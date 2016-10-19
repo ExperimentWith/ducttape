@@ -1,0 +1,1149 @@
+\documentclass[a1,14pt]{sciposter}
+%\usepackage{acl2015}
+%\usepackage{times}
+%\usepackage{listings}
+\usepackage{fancyvrb}
+\usepackage{latexsym}
+\usepackage[margin=1in]{geometry}
+\usepackage[forceshell,outputdir={auto_generated/}]{dot2texi}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,shadows,shadows.blur,positioning,fit}
+
+% Note: When compiling this document using TeXShop on Mac OS X, 
+%       if dot2tex is installed using fink, the following workaround can be used 
+%       to ensure that TeXShop can find dot2tex
+%
+%       sudo ln -s /sw/bin/dot2tex /usr/texbin/dot2tex
+
+
+\title{A workflow management acid test}
+
+\author{Lane Schwartz \textnormal{and} Jonathan Clark}
+
+\institute{University of Illinois at Urbana-Champaign}
+
+\date{}
+
+\definecolor{darkpastelgreen}{rgb}{0.01, 0.75, 0.24}
+ 
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background,main,foreground}
+
+\tikzstyle{branch} = [ellipse, draw=none, inner sep=0.3mm, fill=blue, drop shadow, text centered, anchor=north, text=white]
+\tikzstyle{task}   = [rectangle, draw=none, rounded corners=2mm, fill=orange, drop shadow, text centered, anchor=north, text=white, inner sep=1mm]
+\tikzstyle{branch point} = [rectangle, draw=none, fill=red, drop shadow, text centered, anchor=north, text=white]
+
+%\tikzstyle{graft}  = [sloped,pos=0.1,fill=blue!20]
+\tikzstyle{graft}  = [fill=blue!20]
+
+\tikzstyle{param}   = [rectangle]
+\tikzstyle{input}   = [ellipse]
+\tikzstyle{output}   = [ellipse]
+
+
+\tikzstyle{file} = [ellipse, draw, inner sep=0.3mm, fill=darkpastelgreen, text centered, anchor=north, text=white]
+\tikzstyle{string} = [rectangle, draw, inner sep=0.3mm, fill=darkpastelgreen, text centered, anchor=north, text=white]
+ 
+
+\begin{document}
+\maketitle
+
+
+\section{Entire packed graph}
+
+\begin{center}
+\begin{tikzpicture}[>=latex, scale=1.0, transform shape]
+\begin{dot2tex}[dot,tikzedgelabels,codeonly]
+	digraph G {
+		graph [nodesep="1", ranksep="1"];
+
+		b01_value [style="string", label="Small training corpus"];
+		b02_value [style="string", label="Large training corpus"];
+		b03_value [style="string", label="Standard test set"];
+		b04_value [style="string", label="Randomized test set"];
+
+		b01 [style="branch",       label="small"];
+		b02 [style="branch",       label="large"];
+		b03 [style="branch",       label="standard"];
+		b04 [style="branch",       label="random"];
+		b05 [style="branch",       label="train"];
+		b06 [style="branch",       label="test"];
+
+		p01 [style="branch point", label="TrainCorpus"];
+		p02 [style="branch point", label="TestSplit"];
+		p03 [style="branch point", label="DataSet"];
+
+		b01_value -> b01;
+		b02_value -> b02;
+		b03_value -> b03;
+		b04_value -> b04;
+
+		b01 -> p01;
+		b02 -> p01;
+		
+		b03 -> p02;
+		b04 -> p02;
+		
+		p01 -> b05;
+		p02 -> b06;
+		
+		b05 -> p03;
+		b06 -> p03;
+
+	    {	
+		  t01 [style="task",         label="extract_dictionary"];
+		  t01_param [style="param",  label="param"];
+		  t01_out [                  label="out"];
+        }
+
+		p03 -> t01_param;
+		t01_param -> t01;
+		t01 -> t01_out;
+		
+		subgraph cluster_task02 {
+			t02 [style="task", label="preproc"];
+			t02_in1 [label="in"];
+			t02_in2 [label="dict_in"];
+			t02_out [label="out"];
+		}
+		
+		t02_in1 -> t02;
+		t02_in2 -> t02;
+		t02 -> t02_out;
+		
+		t01_out -> t02_in2;
+		
+		t02_in1_a [style="file", label="test.tgt"];
+		t02_in1_b [style="file", label="rand.tgt"];
+		t02_in1_c [style="file", label="sm.tgt"];
+		t02_in1_d [style="file", label="lg.tgt"];
+		t02_in1_e [style="file", label="test.src"];
+		t02_in1_f [style="file", label="rand.src"];
+		t02_in1_g [style="file", label="sm.src"];
+		t02_in1_h [style="file", label="lg.src"];
+			
+		b07 [style="branch",       label="src"];
+		b08 [style="branch",       label="small"];
+		b09 [style="branch",       label="large"];
+		b10 [style="branch",       label="standard"];
+		b11 [style="branch",       label="random"];
+		b12 [style="branch",       label="train"];
+		b13 [style="branch",       label="test"];
+
+		b14 [style="branch",       label="tgt"];
+		b15 [style="branch",       label="small"];
+		b16 [style="branch",       label="large"];
+		b17 [style="branch",       label="standard"];
+		b18 [style="branch",       label="random"];
+		b19 [style="branch",       label="train"];
+		b20 [style="branch",       label="test"];
+		
+		p04 [style="branch point", label="Side"];
+		p05 [style="branch point", label="TrainCorpus"];
+		p06 [style="branch point", label="TestSplit"];
+		p07 [style="branch point", label="DataSet"];
+		p08 [style="branch point", label="TrainCorpus"];
+		p09 [style="branch point", label="TestSplit"];
+		p10 [style="branch point", label="DataSet"];
+		
+		p04 -> t02_in1;
+		b07 -> p04;
+		b14 -> p04;	
+
+		p07 -> b07;
+		p10 -> b14;
+		
+		b12 -> p07;
+		b13 -> p07;
+		b19 -> p10;
+		b20 -> p10;
+		
+		p05 -> b12;
+		p06 -> b13;
+		p08 -> b19;
+		p09 -> b20;
+		
+		b08 -> p05;
+		b09 -> p05;
+		b10 -> p06;
+		b11 -> p06;
+		
+		b15 -> p08;
+		b16 -> p08;
+		b17 -> p09;
+		b18 -> p09;
+		
+		t02_in1_g -> b08;
+		t02_in1_h -> b09;
+		t02_in1_e -> b10;
+		t02_in1_f -> b11;
+		t02_in1_c -> b15;
+		t02_in1_d -> b16;
+		t02_in1_a -> b17;
+		t02_in1_b -> b18;
+		
+		subgraph cluster_task03 {
+			t03 [style="task", label="process_dict"];
+			t03_in [label="in"];
+			t03_out [label="out"];
+		}
+		
+		t03_in -> t03;
+		t03 -> t03_out;
+		
+		b21 [style="branch", label="one"];
+		p11 [style="branch point", label="OnlyOne"];
+		
+		p11 -> t03_in;
+		b21 -> p11;
+		
+		t01_out -> b21;
+		
+		b22 [style="branch", label="yes"];
+		b23 [style="branch", label="no"];
+		p12 [style="branch point", label="UseDict"];
+		
+		b23_no [style="file", label="/dev/null"];
+		
+		t03_out -> b22;
+		b22 -> p12;
+		b23 -> p12;
+		
+		b23_no -> b23;
+		
+		subgraph cluster_task04 {
+			t04 [style="task", label="build_model"];
+			t04_in1 [label="src"];
+			t04_in2 [label="tgt"];
+			t04_in3 [label="dict"];
+			t04_out [label="out"];
+		}
+		
+		t04_in1 -> t04;
+		t04_in2 -> t04;
+		t04_in3 -> t04;
+		t04 -> t04_out;
+		
+		p12 -> t04_in3;
+		
+		t02_out -> t04_in1 [label="[DataSet:train,Side:src]", lblstyle="graft"];
+		t02_out -> t04_in2 [label="[DataSet:train,Side:tgt]", lblstyle="graft"];
+		
+		
+		subgraph cluster_task05 {
+			t05 [style="task", label="nothing"];
+			t05_in [style="param", label="x"];
+			t05_out [label="out"];
+		}
+		
+		t05_in -> t05;
+		t05 -> t05_out;
+		
+		b24_value [style="string", label="bar"];
+		
+		b24 [style="branch", label="bar"];
+		p13 [style="branch point", label="Foo"];
+		
+		b24_value -> b24;
+		b24 -> p13;
+		p13 -> t05_in;
+		
+		b25 [style="branch", label="bar"];
+		p14 [style="branch point", label="Foo"];
+		
+		t05_out -> b25 [label="[Foo:bar]", lblstyle="graft"];
+		b25 -> p14;		
+
+		subgraph cluster_task06 {
+			t06 [style="task", label="corpus_counts"];
+			t06_in1 [label="bar"];
+			t06_in2 [label="src"];
+			t06_in3 [label="tgt"];
+			t06_out [label="out"];
+		}
+		
+		t06_in1 -> t06;
+		t06_in2 -> t06;
+		t06_in3 -> t06;
+		t06 -> t06_out;
+		
+		p14 -> t06_in1;
+		t02_out -> t06_in2 [label="[Side:src]", lblstyle="graft"];
+		t02_out -> t06_in3 [label="[Side:tgt]", lblstyle="graft"];
+		
+		subgraph cluster_task07 {
+			t07 [style="task", label="optimize"];
+			t07_in [label="in"];
+			t07_p [style="param", label="seed"];
+			t07_out [label="out"];
+		}
+		
+		t07_in -> t07;
+		t07_p -> t07;
+		t07 -> t07_out;
+		
+		b26_value [style="string", label="1"];
+		b27_value [style="string", label="2"];
+		b28_value [style="string", label="3"];
+		
+		b26 [style="branch", label="1"];
+		b27 [style="branch", label="2"];
+		b28 [style="branch", label="3"];
+		p15 [style="branch point", label="Seed"];
+		
+		b26_value -> b26;
+		b27_value -> b27;
+		b28_value -> b28;
+		
+		b26 -> p15;
+		b27 -> p15;
+		b28 -> p15;
+		p15 -> t07_p;
+		t04_out -> t07_in;
+		
+		subgraph cluster_task08 {
+			t08 [style="task", label="evaluate_all"];
+			t08_in1 [label="counts"];
+			t08_in2 [label="weights"];
+			t08_in3 [label="model"];
+			t08_out [label="out"];
+		}
+		
+		t08_in1 -> t08;
+		t08_in2 -> t08;
+		t08_in3 -> t08;
+		t08 -> t08_out;
+		
+		t06_out -> t08_in1;
+		t07_out -> t08_in2 [label="[Seed:*]", lblstyle="graft"];
+		t04_out -> t08_in3;
+
+
+		subgraph cluster_task09 {
+			t09 [style="task", label="evaluate_one"];
+			t09_in1 [label="counts"];
+			t09_in2 [label="weights"];
+			t09_in3 [label="model"];
+			t09_out [label="out"];
+		}
+		
+		t09_in1 -> t09;
+		t09_in2 -> t09;
+		t09_in3 -> t09;
+		t09 -> t09_out;
+		
+		t06_out -> t09_in1;
+		t07_out -> t09_in2;
+		t04_out -> t09_in3;	
+
+	
+	}
+\end{dot2tex}
+%
+\node[fit=(t01_param)(t01)(t01_out), draw, thick, inner sep=1.0cm, black] {};
+\node[fit=(t02_in1)(t02_in2)(t02)(t02_out), draw, thick, inner sep=1.0cm, black] {};
+\node[fit=(t03_in)(t03)(t03_out), draw, thick, inner sep=1.0cm, black] {};
+\node[fit=(t04_in1)(t04_in2)(t04_in3)(t04)(t04_out), draw, thick, inner sep=1.0cm, black] {};
+\node[fit=(t05_in)(t05)(t05_out), draw, thick, inner sep=1.0cm, black] {};
+\node[fit=(t06_in1)(t06_in2)(t06_in3)(t06)(t06_out), draw, thick, inner sep=1.0cm, black] {};
+\node[fit=(t07_in)(t07_p)(t07)(t07_out), draw, thick, inner sep=1.0cm, black] {};
+\node[fit=(t08_in1)(t08_in2)(t08_in3)(t08)(t08_out), draw, thick, inner sep=1.0cm, black] {};
+\node[fit=(t09_in1)(t09_in2)(t09_in3)(t09)(t09_out), draw, thick, inner sep=1.0cm, black] {};
+%
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
+
+	     \begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
+	digraph G {
+
+	     		graph [nodesep="0.5", ranksep="0"];
+
+		b01 [style="branch", label="small"];
+		b01_value [style="string", label="Small training corpus"];
+		b05 [style="branch", label="train"];
+		b07 [style="branch", label="src"];
+		b08 [style="branch", label="small"];
+		b12 [style="branch", label="train"];
+		b14 [style="branch", label="tgt"];
+		b15 [style="branch", label="small"];
+		b19 [style="branch", label="train"];
+		b21 [style="branch", label="one"];
+		b22 [style="branch", label="yes"];
+		b24 [style="branch", label="bar"];
+		b24_value [style="string", label="bar"];
+		b25 [style="branch", label="bar"];
+		b26 [style="branch", label="1"];
+		b26_value [style="string", label="1"];
+		p01 [style="branch point", label="TrainCorpus"];
+		p03 [style="branch point", label="DataSet"];
+		p04 [style="branch point", label="Side"];
+		p05 [style="branch point", label="TrainCorpus"];
+		p07 [style="branch point", label="DataSet"];
+		p08 [style="branch point", label="TrainCorpus"];
+		p10 [style="branch point", label="DataSet"];
+		p11 [style="branch point", label="OnlyOne"];
+		p12 [style="branch point", label="UseDict"];
+		p13 [style="branch point", label="Foo"];
+		p14 [style="branch point", label="Foo"];
+		p15 [style="branch point", label="Seed"];
+		t01 [style="task", label="extract_dictionary"];
+		t01_out [style="", label="out"];
+		t01_param [style="param", label="param"];
+		t02 [style="task", label="preproc"];
+		t02_in1 [style="", label="in"];
+		t02_in1_c [style="file", label="sm.tgt"];
+		t02_in1_g [style="file", label="sm.src"];
+		t02_in2 [style="", label="dict_in"];
+		t02_out [style="", label="out"];
+		t03 [style="task", label="process_dict"];
+		t03_in [style="", label="in"];
+		t03_out [style="", label="out"];
+		t04 [style="task", label="build_model"];
+		t04_in1 [style="", label="src"];
+		t04_in2 [style="", label="tgt"];
+		t04_in3 [style="", label="dict"];
+		t04_out [style="", label="out"];
+		t05 [style="task", label="nothing"];
+		t05_in [style="param", label="x"];
+		t05_out [style="", label="out"];
+		t06 [style="task", label="corpus_counts"];
+		t06_in1 [style="", label="bar"];
+		t06_in2 [style="", label="src"];
+		t06_in3 [style="", label="tgt"];
+		t06_out [style="", label="out"];
+		t07 [style="task", label="optimize"];
+		t07_in [style="", label="in"];
+		t07_out [style="", label="out"];
+		t07_p [style="param", label="seed"];
+		t08 [style="task", label="evaluate_all"];
+		t08_in1 [style="", label="counts"];
+		t08_in2 [style="", label="weights"];
+		t08_in3 [style="", label="model"];
+		t08_out [style="", label="out"];
+		t09 [style="task", label="evaluate_one"];
+		t09_in1 [style="", label="counts"];
+		t09_in2 [style="", label="weights"];
+		t09_in3 [style="", label="model"];
+		t09_out [style="", label="out"];
+		p042 [style="branch point", label="Side"];
+		t022 [style="task", label="preproc"];
+		t02_in12 [style="", label="in"];
+		t02_out2 [style="", label="out"];
+
+		b01 -> p01;
+		b01_value -> b01;
+		b05 -> p03;
+		b07 -> p04;
+		b08 -> p05;
+		b12 -> p07;
+		b14 -> p042;
+		b15 -> p08;
+		b19 -> p10;
+		b21 -> p11;
+		b22 -> p12;
+		b24 -> p13;
+		b24_value -> b24;
+		b25 -> p14;
+		b26 -> p15;
+		b26_value -> b26;
+		p01 -> b05;
+		p03 -> t01_param;
+		p04 -> t02_in1;
+		p05 -> b12;
+		p07 -> b07;
+		p08 -> b19;
+		p10 -> b14;
+		p11 -> t03_in;
+		p12 -> t04_in3;
+		p13 -> t05_in;
+		p14 -> t06_in1;
+		p15 -> t07_p;
+		t01 -> t01_out;
+		t01_out -> b21;
+		t01_out -> t02_in2;
+		t01_param -> t01;
+		t02 -> t02_out;
+		t02_in1 -> t02;
+		t02_in1_c -> b15;
+		t02_in1_g -> b08;
+		t02_in2 -> t02;
+		t02_out -> t04_in1;
+		t02_out -> t06_in2;
+		t03 -> t03_out;
+		t03_in -> t03;
+		t03_out -> b22;
+		t04 -> t04_out;
+		t04_in1 -> t04;
+		t04_in2 -> t04;
+		t04_in3 -> t04;
+		t04_out -> t07_in;
+		t04_out -> t08_in3;
+		t04_out -> t09_in3;
+		t05 -> t05_out;
+		t05_in -> t05;
+		t05_out -> b25;
+		t06 -> t06_out;
+		t06_in1 -> t06;
+		t06_in2 -> t06;
+		t06_in3 -> t06;
+		t06_out -> t08_in1;
+		t06_out -> t09_in1;
+		t07 -> t07_out;
+		t07_in -> t07;
+		t07_out -> t08_in2;
+		t07_out -> t09_in2;
+		t07_p -> t07;
+		t08 -> t08_out;
+		t08_in1 -> t08;
+		t08_in2 -> t08;
+		t08_in3 -> t08;
+		t09 -> t09_out;
+		t09_in1 -> t09;
+		t09_in2 -> t09;
+		t09_in3 -> t09;
+		p042 -> t02_in12;
+		t022 -> t02_out2;
+		t02_in12 -> t022;
+		t02_out2 -> t04_in2;
+		t02_out2 -> t06_in3;
+
+	}
+\end{dot2tex}
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
+
+	     \begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
+	digraph G {
+
+	     		graph [nodesep="0.5", ranksep="0"];
+
+		b01 [style="branch", label="small"];
+		b01_value [style="string", label="Small training corpus"];
+		b05 [style="branch", label="train"];
+		b07 [style="branch", label="src"];
+		b08 [style="branch", label="small"];
+		b12 [style="branch", label="train"];
+		b14 [style="branch", label="tgt"];
+		b15 [style="branch", label="small"];
+		b19 [style="branch", label="train"];
+		b21 [style="branch", label="one"];
+		b22 [style="branch", label="yes"];
+		b24 [style="branch", label="bar"];
+		b24_value [style="string", label="bar"];
+		b25 [style="branch", label="bar"];
+		b27 [style="branch", label="2"];
+		b27_value [style="string", label="2"];
+		p01 [style="branch point", label="TrainCorpus"];
+		p03 [style="branch point", label="DataSet"];
+		p04 [style="branch point", label="Side"];
+		p05 [style="branch point", label="TrainCorpus"];
+		p07 [style="branch point", label="DataSet"];
+		p08 [style="branch point", label="TrainCorpus"];
+		p10 [style="branch point", label="DataSet"];
+		p11 [style="branch point", label="OnlyOne"];
+		p12 [style="branch point", label="UseDict"];
+		p13 [style="branch point", label="Foo"];
+		p14 [style="branch point", label="Foo"];
+		p15 [style="branch point", label="Seed"];
+		t01 [style="task", label="extract_dictionary"];
+		t01_out [style="", label="out"];
+		t01_param [style="param", label="param"];
+		t02 [style="task", label="preproc"];
+		t02_in1 [style="", label="in"];
+		t02_in1_c [style="file", label="sm.tgt"];
+		t02_in1_g [style="file", label="sm.src"];
+		t02_in2 [style="", label="dict_in"];
+		t02_out [style="", label="out"];
+		t03 [style="task", label="process_dict"];
+		t03_in [style="", label="in"];
+		t03_out [style="", label="out"];
+		t04 [style="task", label="build_model"];
+		t04_in1 [style="", label="src"];
+		t04_in2 [style="", label="tgt"];
+		t04_in3 [style="", label="dict"];
+		t04_out [style="", label="out"];
+		t05 [style="task", label="nothing"];
+		t05_in [style="param", label="x"];
+		t05_out [style="", label="out"];
+		t06 [style="task", label="corpus_counts"];
+		t06_in1 [style="", label="bar"];
+		t06_in2 [style="", label="src"];
+		t06_in3 [style="", label="tgt"];
+		t06_out [style="", label="out"];
+		t07 [style="task", label="optimize"];
+		t07_in [style="", label="in"];
+		t07_out [style="", label="out"];
+		t07_p [style="param", label="seed"];
+		t08 [style="task", label="evaluate_all"];
+		t08_in1 [style="", label="counts"];
+		t08_in2 [style="", label="weights"];
+		t08_in3 [style="", label="model"];
+		t08_out [style="", label="out"];
+		t09 [style="task", label="evaluate_one"];
+		t09_in1 [style="", label="counts"];
+		t09_in2 [style="", label="weights"];
+		t09_in3 [style="", label="model"];
+		t09_out [style="", label="out"];
+		p042 [style="branch point", label="Side"];
+		t022 [style="task", label="preproc"];
+		t02_in12 [style="", label="in"];
+		t02_out2 [style="", label="out"];
+
+		b01 -> p01;
+		b01_value -> b01;
+		b05 -> p03;
+		b07 -> p04;
+		b08 -> p05;
+		b12 -> p07;
+		b14 -> p042;
+		b15 -> p08;
+		b19 -> p10;
+		b21 -> p11;
+		b22 -> p12;
+		b24 -> p13;
+		b24_value -> b24;
+		b25 -> p14;
+		b27 -> p15;
+		b27_value -> b27;
+		p01 -> b05;
+		p03 -> t01_param;
+		p04 -> t02_in1;
+		p05 -> b12;
+		p07 -> b07;
+		p08 -> b19;
+		p10 -> b14;
+		p11 -> t03_in;
+		p12 -> t04_in3;
+		p13 -> t05_in;
+		p14 -> t06_in1;
+		p15 -> t07_p;
+		t01 -> t01_out;
+		t01_out -> b21;
+		t01_out -> t02_in2;
+		t01_param -> t01;
+		t02 -> t02_out;
+		t02_in1 -> t02;
+		t02_in1_c -> b15;
+		t02_in1_g -> b08;
+		t02_in2 -> t02;
+		t02_out -> t04_in1;
+		t02_out -> t06_in2;
+		t03 -> t03_out;
+		t03_in -> t03;
+		t03_out -> b22;
+		t04 -> t04_out;
+		t04_in1 -> t04;
+		t04_in2 -> t04;
+		t04_in3 -> t04;
+		t04_out -> t07_in;
+		t04_out -> t08_in3;
+		t04_out -> t09_in3;
+		t05 -> t05_out;
+		t05_in -> t05;
+		t05_out -> b25;
+		t06 -> t06_out;
+		t06_in1 -> t06;
+		t06_in2 -> t06;
+		t06_in3 -> t06;
+		t06_out -> t08_in1;
+		t06_out -> t09_in1;
+		t07 -> t07_out;
+		t07_in -> t07;
+		t07_out -> t08_in2;
+		t07_out -> t09_in2;
+		t07_p -> t07;
+		t08 -> t08_out;
+		t08_in1 -> t08;
+		t08_in2 -> t08;
+		t08_in3 -> t08;
+		t09 -> t09_out;
+		t09_in1 -> t09;
+		t09_in2 -> t09;
+		t09_in3 -> t09;
+		p042 -> t02_in12;
+		t022 -> t02_out2;
+		t02_in12 -> t022;
+		t02_out2 -> t04_in2;
+		t02_out2 -> t06_in3;
+
+	}
+\end{dot2tex}
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
+
+	     \begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
+	digraph G {
+
+	     		graph [nodesep="0.5", ranksep="0"];
+
+		b01 [style="branch", label="small"];
+		b01_value [style="string", label="Small training corpus"];
+		b05 [style="branch", label="train"];
+		b07 [style="branch", label="src"];
+		b08 [style="branch", label="small"];
+		b12 [style="branch", label="train"];
+		b14 [style="branch", label="tgt"];
+		b15 [style="branch", label="small"];
+		b19 [style="branch", label="train"];
+		b21 [style="branch", label="one"];
+		b22 [style="branch", label="yes"];
+		b24 [style="branch", label="bar"];
+		b24_value [style="string", label="bar"];
+		b25 [style="branch", label="bar"];
+		b28 [style="branch", label="3"];
+		b28_value [style="string", label="3"];
+		p01 [style="branch point", label="TrainCorpus"];
+		p03 [style="branch point", label="DataSet"];
+		p04 [style="branch point", label="Side"];
+		p05 [style="branch point", label="TrainCorpus"];
+		p07 [style="branch point", label="DataSet"];
+		p08 [style="branch point", label="TrainCorpus"];
+		p10 [style="branch point", label="DataSet"];
+		p11 [style="branch point", label="OnlyOne"];
+		p12 [style="branch point", label="UseDict"];
+		p13 [style="branch point", label="Foo"];
+		p14 [style="branch point", label="Foo"];
+		p15 [style="branch point", label="Seed"];
+		t01 [style="task", label="extract_dictionary"];
+		t01_out [style="", label="out"];
+		t01_param [style="param", label="param"];
+		t02 [style="task", label="preproc"];
+		t02_in1 [style="", label="in"];
+		t02_in1_c [style="file", label="sm.tgt"];
+		t02_in1_g [style="file", label="sm.src"];
+		t02_in2 [style="", label="dict_in"];
+		t02_out [style="", label="out"];
+		t03 [style="task", label="process_dict"];
+		t03_in [style="", label="in"];
+		t03_out [style="", label="out"];
+		t04 [style="task", label="build_model"];
+		t04_in1 [style="", label="src"];
+		t04_in2 [style="", label="tgt"];
+		t04_in3 [style="", label="dict"];
+		t04_out [style="", label="out"];
+		t05 [style="task", label="nothing"];
+		t05_in [style="param", label="x"];
+		t05_out [style="", label="out"];
+		t06 [style="task", label="corpus_counts"];
+		t06_in1 [style="", label="bar"];
+		t06_in2 [style="", label="src"];
+		t06_in3 [style="", label="tgt"];
+		t06_out [style="", label="out"];
+		t07 [style="task", label="optimize"];
+		t07_in [style="", label="in"];
+		t07_out [style="", label="out"];
+		t07_p [style="param", label="seed"];
+		t08 [style="task", label="evaluate_all"];
+		t08_in1 [style="", label="counts"];
+		t08_in2 [style="", label="weights"];
+		t08_in3 [style="", label="model"];
+		t08_out [style="", label="out"];
+		t09 [style="task", label="evaluate_one"];
+		t09_in1 [style="", label="counts"];
+		t09_in2 [style="", label="weights"];
+		t09_in3 [style="", label="model"];
+		t09_out [style="", label="out"];
+		p042 [style="branch point", label="Side"];
+		t022 [style="task", label="preproc"];
+		t02_in12 [style="", label="in"];
+		t02_out2 [style="", label="out"];
+
+		b01 -> p01;
+		b01_value -> b01;
+		b05 -> p03;
+		b07 -> p04;
+		b08 -> p05;
+		b12 -> p07;
+		b14 -> p042;
+		b15 -> p08;
+		b19 -> p10;
+		b21 -> p11;
+		b22 -> p12;
+		b24 -> p13;
+		b24_value -> b24;
+		b25 -> p14;
+		b28 -> p15;
+		b28_value -> b28;
+		p01 -> b05;
+		p03 -> t01_param;
+		p04 -> t02_in1;
+		p05 -> b12;
+		p07 -> b07;
+		p08 -> b19;
+		p10 -> b14;
+		p11 -> t03_in;
+		p12 -> t04_in3;
+		p13 -> t05_in;
+		p14 -> t06_in1;
+		p15 -> t07_p;
+		t01 -> t01_out;
+		t01_out -> b21;
+		t01_out -> t02_in2;
+		t01_param -> t01;
+		t02 -> t02_out;
+		t02_in1 -> t02;
+		t02_in1_c -> b15;
+		t02_in1_g -> b08;
+		t02_in2 -> t02;
+		t02_out -> t04_in1;
+		t02_out -> t06_in2;
+		t03 -> t03_out;
+		t03_in -> t03;
+		t03_out -> b22;
+		t04 -> t04_out;
+		t04_in1 -> t04;
+		t04_in2 -> t04;
+		t04_in3 -> t04;
+		t04_out -> t07_in;
+		t04_out -> t08_in3;
+		t04_out -> t09_in3;
+		t05 -> t05_out;
+		t05_in -> t05;
+		t05_out -> b25;
+		t06 -> t06_out;
+		t06_in1 -> t06;
+		t06_in2 -> t06;
+		t06_in3 -> t06;
+		t06_out -> t08_in1;
+		t06_out -> t09_in1;
+		t07 -> t07_out;
+		t07_in -> t07;
+		t07_out -> t08_in2;
+		t07_out -> t09_in2;
+		t07_p -> t07;
+		t08 -> t08_out;
+		t08_in1 -> t08;
+		t08_in2 -> t08;
+		t08_in3 -> t08;
+		t09 -> t09_out;
+		t09_in1 -> t09;
+		t09_in2 -> t09;
+		t09_in3 -> t09;
+		p042 -> t02_in12;
+		t022 -> t02_out2;
+		t02_in12 -> t022;
+		t02_out2 -> t04_in2;
+		t02_out2 -> t06_in3;
+
+	}
+\end{dot2tex}
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
+
+	     \begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
+	digraph G {
+
+	     		graph [nodesep="0.5", ranksep="0"];
+
+		b01 [style="branch", label="small"];
+		b01_value [style="string", label="Small training corpus"];
+		b05 [style="branch", label="train"];
+		b07 [style="branch", label="src"];
+		b08 [style="branch", label="small"];
+		b12 [style="branch", label="train"];
+		b14 [style="branch", label="tgt"];
+		b15 [style="branch", label="small"];
+		b19 [style="branch", label="train"];
+		b23 [style="branch", label="no"];
+		b23_no [style="file", label="/dev/null"];
+		b24 [style="branch", label="bar"];
+		b24_value [style="string", label="bar"];
+		b25 [style="branch", label="bar"];
+		b26 [style="branch", label="1"];
+		b26_value [style="string", label="1"];
+		p01 [style="branch point", label="TrainCorpus"];
+		p03 [style="branch point", label="DataSet"];
+		p04 [style="branch point", label="Side"];
+		p05 [style="branch point", label="TrainCorpus"];
+		p07 [style="branch point", label="DataSet"];
+		p08 [style="branch point", label="TrainCorpus"];
+		p10 [style="branch point", label="DataSet"];
+		p12 [style="branch point", label="UseDict"];
+		p13 [style="branch point", label="Foo"];
+		p14 [style="branch point", label="Foo"];
+		p15 [style="branch point", label="Seed"];
+		t01 [style="task", label="extract_dictionary"];
+		t01_out [style="", label="out"];
+		t01_param [style="param", label="param"];
+		t02 [style="task", label="preproc"];
+		t02_in1 [style="", label="in"];
+		t02_in1_c [style="file", label="sm.tgt"];
+		t02_in1_g [style="file", label="sm.src"];
+		t02_in2 [style="", label="dict_in"];
+		t02_out [style="", label="out"];
+		t04 [style="task", label="build_model"];
+		t04_in1 [style="", label="src"];
+		t04_in2 [style="", label="tgt"];
+		t04_in3 [style="", label="dict"];
+		t04_out [style="", label="out"];
+		t05 [style="task", label="nothing"];
+		t05_in [style="param", label="x"];
+		t05_out [style="", label="out"];
+		t06 [style="task", label="corpus_counts"];
+		t06_in1 [style="", label="bar"];
+		t06_in2 [style="", label="src"];
+		t06_in3 [style="", label="tgt"];
+		t06_out [style="", label="out"];
+		t07 [style="task", label="optimize"];
+		t07_in [style="", label="in"];
+		t07_out [style="", label="out"];
+		t07_p [style="param", label="seed"];
+		t08 [style="task", label="evaluate_all"];
+		t08_in1 [style="", label="counts"];
+		t08_in2 [style="", label="weights"];
+		t08_in3 [style="", label="model"];
+		t08_out [style="", label="out"];
+		t09 [style="task", label="evaluate_one"];
+		t09_in1 [style="", label="counts"];
+		t09_in2 [style="", label="weights"];
+		t09_in3 [style="", label="model"];
+		t09_out [style="", label="out"];
+		p042 [style="branch point", label="Side"];
+		t022 [style="task", label="preproc"];
+		t02_in12 [style="", label="in"];
+		t02_out2 [style="", label="out"];
+
+		b01 -> p01;
+		b01_value -> b01;
+		b05 -> p03;
+		b07 -> p04;
+		b08 -> p05;
+		b12 -> p07;
+		b14 -> p042;
+		b15 -> p08;
+		b19 -> p10;
+		b23 -> p12;
+		b23_no -> b23;
+		b24 -> p13;
+		b24_value -> b24;
+		b25 -> p14;
+		b26 -> p15;
+		b26_value -> b26;
+		p01 -> b05;
+		p03 -> t01_param;
+		p04 -> t02_in1;
+		p05 -> b12;
+		p07 -> b07;
+		p08 -> b19;
+		p10 -> b14;
+		p12 -> t04_in3;
+		p13 -> t05_in;
+		p14 -> t06_in1;
+		p15 -> t07_p;
+		t01 -> t01_out;
+		t01_out -> t02_in2;
+		t01_param -> t01;
+		t02 -> t02_out;
+		t02_in1 -> t02;
+		t02_in1_c -> b15;
+		t02_in1_g -> b08;
+		t02_in2 -> t02;
+		t02_out -> t04_in1;
+		t02_out -> t06_in2;
+		t04 -> t04_out;
+		t04_in1 -> t04;
+		t04_in2 -> t04;
+		t04_in3 -> t04;
+		t04_out -> t07_in;
+		t04_out -> t08_in3;
+		t04_out -> t09_in3;
+		t05 -> t05_out;
+		t05_in -> t05;
+		t05_out -> b25;
+		t06 -> t06_out;
+		t06_in1 -> t06;
+		t06_in2 -> t06;
+		t06_in3 -> t06;
+		t06_out -> t08_in1;
+		t06_out -> t09_in1;
+		t07 -> t07_out;
+		t07_in -> t07;
+		t07_out -> t08_in2;
+		t07_out -> t09_in2;
+		t07_p -> t07;
+		t08 -> t08_out;
+		t08_in1 -> t08;
+		t08_in2 -> t08;
+		t08_in3 -> t08;
+		t09 -> t09_out;
+		t09_in1 -> t09;
+		t09_in2 -> t09;
+		t09_in3 -> t09;
+		p042 -> t02_in12;
+		t022 -> t02_out2;
+		t02_in12 -> t022;
+		t02_out2 -> t04_in2;
+		t02_out2 -> t06_in3;
+
+	}
+\end{dot2tex}
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
+
+	     \begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
+	digraph G {
+
+	     		graph [nodesep="0.5", ranksep="0"];
+
+		b01 [style="branch", label="small"];
+		b01_value [style="string", label="Small training corpus"];
+		b05 [style="branch", label="train"];
+		b07 [style="branch", label="src"];
+		b08 [style="branch", label="small"];
+		b12 [style="branch", label="train"];
+		b14 [style="branch", label="tgt"];
+		b15 [style="branch", label="small"];
+		b19 [style="branch", label="train"];
+		b23 [style="branch", label="no"];
+		b23_no [style="file", label="/dev/null"];
+		b24 [style="branch", label="bar"];
+		b24_value [style="string", label="bar"];
+		b25 [style="branch", label="bar"];
+		b27 [style="branch", label="2"];
+		b27_value [style="string", label="2"];
+		p01 [style="branch point", label="TrainCorpus"];
+		p03 [style="branch point", label="DataSet"];
+		p04 [style="branch point", label="Side"];
+		p05 [style="branch point", label="TrainCorpus"];
+		p07 [style="branch point", label="DataSet"];
+		p08 [style="branch point", label="TrainCorpus"];
+		p10 [style="branch point", label="DataSet"];
+		p12 [style="branch point", label="UseDict"];
+		p13 [style="branch point", label="Foo"];
+		p14 [style="branch point", label="Foo"];
+		p15 [style="branch point", label="Seed"];
+		t01 [style="task", label="extract_dictionary"];
+		t01_out [style="", label="out"];
+		t01_param [style="param", label="param"];
+		t02 [style="task", label="preproc"];
+		t02_in1 [style="", label="in"];
+		t02_in1_c [style="file", label="sm.tgt"];
+		t02_in1_g [style="file", label="sm.src"];
+		t02_in2 [style="", label="dict_in"];
+		t02_out [style="", label="out"];
+		t04 [style="task", label="build_model"];
+		t04_in1 [style="", label="src"];
+		t04_in2 [style="", label="tgt"];
+		t04_in3 [style="", label="dict"];
+		t04_out [style="", label="out"];
+		t05 [style="task", label="nothing"];
+		t05_in [style="param", label="x"];
+		t05_out [style="", label="out"];
+		t06 [style="task", label="corpus_counts"];
+		t06_in1 [style="", label="bar"];
+		t06_in2 [style="", label="src"];
+		t06_in3 [style="", label="tgt"];
+		t06_out [style="", label="out"];
+		t07 [style="task", label="optimize"];
+		t07_in [style="", label="in"];
+		t07_out [style="", label="out"];
+		t07_p [style="param", label="seed"];
+		t08 [style="task", label="evaluate_all"];
+		t08_in1 [style="", label="counts"];
+		t08_in2 [style="", label="weights"];
+		t08_in3 [style="", label="model"];
+		t08_out [style="", label="out"];
+		t09 [style="task", label="evaluate_one"];
+		t09_in1 [style="", label="counts"];
+		t09_in2 [style="", label="weights"];
+		t09_in3 [style="", label="model"];
+		t09_out [style="", label="out"];
+		p042 [style="branch point", label="Side"];
+		t022 [style="task", label="preproc"];
+		t02_in12 [style="", label="in"];
+		t02_out2 [style="", label="out"];
+
+		b01 -> p01;
+		b01_value -> b01;
+		b05 -> p03;
+		b07 -> p04;
+		b08 -> p05;
+		b12 -> p07;
+		b14 -> p042;
+		b15 -> p08;
+		b19 -> p10;
+		b23 -> p12;
+		b23_no -> b23;
+		b24 -> p13;
+		b24_value -> b24;
+		b25 -> p14;
+		b27 -> p15;
+		b27_value -> b27;
+		p01 -> b05;
+		p03 -> t01_param;
+		p04 -> t02_in1;
+		p05 -> b12;
+		p07 -> b07;
+		p08 -> b19;
+		p10 -> b14;
+		p12 -> t04_in3;
+		p13 -> t05_in;
+		p14 -> t06_in1;
+		p15 -> t07_p;
+		t01 -> t01_out;
+		t01_out -> t02_in2;
+		t01_param -> t01;
+		t02 -> t02_out;
+		t02_in1 -> t02;
+		t02_in1_c -> b15;
+		t02_in1_g -> b08;
+		t02_in2 -> t02;
+		t02_out -> t04_in1;
+		t02_out -> t06_in2;
+		t04 -> t04_out;
+		t04_in1 -> t04;
+		t04_in2 -> t04;
+		t04_in3 -> t04;
+		t04_out -> t07_in;
+		t04_out -> t08_in3;
+		t04_out -> t09_in3;
+		t05 -> t05_out;
+		t05_in -> t05;
+		t05_out -> b25;
+		t06 -> t06_out;
+		t06_in1 -> t06;
+		t06_in2 -> t06;
+		t06_in3 -> t06;
+		t06_out -> t08_in1;
+		t06_out -> t09_in1;
+		t07 -> t07_out;
+		t07_in -> t07;
+		t07_out -> t08_in2;
+		t07_out -> t09_in2;
+		t07_p -> t07;
+		t08 -> t08_out;
+		t08_in1 -> t08;
+		t08_in2 -> t08;
+		t08_in3 -> t08;
+		t09 -> t09_out;
+		t09_in1 -> t09;
+		t09_in2 -> t09;
+		t09_in3 -> t09;
+		p042 -> t02_in12;
+		t022 -> t02_out2;
+		t02_in12 -> t022;
+		t02_out2 -> t04_in2;
+		t02_out2 -> t06_in3;
+
+	}
+\end{dot2tex}
+\end{tikzpicture}
+\end{center}
+
+\end{document}
