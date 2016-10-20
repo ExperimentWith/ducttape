@@ -20,20 +20,18 @@
 %%%%%%%%%%%%%%%%%%%%%%%
 unpack:-
 	tell('unpacked_grafts.txt'),                                                          % open output file
-	findall(Goal,(node(Goal,_,_),not(edge(Goal,_))),Goals),                               % find non-parent/goal nodes
+	setof(Goal,(node(Goal,_,_),not(edge(Goal,_))),Goals),                               % find non-parent/goal nodes
 	iterate_goals(Goals),                                                                 % iterate through goal nodes
-	findall([Parent,Child,Vias,ID],graft(Parent,Child,Vias,ID),Grafts),                   % find grafts
+	setof([Parent,Child,Vias,ID],graft(Parent,Child,Vias,ID),Grafts),                   % find grafts
 	iterate_grafts(Grafts),                                                               % add grafted branches
-	findall(X,unpacked_node(X),Nodes),                                                    % find the list of unpacked nodes
-	findall([Parent,Child],unpacked_edge(Parent,Child),Edges),			      % find the list of unpacked edges
-	sort(Nodes,SortedNodes),                                                              % sorting is unecessary, but makes for easier reading
-	sort(Edges,SortedEdges),
+	setof(X,unpacked_node(X),Nodes),                                                    % find the list of unpacked nodes
+	setof([Parent,Child],unpacked_edge(Parent,Child),Edges),			      % find the list of unpacked edges
 	write('\\begin{center}\n\\begin{tikzpicture}[>=latex, scale=2.0, transform shape]\n
 	     \\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]\n\tdigraph G {\n
 	     \t\tgraph [nodesep=\"0.5\", ranksep=\"0\"];\n\n'),				      % print dot2tex formatting
-	print_nodes(SortedNodes),                                                             % format required nodes
+	print_nodes(Nodes),                                                             % format required nodes
 	write('\n'),
-	print_edges(SortedEdges),                                                             % format required edges
+	print_edges(Edges),                                                             % format required edges
 	write('\n\t}\n\\end{dot2tex}\n\\end{tikzpicture}\n\\end{center}\n\n'),
 	false.	                                                                              % backtrack to next unpacking
 
@@ -46,12 +44,16 @@ unpack:-
 unpack_node(Node):-
 	unpacked_node(Node).
 
+unpack_node(Node):-
+	not(edge(Parent,Node)),
+	assert2(unpacked_node(Node)).
+
 % if node is not a branch point, unpack all parents
 unpack_node(Node):-
 	not(unpacked_node(Node)),                             % check if already unpacked
 	not(node(Node,'branch point',_)),                     % if node is anything other than a branch point
 	assert2(unpacked_node(Node)),                         % assert that Node is unpacked
-	findall([Parent,Node],edge(Parent,Node),ParentEdges), % find all Parent->Node edges
+	setof([Parent,Node],edge(Parent,Node),ParentEdges), % find all Parent->Node edges
 	unpack_parents(ParentEdges).                          % unpack all parent nodes
 
 % if node is a branch point, and another branch point
@@ -218,7 +220,7 @@ unzip_graft(Node,Vias,Prev,ID):-
 % if node is not a branch point
 unzip_graft(Node,Vias,Prev,ID):-
 	node(Node,Type,Label),		           % get node type and label
-	%not(Type = 'branch point'),            % if type is not 'branch point'
+	not(Type = 'branch point'),            % if type is not 'branch point'
 	%findall(Parent,edge(Parent,Node),Parents),
 	edge(Parent,Node),                     % find parent node
 	string_concat(Node,ID,NodeCopy),       % create copy of node
