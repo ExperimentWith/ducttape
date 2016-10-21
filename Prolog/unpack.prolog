@@ -22,8 +22,8 @@ unpack:-
 	tell('unpacked_grafts_small.txt'),                                              % open output file
 	setof(Goal,(node(Goal,_,_),not(edge(Goal,_))),Goals),                     % find non-parent/goal nodes
 	iterate_goals(Goals),                                                     % iterate through goal nodes
-	%setof([Parent,Child,Vias,ID],graft(Parent,Child,Vias,ID),Grafts),         % find grafts
-	%iterate_grafts(Grafts),                                                   % add grafted branches
+	setof([Parent,Child,Vias,ID],graft(Parent,Child,Vias,ID),Grafts),         % find grafts
+	iterate_grafts(Grafts),                                                   % add grafted branches
 	setof(X,unpacked_node(X),Nodes),                                          % find the list of unpacked nodes
 	setof([Parent,Child],unpacked_edge(Parent,Child),Edges),			      % find the list of unpacked edges
 	write('\\begin{center}\n\\begin{tikzpicture}[>=latex, scale=2.0, transform shape]\n
