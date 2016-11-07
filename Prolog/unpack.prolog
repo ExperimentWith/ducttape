@@ -2,15 +2,15 @@
 % unpack.prolog									   %
 % takes a set of nodes, edges, and grafts as input %
 % returns the unpacked graphs (in LaTeX)		   %
-% Caitlin Cassidy - 04 Nov 2016 				   %
+% Caitlin Cassidy - 06 Nov 2016 				   %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 :- dynamic unpacked_node/1.
 :- dynamic edge/2.
-:- dynamic unzipped_graft/2.
 :- dynamic unpacked_branchpoint/2.
 :- dynamic unpacked_edge/2.
 :- dynamic node/4.
+:- dynamic graft/4.
 
 % Command to run
 % first prints packed graph
@@ -38,58 +38,35 @@ unpack(UnpackedNodes,UnpackedEdges):-
 	bind_nodes(UnboundNodes,UnpackedVias), % add unpacked branch points to vias list for each node
 	setof(Copies,(CopyType,CopyLabel,CopyVias)^setof(CopyNode,node(CopyNode,CopyType,CopyLabel,CopyVias),Copies),Sets), % set of copied nodes; e.g. [[a,a_1],[b],[c],[d,d_1,d_2],[e]]
 	delete_copies(Sets), % delete all but original copy
+	%setof(Node,(Type,Label,Via)^node(Node,Type,Label,Via),UnpackedNodes), % set of nodes in packed graph
+	%setof([Parent,Child],edge(Parent,Child),UnpackedEdges). % set of edges in packed graph
 	setof(UnpackedNode, unpacked_node(UnpackedNode), UnpackedNodes), % set of unpacked nodes
 	setof([UnpackedParent, UnpackedChild], (unpacked_edge(UnpackedParent, UnpackedChild),unpacked_node(UnpackedParent),unpacked_node(UnpackedChild)), UnpackedEdges). % set of unpacked edges
 
 % unzip_graft
 % copies path from graft child to this branch point
 % binds nodes to this branch point
-unzip_graft(Node, PreviousNode, _, GraftID) :- % Case 1: Node is a root
-	not(edge(_, Node)), % Node has no parent
-	node(Node, Type, Label,_), % get Node type and label
-	string_concat(Node, GraftID, Copy), % create a copy
-	graft(_,_,CurrentVias,GraftID), % get vias for this graft
-	assert2(node(Copy, Type, Label,CurrentVias)), % assert copy
-	assert2(unpacked_node(Copy)), % assert copy is unpacked
-	assert2(unpacked_edge(Copy, PreviousNode)). % assert copy is attached to previous node
-unzip_graft(_, PreviousNode, Vias, _) :- % Case 2: Vias already unzipped
-	unzipped_graft(Vias, Child), % find child of unzipped path
-	unpacked_edge(Parent, Child), % get parent of that child
-	assert2(unpacked_edge(Parent, PreviousNode)). % attach parent to previous node
-unzip_graft(Node, PreviousNode, [[BranchPointName, BranchName]], GraftID) :- % Case 3: Node is final/only branch point in graft
+unzip_graft(Node, _, _, _) :- % Case 1: Node is a root
+	not(edge(_, Node)).
+unzip_graft(Node, NodeCopy, Vias, GraftID) :- % Case 2: Node is a branch point in Vias
 	node(Node, 'branch point', BranchPointName,_), % node is branch point
+	member([BranchPointName,BranchName],Vias), % branch point is in vias
 	edge(Parent, Node), % find a parent
 	node(Parent, branch, BranchName,_), % find correct parent
-	unpack_node(Parent,[[BranchPointName, BranchName]]), % unpack parent node
-	string_concat(Node, GraftID, Copy), % make a copy
-	graft(_,_,CurrentVias,GraftID), % get vias for this graft
-	assert2(node(Copy, 'branch point', BranchPointName,CurrentVias)), % assert copy
-	assert2(unpacked_node(Copy)), % assert copy is unpacked
-	assert2(unpacked_edge(Parent, Copy)), % assert copy is attached to parent node
-	assert2(unpacked_edge(Copy, PreviousNode)). % assert copy is attached to previous node
-unzip_graft(Node, PreviousNode, Vias, GraftID) :- % Case 4: Node is a branch point, but not final/only
-	node(Node, 'branch point', BranchPointName,_), % node is a branch point
-	edge(Parent, Node), % find a parent
-	node(Parent, branch, BranchName,_), % find correct parent
-	member([BranchPointName, BranchName], Vias), % if branch point is in graft vias
-	string_concat(Node, GraftID, Copy), % create a copy
-	graft(_,_,CurrentVias,GraftID), % get vias for this graft
-	delete(Vias, [BranchPointName, BranchName], NewVias), % remove branch point from vias to unzip
-	assert2(node(Copy, 'branch point', BranchPointName,CurrentVias)), % assert copy
-	assert2(unpacked_node(Copy)), % assert copy is unpacked
-	assert2(unpacked_edge(Copy, PreviousNode)), % assert copy is attached to previous
-	unzip_graft(Parent, Copy, NewVias, GraftID). % keep going
-unzip_graft(Node, PreviousNode, Vias, GraftID) :- % Case 5: Node is not a branch point
-	node(Node, Type, Label,_), % get type and label
-	not(Type='branch point'), % node is not a branch point
-	not(unzipped_graft(Vias, _)), % vias not already unzipped
+	string_concat(Parent,GraftID,ParentCopy), % create parent copy
+	assert2(node(ParentCopy,branch,BranchName,Vias)), % assert parent copy with graft vias
+	assert2(edge(ParentCopy,NodeCopy)), % assert copied edge
+	unzip_graft(Parent, ParentCopy, Vias, GraftID). % unzip graft
+unzip_graft(Node, NodeCopy, Vias, GraftID) :- % Case 3: Node is a branch point, but not in vias
+	node(Node, 'branch point', BranchPointName,_), % node is branch point
+	not(member([BranchPointName,_],Vias)), % branch point is not in vias (not bound)
 	setof(Parent, edge(Parent, Node), Parents), % get set of parents
-	string_concat(Node, GraftID, Copy), % make a copy
-	graft(_,_,CurrentVias,GraftID), % get vias for this graft
-	assert2(node(Copy, Type, Label,CurrentVias)), % assert copy
-	assert2(unpacked_node(Copy)), % assert copy unpacked
-	assert2(unpacked_edge(Copy, PreviousNode)), % assert node is attached to previous
-	unzip_parents(Parents, Copy, Vias, GraftID). % unzip all the parents
+	unzip_parents(Parents, NodeCopy, Vias, GraftID). % unzip each parent
+unzip_graft(Node, NodeCopy, Vias, GraftID) :- % Case 4: Node is not a branch point
+	node(Node, Type, _,_), % get type and label
+	not(Type == 'branch point'), % node is not a branch point
+	setof(Parent, edge(Parent, Node), Parents), % get set of parents
+	unzip_parents(Parents, NodeCopy, Vias, GraftID). % unzip each parent
 
 % unpack_node
 % adds nodes and edges to unpacked graph
@@ -106,8 +83,8 @@ unpack_node(Node,Via) :- % Case 2: Node is a root
 unpack_node(Node,Via) :- % Case 3: Node is not a branch point
 	not(unpacked_node(Node)), % check not unpacked
 	node(Node,Type,Label,OldVia), % get type, label, and old via
+	not(Type == 'branch point'), % check not branch point
 	union2(Via,OldVia,NewVia), % add Via to OldVia
-	not(Type = 'branch point'), % check not branch point
 	retract2(node(Node,Type,Label,OldVia)), % retract node with old via
 	assert2(node(Node,Type,Label,NewVia)), % assert node with new via
 	assert2(unpacked_node(Node)), % assert node unpacked
@@ -135,13 +112,26 @@ unpack_node(Node,Via) :- %Case 5: Node is branch point that has not been unpacke
 	assert2(unpacked_node(Node)), % assert node unpacked
 	assert2(unpacked_edge(Parent, Node)), % assert edge unpacked
 	unpack_node(Parent,Via). %unpack parent
+unpack_node(Node,Via):- % Case 6: Node is a branch point that is bound
+	not(unpacked_node(Node)), % check not unpacked
+	node(Node, 'branch point', BranchPointName,BoundVias), % get binding
+	edge(Parent, Node), % find the parent
+	node(Parent, branch, BranchName,_), % get parent branch name
+	member([BranchPointName,BranchName],BoundVias), % check correct binding (maybe unnecessary)
+	assert2(unpacked_node(Node)), % assert node unpacked
+	assert2(unpacked_edge(Parent, Node)), % assert edge unpacked
+	unpack_node(Parent,Via). %unpack parent
 
 % unzip_parents
 % iterates through graft parents
 unzip_parents([], _, _, _).
-unzip_parents([Node|Tail], PreviousNode, Vias, GraftID) :-
-	unzip_graft(Node, PreviousNode, Vias, GraftID),
-	unzip_parents(Tail, PreviousNode, Vias, GraftID).
+unzip_parents([Parent|Tail], NodeCopy, Vias, GraftID) :-
+	node(Parent,ParentType,ParentLabel,_), % get parent type and label
+	string_concat(Parent,GraftID,ParentCopy), % create parent copy
+	assert2(node(ParentCopy,ParentType,ParentLabel,Vias)), % assert parent copy with graft vias
+	assert2(edge(ParentCopy,NodeCopy)), % assert copied edge
+	unzip_graft(Parent, ParentCopy, Vias, GraftID), % unzip graft from this parent
+	unzip_parents(Tail, NodeCopy, Vias, GraftID). % move on to the next parent
 
 % unpack_parents
 % iterates through node parents
@@ -155,12 +145,16 @@ unpack_parents([[Parent, Child]|Tail],Via) :-
 % unzips each graft
 iterate_grafts([]).
 iterate_grafts([[Parent, Child, Vias, GraftID]|Tail]) :-
-	unzip_graft(Parent, Child, Vias, GraftID), % unzip first graft
-	node(Child,Type,Label,OldVias), % get type, label, and old vias
-	retract2(node(Child,Type,Label,OldVias)), % retract node with old vias
-	assert2(node(Child,Type,Label,Vias)), % assert node with graft vias
+	node(Parent,ParentType,ParentLabel,_), % get parent type and label
+	string_concat(Parent,GraftID,ParentCopy), % create parent copy
+	assert2(node(ParentCopy,ParentType,ParentLabel,Vias)), % assert parent copy with graft vias
 	retract2(edge(Parent, Child)), % retract original edge
-	assert2(unzipped_graft(Vias, Child)), % assert graft unzipped
+	assert2(edge(ParentCopy,Child)), % assert copied edge
+	retract2(node(Child,ChildType,ChildLabel,_)), % retract child with old vias
+	assert2(node(Child,ChildType,ChildLabel,Vias)), % assert child with graft vias
+	retract2(graft(Parent,Child,Vias,GraftID)), % retract original graft
+	assert2(graft(ParentCopy,Child,Vias,GraftID)), % assert copied graft
+	unzip_graft(Parent, ParentCopy, Vias, GraftID), % unzip graft
 	iterate_grafts(Tail). % keep going
 
 % iterate_goals
@@ -196,61 +190,63 @@ delete_aux([Node|Tail]):-
 	delete_aux(Tail).
 
 % node(NodeID,Type,Label,EmptyVias).
-node(foo, task, foo,[]).
-node(bar, task, bar,[]).
-node(bp, 'branch point', bp,[]).
-node(a, branch, a,[]).
-node(b, branch, b,[]).
-node(out, '', out,[]).
-node(a_val, '', '1',[]).
-node(b_val, '', '2',[]).
-node(in1, '', in,[]).
-node(in2, '', in,[]).
-node(in, '', in,[]).
-node(w, '', w,[]).
-node(x, '', x,[]).
-node(y, '', y,[]).
-node(z, '', z,[]).
-node(diff_bp, 'branch point', 'different bp',[]).
-node(c, branch, c,[]).
-node(d, branch, d,[]).
-node(no_bp, '', 'no bp',[]).
-node(still_no_bp, '', 'still no bp',[]).
-node(higher_bp, 'branch point', 'higher bp',[]).
-node(g_alt, branch, g,[]).
-node(h, branch, h,[]).
-node(3,task,3,[]).
+node(foo,task,foo,[]).
+node(x,input,x,[]).
+node(bp,'branch point',bp,[]).
+node(a,branch,a,[]).
+node(higher_bp,'branch point','higher BP',[]).
+node(g,branch,g,[]).
+node(l,input,l,[]).
+node(h,branch,h,[]).
+node(m, input,m,[]).
+node(b,branch,b,[]).
+node(n,input,n,[]).
+node(o,input,o,[]).
+node(out,output,out,[]).
+node(bar,task,bar,[]).
+node(in1,input,in,[]).
+node(in2,input,in,[]).
+node(in,input,in,[]).
+node(y,output,y,[]).
+node(baz,task,baz,[]).
+node(w,input,w,[]).
+node(z,input,z,[]).
+node(diffBP,'branch point','different BP',[]).
+node(c,branch,c,[]).
+node(d,branch,d,[]).
+
 
 % edge(Parent, Child).
-edge(a_val, a).
-edge(b_val, b).
-edge(a, bp).
-edge(b, bp).
-edge(bp, x).
-edge(x, foo).
-edge(foo, out).
-edge(3,out).
-edge(out, in1).
-edge(out, in2).
-edge(out, in).
-edge(in1, bar).
-edge(in2, bar).
-edge(in, bar).
-edge(bar, y).
-edge(y, z).
-edge(y, w).
-edge(diff_bp, y).
-edge(c, diff_bp).
-edge(d, diff_bp).
-edge(no_bp, out).
-edge(still_no_bp, no_bp).
-edge(higher_bp, a_val).
-edge(g_alt, higher_bp).
-edge(h, higher_bp).
+edge(x,foo).
+edge(a,bp).
+edge(b,bp).
+edge(higher_bp,a).
+edge(higher_bp,b).
+edge(g,higher_bp).
+edge(h,higher_bp).
+edge(bp,x).
+edge(l,g).
+edge(m,h).
+edge(n,g).
+edge(o,h).
+edge(foo,out).
+edge(out,in).
+edge(out,in2).
+edge(out,in1).
+edge(in1,bar).
+edge(in2,bar).
+edge(in,bar).
+edge(bar,y).
+edge(w,baz).
+edge(y,w).
+edge(z,baz).
+edge(diffBP,z).
+edge(c,diffBP).
+edge(d,diffBP).
 
 % graft(Parent,Child,Vias,GraftID).
 graft(out, in1, [[bp, a]], '_1').
-graft(out, in2, [[bp, b]], '_2').
+graft(out, in2, [[bp, b],['higher BP',h]], '_2').
 
 % print LaTeX-ready graph
 print_graph(UnpackedNodes,UnpackedEdges) :-
@@ -275,6 +271,15 @@ print_nodes([Node|Tail]) :-
 
 % print formatted edges
 print_edges([]).
+print_edges([[Parent,Child]|Tail]):-
+	graft(Parent,Child,Vias,_),
+	write('\t\t'),
+	write(Parent),
+	write(' -> '),
+	write(Child),
+	graft_string(Vias,'',GraftString),
+	write(' [label=\"['),write(GraftString),write(']\", lblstyle="graft"];\n'),
+	print_edges(Tail),!.
 print_edges([[Parent,Child]|Tail]) :-
 	write('\t\t'),
 	write(Parent),
@@ -282,6 +287,18 @@ print_edges([[Parent,Child]|Tail]) :-
 	write(Child),
 	write(';\n'),
 	print_edges(Tail).
+	
+graft_string([[BranchPoint,Branch]],SoFar,Return):-
+	string_concat(SoFar,BranchPoint,A),
+	string_concat(A,':',B),
+	string_concat(B,Branch,Return),!.
+graft_string([[BranchPoint,Branch]|Tail],SoFar,Return):-
+	not(Tail == []),
+	string_concat(SoFar,BranchPoint,A),
+	string_concat(A,':',B),
+	string_concat(B,Branch,C),
+	string_concat(C,',',D),
+	graft_string(Tail,D,Return).
 
 % assert2 and retract2
 % alternatives that are not immune to backtracking
