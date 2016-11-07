@@ -56,56 +56,57 @@
 
 			graph [nodesep="0.5", ranksep="0"];
 
-		3 [style="task", label="3"];
 		a [style="branch", label="a"];
-		a_val [style="", label="1"];
 		b [style="branch", label="b"];
-		b_val [style="", label="2"];
 		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
 		bp [style="branch point", label="bp"];
 		c [style="branch", label="c"];
 		d [style="branch", label="d"];
-		diff_bp [style="branch point", label="different bp"];
+		diffBP [style="branch point", label="different BP"];
 		foo [style="task", label="foo"];
-		g_alt [style="branch", label="g"];
+		g [style="branch", label="g"];
 		h [style="branch", label="h"];
-		higher_bp [style="branch point", label="higher bp"];
-		in [style="", label="in"];
-		in1 [style="", label="in"];
-		in2 [style="", label="in"];
-		no_bp [style="", label="no bp"];
-		out [style="", label="out"];
-		still_no_bp [style="", label="still no bp"];
-		w [style="", label="w"];
-		x [style="", label="x"];
-		y [style="", label="y"];
-		z [style="", label="z"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in1 [style="input", label="in"];
+		in2 [style="input", label="in"];
+		l [style="input", label="l"];
+		m [style="input", label="m"];
+		n [style="input", label="n"];
+		o [style="input", label="o"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
 
-		3 -> out;
 		a -> bp;
-		a_val -> a;
 		b -> bp;
-		b_val -> b;
 		bar -> y;
 		bp -> x;
-		c -> diff_bp;
-		d -> diff_bp;
-		diff_bp -> y;
+		c -> diffBP;
+		d -> diffBP;
+		diffBP -> z;
 		foo -> out;
-		g_alt -> higher_bp;
+		g -> higher_bp;
 		h -> higher_bp;
-		higher_bp -> a_val;
+		higher_bp -> a;
+		higher_bp -> b;
 		in -> bar;
 		in1 -> bar;
 		in2 -> bar;
-		no_bp -> out;
+		l -> g;
+		m -> h;
+		n -> g;
+		o -> h;
 		out -> in;
-		out -> in1;
-		out -> in2;
-		still_no_bp -> no_bp;
+		out -> in1 [label="[bp:a]", lblstyle="graft"];
+		out -> in2 [label="[bp:b,higher BP:h]", lblstyle="graft"];
+		w -> baz;
 		x -> foo;
 		y -> w;
-		y -> z;
+		z -> baz;
 
 	}
 \end{dot2tex}
@@ -120,341 +121,59 @@
 
 			graph [nodesep="0.5", ranksep="0"];
 
-		3 [style="task", label="3"];
 		a [style="branch", label="a"];
-		a_val [style="", label="1"];
-		b [style="branch", label="b"];
-		b_val [style="", label="2"];
 		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
 		bp [style="branch point", label="bp"];
 		c [style="branch", label="c"];
-		diff_bp [style="branch point", label="different bp"];
+		diffBP [style="branch point", label="different BP"];
 		foo [style="task", label="foo"];
-		g_alt [style="branch", label="g"];
-		higher_bp [style="branch point", label="higher bp"];
-		in [style="", label="in"];
-		in2 [style="", label="in"];
-		no_bp [style="", label="no bp"];
-		out [style="", label="out"];
-		still_no_bp [style="", label="still no bp"];
-		w [style="", label="w"];
-		x [style="", label="x"];
-		y [style="", label="y"];
-		z [style="", label="z"];
-		3_2 [style="task", label="3"];
-		bp_2 [style="branch point", label="bp"];
-		foo_2 [style="task", label="foo"];
-		no_bp_2 [style="", label="no bp"];
-		out_2 [style="", label="out"];
-		still_no_bp_2 [style="", label="still no bp"];
-		x_2 [style="", label="x"];
-
-		3 -> out;
-		a -> bp;
-		a_val -> a;
-		b -> bp_2;
-		b_val -> b;
-		bar -> y;
-		bp -> x;
-		c -> diff_bp;
-		diff_bp -> y;
-		foo -> out;
-		g_alt -> higher_bp;
-		higher_bp -> a_val;
-		in -> bar;
-		in2 -> bar;
-		no_bp -> out;
-		out -> in;
-		still_no_bp -> no_bp;
-		x -> foo;
-		y -> w;
-		y -> z;
-		3_2 -> out_2;
-		bp_2 -> x_2;
-		foo_2 -> out_2;
-		no_bp_2 -> out_2;
-		out_2 -> in2;
-		still_no_bp_2 -> no_bp_2;
-		x_2 -> foo_2;
-
-	}
-\end{dot2tex}
-\end{tikzpicture}
-\end{center}
-
-\begin{center}
-\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
-
-	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
-	digraph G {
-
-			graph [nodesep="0.5", ranksep="0"];
-
-		3 [style="task", label="3"];
-		a [style="branch", label="a"];
-		a_val [style="", label="1"];
-		b [style="branch", label="b"];
-		b_val [style="", label="2"];
-		bar [style="task", label="bar"];
-		bp [style="branch point", label="bp"];
-		d [style="branch", label="d"];
-		diff_bp [style="branch point", label="different bp"];
-		foo [style="task", label="foo"];
-		g_alt [style="branch", label="g"];
-		higher_bp [style="branch point", label="higher bp"];
-		in [style="", label="in"];
-		in2 [style="", label="in"];
-		no_bp [style="", label="no bp"];
-		out [style="", label="out"];
-		still_no_bp [style="", label="still no bp"];
-		w [style="", label="w"];
-		x [style="", label="x"];
-		y [style="", label="y"];
-		z [style="", label="z"];
-		3_2 [style="task", label="3"];
-		bp_2 [style="branch point", label="bp"];
-		foo_2 [style="task", label="foo"];
-		no_bp_2 [style="", label="no bp"];
-		out_2 [style="", label="out"];
-		still_no_bp_2 [style="", label="still no bp"];
-		x_2 [style="", label="x"];
-
-		3 -> out;
-		a -> bp;
-		a_val -> a;
-		b -> bp_2;
-		b_val -> b;
-		bar -> y;
-		bp -> x;
-		d -> diff_bp;
-		diff_bp -> y;
-		foo -> out;
-		g_alt -> higher_bp;
-		higher_bp -> a_val;
-		in -> bar;
-		in2 -> bar;
-		no_bp -> out;
-		out -> in;
-		still_no_bp -> no_bp;
-		x -> foo;
-		y -> w;
-		y -> z;
-		3_2 -> out_2;
-		bp_2 -> x_2;
-		foo_2 -> out_2;
-		no_bp_2 -> out_2;
-		out_2 -> in2;
-		still_no_bp_2 -> no_bp_2;
-		x_2 -> foo_2;
-
-	}
-\end{dot2tex}
-\end{tikzpicture}
-\end{center}
-
-\begin{center}
-\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
-
-	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
-	digraph G {
-
-			graph [nodesep="0.5", ranksep="0"];
-
-		3 [style="task", label="3"];
-		a [style="branch", label="a"];
-		a_val [style="", label="1"];
-		b [style="branch", label="b"];
-		b_val [style="", label="2"];
-		bar [style="task", label="bar"];
-		bp [style="branch point", label="bp"];
-		c [style="branch", label="c"];
-		diff_bp [style="branch point", label="different bp"];
-		foo [style="task", label="foo"];
-		g_alt [style="branch", label="g"];
-		higher_bp [style="branch point", label="higher bp"];
-		in [style="", label="in"];
-		in1 [style="", label="in"];
-		no_bp [style="", label="no bp"];
-		out [style="", label="out"];
-		still_no_bp [style="", label="still no bp"];
-		w [style="", label="w"];
-		x [style="", label="x"];
-		y [style="", label="y"];
-		z [style="", label="z"];
-		3_1 [style="task", label="3"];
-		bp_1 [style="branch point", label="bp"];
-		foo_1 [style="task", label="foo"];
-		no_bp_1 [style="", label="no bp"];
-		out_1 [style="", label="out"];
-		still_no_bp_1 [style="", label="still no bp"];
-		x_1 [style="", label="x"];
-
-		3 -> out;
-		a -> bp_1;
-		a_val -> a;
-		b -> bp;
-		b_val -> b;
-		bar -> y;
-		bp -> x;
-		c -> diff_bp;
-		diff_bp -> y;
-		foo -> out;
-		g_alt -> higher_bp;
-		higher_bp -> a_val;
-		in -> bar;
-		in1 -> bar;
-		no_bp -> out;
-		out -> in;
-		still_no_bp -> no_bp;
-		x -> foo;
-		y -> w;
-		y -> z;
-		3_1 -> out_1;
-		bp_1 -> x_1;
-		foo_1 -> out_1;
-		no_bp_1 -> out_1;
-		out_1 -> in1;
-		still_no_bp_1 -> no_bp_1;
-		x_1 -> foo_1;
-
-	}
-\end{dot2tex}
-\end{tikzpicture}
-\end{center}
-
-\begin{center}
-\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
-
-	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
-	digraph G {
-
-			graph [nodesep="0.5", ranksep="0"];
-
-		3 [style="task", label="3"];
-		a [style="branch", label="a"];
-		a_val [style="", label="1"];
-		b [style="branch", label="b"];
-		b_val [style="", label="2"];
-		bar [style="task", label="bar"];
-		bp [style="branch point", label="bp"];
-		d [style="branch", label="d"];
-		diff_bp [style="branch point", label="different bp"];
-		foo [style="task", label="foo"];
-		g_alt [style="branch", label="g"];
-		higher_bp [style="branch point", label="higher bp"];
-		in [style="", label="in"];
-		in1 [style="", label="in"];
-		no_bp [style="", label="no bp"];
-		out [style="", label="out"];
-		still_no_bp [style="", label="still no bp"];
-		w [style="", label="w"];
-		x [style="", label="x"];
-		y [style="", label="y"];
-		z [style="", label="z"];
-		3_1 [style="task", label="3"];
-		bp_1 [style="branch point", label="bp"];
-		foo_1 [style="task", label="foo"];
-		no_bp_1 [style="", label="no bp"];
-		out_1 [style="", label="out"];
-		still_no_bp_1 [style="", label="still no bp"];
-		x_1 [style="", label="x"];
-
-		3 -> out;
-		a -> bp_1;
-		a_val -> a;
-		b -> bp;
-		b_val -> b;
-		bar -> y;
-		bp -> x;
-		d -> diff_bp;
-		diff_bp -> y;
-		foo -> out;
-		g_alt -> higher_bp;
-		higher_bp -> a_val;
-		in -> bar;
-		in1 -> bar;
-		no_bp -> out;
-		out -> in;
-		still_no_bp -> no_bp;
-		x -> foo;
-		y -> w;
-		y -> z;
-		3_1 -> out_1;
-		bp_1 -> x_1;
-		foo_1 -> out_1;
-		no_bp_1 -> out_1;
-		out_1 -> in1;
-		still_no_bp_1 -> no_bp_1;
-		x_1 -> foo_1;
-
-	}
-\end{dot2tex}
-\end{tikzpicture}
-\end{center}
-
-\begin{center}
-\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
-
-	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
-	digraph G {
-
-			graph [nodesep="0.5", ranksep="0"];
-
-		3 [style="task", label="3"];
-		a [style="branch", label="a"];
-		a_val [style="", label="1"];
-		bar [style="task", label="bar"];
-		bp [style="branch point", label="bp"];
-		c [style="branch", label="c"];
-		diff_bp [style="branch point", label="different bp"];
-		foo [style="task", label="foo"];
-		g_alt [style="branch", label="g"];
-		higher_bp [style="branch point", label="higher bp"];
-		in [style="", label="in"];
-		in2 [style="", label="in"];
-		no_bp [style="", label="no bp"];
-		out [style="", label="out"];
-		still_no_bp [style="", label="still no bp"];
-		w [style="", label="w"];
-		x [style="", label="x"];
-		y [style="", label="y"];
-		z [style="", label="z"];
-		3_2 [style="task", label="3"];
+		g [style="branch", label="g"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in2 [style="input", label="in"];
+		l [style="input", label="l"];
+		n [style="input", label="n"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
 		b_2 [style="branch", label="b"];
-		b_val_2 [style="", label="2"];
 		bp_2 [style="branch point", label="bp"];
 		foo_2 [style="task", label="foo"];
-		no_bp_2 [style="", label="no bp"];
-		out_2 [style="", label="out"];
-		still_no_bp_2 [style="", label="still no bp"];
-		x_2 [style="", label="x"];
+		h_2 [style="branch", label="h"];
+		higher_bp_2 [style="branch point", label="higher BP"];
+		m_2 [style="input", label="m"];
+		o_2 [style="input", label="o"];
+		out_2 [style="output", label="out"];
+		x_2 [style="input", label="x"];
 
-		3 -> out;
 		a -> bp;
-		a_val -> a;
 		bar -> y;
 		bp -> x;
-		c -> diff_bp;
-		diff_bp -> y;
+		c -> diffBP;
+		diffBP -> z;
 		foo -> out;
-		g_alt -> higher_bp;
-		higher_bp -> a_val;
+		g -> higher_bp;
+		higher_bp -> a;
 		in -> bar;
 		in2 -> bar;
-		no_bp -> out;
+		l -> g;
+		n -> g;
 		out -> in;
-		still_no_bp -> no_bp;
+		w -> baz;
 		x -> foo;
 		y -> w;
-		y -> z;
-		3_2 -> out_2;
+		z -> baz;
 		b_2 -> bp_2;
-		b_val_2 -> b_2;
 		bp_2 -> x_2;
 		foo_2 -> out_2;
-		no_bp_2 -> out_2;
-		out_2 -> in2;
-		still_no_bp_2 -> no_bp_2;
+		h_2 -> higher_bp_2;
+		higher_bp_2 -> b_2;
+		m_2 -> h_2;
+		o_2 -> h_2;
+		out_2 -> in2 [label="[bp:b,higher BP:h]", lblstyle="graft"];
 		x_2 -> foo_2;
 
 	}
@@ -470,61 +189,59 @@
 
 			graph [nodesep="0.5", ranksep="0"];
 
-		3 [style="task", label="3"];
 		a [style="branch", label="a"];
-		a_val [style="", label="1"];
 		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
 		bp [style="branch point", label="bp"];
 		d [style="branch", label="d"];
-		diff_bp [style="branch point", label="different bp"];
+		diffBP [style="branch point", label="different BP"];
 		foo [style="task", label="foo"];
-		g_alt [style="branch", label="g"];
-		higher_bp [style="branch point", label="higher bp"];
-		in [style="", label="in"];
-		in2 [style="", label="in"];
-		no_bp [style="", label="no bp"];
-		out [style="", label="out"];
-		still_no_bp [style="", label="still no bp"];
-		w [style="", label="w"];
-		x [style="", label="x"];
-		y [style="", label="y"];
-		z [style="", label="z"];
-		3_2 [style="task", label="3"];
+		g [style="branch", label="g"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in2 [style="input", label="in"];
+		l [style="input", label="l"];
+		n [style="input", label="n"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
 		b_2 [style="branch", label="b"];
-		b_val_2 [style="", label="2"];
 		bp_2 [style="branch point", label="bp"];
 		foo_2 [style="task", label="foo"];
-		no_bp_2 [style="", label="no bp"];
-		out_2 [style="", label="out"];
-		still_no_bp_2 [style="", label="still no bp"];
-		x_2 [style="", label="x"];
+		h_2 [style="branch", label="h"];
+		higher_bp_2 [style="branch point", label="higher BP"];
+		m_2 [style="input", label="m"];
+		o_2 [style="input", label="o"];
+		out_2 [style="output", label="out"];
+		x_2 [style="input", label="x"];
 
-		3 -> out;
 		a -> bp;
-		a_val -> a;
 		bar -> y;
 		bp -> x;
-		d -> diff_bp;
-		diff_bp -> y;
+		d -> diffBP;
+		diffBP -> z;
 		foo -> out;
-		g_alt -> higher_bp;
-		higher_bp -> a_val;
+		g -> higher_bp;
+		higher_bp -> a;
 		in -> bar;
 		in2 -> bar;
-		no_bp -> out;
+		l -> g;
+		n -> g;
 		out -> in;
-		still_no_bp -> no_bp;
+		w -> baz;
 		x -> foo;
 		y -> w;
-		y -> z;
-		3_2 -> out_2;
+		z -> baz;
 		b_2 -> bp_2;
-		b_val_2 -> b_2;
 		bp_2 -> x_2;
 		foo_2 -> out_2;
-		no_bp_2 -> out_2;
-		out_2 -> in2;
-		still_no_bp_2 -> no_bp_2;
+		h_2 -> higher_bp_2;
+		higher_bp_2 -> b_2;
+		m_2 -> h_2;
+		o_2 -> h_2;
+		out_2 -> in2 [label="[bp:b,higher BP:h]", lblstyle="graft"];
 		x_2 -> foo_2;
 
 	}
@@ -540,481 +257,59 @@
 
 			graph [nodesep="0.5", ranksep="0"];
 
-		3 [style="task", label="3"];
 		a [style="branch", label="a"];
-		a_val [style="", label="1"];
-		b [style="branch", label="b"];
-		b_val [style="", label="2"];
 		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
 		bp [style="branch point", label="bp"];
 		c [style="branch", label="c"];
-		diff_bp [style="branch point", label="different bp"];
+		diffBP [style="branch point", label="different BP"];
 		foo [style="task", label="foo"];
-		g_alt [style="branch", label="g"];
-		higher_bp [style="branch point", label="higher bp"];
-		in [style="", label="in"];
-		in1 [style="", label="in"];
-		no_bp [style="", label="no bp"];
-		out [style="", label="out"];
-		still_no_bp [style="", label="still no bp"];
-		w [style="", label="w"];
-		x [style="", label="x"];
-		y [style="", label="y"];
-		z [style="", label="z"];
-		3_1 [style="task", label="3"];
-		bp_1 [style="branch point", label="bp"];
-		foo_1 [style="task", label="foo"];
-		no_bp_1 [style="", label="no bp"];
-		out_1 [style="", label="out"];
-		still_no_bp_1 [style="", label="still no bp"];
-		x_1 [style="", label="x"];
-
-		3 -> out;
-		a -> bp_1;
-		a_val -> a;
-		b -> bp;
-		b_val -> b;
-		bar -> y;
-		bp -> x;
-		c -> diff_bp;
-		diff_bp -> y;
-		foo -> out;
-		g_alt -> higher_bp;
-		higher_bp -> a_val;
-		in -> bar;
-		in1 -> bar;
-		no_bp -> out;
-		out -> in;
-		still_no_bp -> no_bp;
-		x -> foo;
-		y -> w;
-		y -> z;
-		3_1 -> out_1;
-		bp_1 -> x_1;
-		foo_1 -> out_1;
-		no_bp_1 -> out_1;
-		out_1 -> in1;
-		still_no_bp_1 -> no_bp_1;
-		x_1 -> foo_1;
-
-	}
-\end{dot2tex}
-\end{tikzpicture}
-\end{center}
-
-\begin{center}
-\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
-
-	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
-	digraph G {
-
-			graph [nodesep="0.5", ranksep="0"];
-
-		3 [style="task", label="3"];
-		a [style="branch", label="a"];
-		a_val [style="", label="1"];
-		b [style="branch", label="b"];
-		b_val [style="", label="2"];
-		bar [style="task", label="bar"];
-		bp [style="branch point", label="bp"];
-		d [style="branch", label="d"];
-		diff_bp [style="branch point", label="different bp"];
-		foo [style="task", label="foo"];
-		g_alt [style="branch", label="g"];
-		higher_bp [style="branch point", label="higher bp"];
-		in [style="", label="in"];
-		in1 [style="", label="in"];
-		no_bp [style="", label="no bp"];
-		out [style="", label="out"];
-		still_no_bp [style="", label="still no bp"];
-		w [style="", label="w"];
-		x [style="", label="x"];
-		y [style="", label="y"];
-		z [style="", label="z"];
-		3_1 [style="task", label="3"];
-		bp_1 [style="branch point", label="bp"];
-		foo_1 [style="task", label="foo"];
-		no_bp_1 [style="", label="no bp"];
-		out_1 [style="", label="out"];
-		still_no_bp_1 [style="", label="still no bp"];
-		x_1 [style="", label="x"];
-
-		3 -> out;
-		a -> bp_1;
-		a_val -> a;
-		b -> bp;
-		b_val -> b;
-		bar -> y;
-		bp -> x;
-		d -> diff_bp;
-		diff_bp -> y;
-		foo -> out;
-		g_alt -> higher_bp;
-		higher_bp -> a_val;
-		in -> bar;
-		in1 -> bar;
-		no_bp -> out;
-		out -> in;
-		still_no_bp -> no_bp;
-		x -> foo;
-		y -> w;
-		y -> z;
-		3_1 -> out_1;
-		bp_1 -> x_1;
-		foo_1 -> out_1;
-		no_bp_1 -> out_1;
-		out_1 -> in1;
-		still_no_bp_1 -> no_bp_1;
-		x_1 -> foo_1;
-
-	}
-\end{dot2tex}
-\end{tikzpicture}
-\end{center}
-
-\begin{center}
-\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
-
-	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
-	digraph G {
-
-			graph [nodesep="0.5", ranksep="0"];
-
-		3 [style="task", label="3"];
-		a [style="branch", label="a"];
-		a_val [style="", label="1"];
-		b [style="branch", label="b"];
-		b_val [style="", label="2"];
-		bar [style="task", label="bar"];
-		bp [style="branch point", label="bp"];
-		c [style="branch", label="c"];
-		diff_bp [style="branch point", label="different bp"];
-		foo [style="task", label="foo"];
-		h [style="branch", label="h"];
-		higher_bp [style="branch point", label="higher bp"];
-		in [style="", label="in"];
-		in2 [style="", label="in"];
-		no_bp [style="", label="no bp"];
-		out [style="", label="out"];
-		still_no_bp [style="", label="still no bp"];
-		w [style="", label="w"];
-		x [style="", label="x"];
-		y [style="", label="y"];
-		z [style="", label="z"];
-		3_2 [style="task", label="3"];
-		bp_2 [style="branch point", label="bp"];
-		foo_2 [style="task", label="foo"];
-		no_bp_2 [style="", label="no bp"];
-		out_2 [style="", label="out"];
-		still_no_bp_2 [style="", label="still no bp"];
-		x_2 [style="", label="x"];
-
-		3 -> out;
-		a -> bp;
-		a_val -> a;
-		b -> bp_2;
-		b_val -> b;
-		bar -> y;
-		bp -> x;
-		c -> diff_bp;
-		diff_bp -> y;
-		foo -> out;
-		h -> higher_bp;
-		higher_bp -> a_val;
-		in -> bar;
-		in2 -> bar;
-		no_bp -> out;
-		out -> in;
-		still_no_bp -> no_bp;
-		x -> foo;
-		y -> w;
-		y -> z;
-		3_2 -> out_2;
-		bp_2 -> x_2;
-		foo_2 -> out_2;
-		no_bp_2 -> out_2;
-		out_2 -> in2;
-		still_no_bp_2 -> no_bp_2;
-		x_2 -> foo_2;
-
-	}
-\end{dot2tex}
-\end{tikzpicture}
-\end{center}
-
-\begin{center}
-\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
-
-	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
-	digraph G {
-
-			graph [nodesep="0.5", ranksep="0"];
-
-		3 [style="task", label="3"];
-		a [style="branch", label="a"];
-		a_val [style="", label="1"];
-		b [style="branch", label="b"];
-		b_val [style="", label="2"];
-		bar [style="task", label="bar"];
-		bp [style="branch point", label="bp"];
-		d [style="branch", label="d"];
-		diff_bp [style="branch point", label="different bp"];
-		foo [style="task", label="foo"];
-		h [style="branch", label="h"];
-		higher_bp [style="branch point", label="higher bp"];
-		in [style="", label="in"];
-		in2 [style="", label="in"];
-		no_bp [style="", label="no bp"];
-		out [style="", label="out"];
-		still_no_bp [style="", label="still no bp"];
-		w [style="", label="w"];
-		x [style="", label="x"];
-		y [style="", label="y"];
-		z [style="", label="z"];
-		3_2 [style="task", label="3"];
-		bp_2 [style="branch point", label="bp"];
-		foo_2 [style="task", label="foo"];
-		no_bp_2 [style="", label="no bp"];
-		out_2 [style="", label="out"];
-		still_no_bp_2 [style="", label="still no bp"];
-		x_2 [style="", label="x"];
-
-		3 -> out;
-		a -> bp;
-		a_val -> a;
-		b -> bp_2;
-		b_val -> b;
-		bar -> y;
-		bp -> x;
-		d -> diff_bp;
-		diff_bp -> y;
-		foo -> out;
-		h -> higher_bp;
-		higher_bp -> a_val;
-		in -> bar;
-		in2 -> bar;
-		no_bp -> out;
-		out -> in;
-		still_no_bp -> no_bp;
-		x -> foo;
-		y -> w;
-		y -> z;
-		3_2 -> out_2;
-		bp_2 -> x_2;
-		foo_2 -> out_2;
-		no_bp_2 -> out_2;
-		out_2 -> in2;
-		still_no_bp_2 -> no_bp_2;
-		x_2 -> foo_2;
-
-	}
-\end{dot2tex}
-\end{tikzpicture}
-\end{center}
-
-\begin{center}
-\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
-
-	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
-	digraph G {
-
-			graph [nodesep="0.5", ranksep="0"];
-
-		3 [style="task", label="3"];
-		a [style="branch", label="a"];
-		a_val [style="", label="1"];
-		b [style="branch", label="b"];
-		b_val [style="", label="2"];
-		bar [style="task", label="bar"];
-		bp [style="branch point", label="bp"];
-		c [style="branch", label="c"];
-		diff_bp [style="branch point", label="different bp"];
-		foo [style="task", label="foo"];
-		h [style="branch", label="h"];
-		higher_bp [style="branch point", label="higher bp"];
-		in [style="", label="in"];
-		in1 [style="", label="in"];
-		no_bp [style="", label="no bp"];
-		out [style="", label="out"];
-		still_no_bp [style="", label="still no bp"];
-		w [style="", label="w"];
-		x [style="", label="x"];
-		y [style="", label="y"];
-		z [style="", label="z"];
-		3_1 [style="task", label="3"];
-		bp_1 [style="branch point", label="bp"];
-		foo_1 [style="task", label="foo"];
-		no_bp_1 [style="", label="no bp"];
-		out_1 [style="", label="out"];
-		still_no_bp_1 [style="", label="still no bp"];
-		x_1 [style="", label="x"];
-
-		3 -> out;
-		a -> bp_1;
-		a_val -> a;
-		b -> bp;
-		b_val -> b;
-		bar -> y;
-		bp -> x;
-		c -> diff_bp;
-		diff_bp -> y;
-		foo -> out;
-		h -> higher_bp;
-		higher_bp -> a_val;
-		in -> bar;
-		in1 -> bar;
-		no_bp -> out;
-		out -> in;
-		still_no_bp -> no_bp;
-		x -> foo;
-		y -> w;
-		y -> z;
-		3_1 -> out_1;
-		bp_1 -> x_1;
-		foo_1 -> out_1;
-		no_bp_1 -> out_1;
-		out_1 -> in1;
-		still_no_bp_1 -> no_bp_1;
-		x_1 -> foo_1;
-
-	}
-\end{dot2tex}
-\end{tikzpicture}
-\end{center}
-
-\begin{center}
-\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
-
-	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
-	digraph G {
-
-			graph [nodesep="0.5", ranksep="0"];
-
-		3 [style="task", label="3"];
-		a [style="branch", label="a"];
-		a_val [style="", label="1"];
-		b [style="branch", label="b"];
-		b_val [style="", label="2"];
-		bar [style="task", label="bar"];
-		bp [style="branch point", label="bp"];
-		d [style="branch", label="d"];
-		diff_bp [style="branch point", label="different bp"];
-		foo [style="task", label="foo"];
-		h [style="branch", label="h"];
-		higher_bp [style="branch point", label="higher bp"];
-		in [style="", label="in"];
-		in1 [style="", label="in"];
-		no_bp [style="", label="no bp"];
-		out [style="", label="out"];
-		still_no_bp [style="", label="still no bp"];
-		w [style="", label="w"];
-		x [style="", label="x"];
-		y [style="", label="y"];
-		z [style="", label="z"];
-		3_1 [style="task", label="3"];
-		bp_1 [style="branch point", label="bp"];
-		foo_1 [style="task", label="foo"];
-		no_bp_1 [style="", label="no bp"];
-		out_1 [style="", label="out"];
-		still_no_bp_1 [style="", label="still no bp"];
-		x_1 [style="", label="x"];
-
-		3 -> out;
-		a -> bp_1;
-		a_val -> a;
-		b -> bp;
-		b_val -> b;
-		bar -> y;
-		bp -> x;
-		d -> diff_bp;
-		diff_bp -> y;
-		foo -> out;
-		h -> higher_bp;
-		higher_bp -> a_val;
-		in -> bar;
-		in1 -> bar;
-		no_bp -> out;
-		out -> in;
-		still_no_bp -> no_bp;
-		x -> foo;
-		y -> w;
-		y -> z;
-		3_1 -> out_1;
-		bp_1 -> x_1;
-		foo_1 -> out_1;
-		no_bp_1 -> out_1;
-		out_1 -> in1;
-		still_no_bp_1 -> no_bp_1;
-		x_1 -> foo_1;
-
-	}
-\end{dot2tex}
-\end{tikzpicture}
-\end{center}
-
-\begin{center}
-\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
-
-	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
-	digraph G {
-
-			graph [nodesep="0.5", ranksep="0"];
-
-		3 [style="task", label="3"];
-		a [style="branch", label="a"];
-		a_val [style="", label="1"];
-		bar [style="task", label="bar"];
-		bp [style="branch point", label="bp"];
-		c [style="branch", label="c"];
-		diff_bp [style="branch point", label="different bp"];
-		foo [style="task", label="foo"];
-		h [style="branch", label="h"];
-		higher_bp [style="branch point", label="higher bp"];
-		in [style="", label="in"];
-		in2 [style="", label="in"];
-		no_bp [style="", label="no bp"];
-		out [style="", label="out"];
-		still_no_bp [style="", label="still no bp"];
-		w [style="", label="w"];
-		x [style="", label="x"];
-		y [style="", label="y"];
-		z [style="", label="z"];
-		3_2 [style="task", label="3"];
+		g [style="branch", label="g"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in2 [style="input", label="in"];
+		l [style="input", label="l"];
+		n [style="input", label="n"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
 		b_2 [style="branch", label="b"];
-		b_val_2 [style="", label="2"];
 		bp_2 [style="branch point", label="bp"];
 		foo_2 [style="task", label="foo"];
-		no_bp_2 [style="", label="no bp"];
-		out_2 [style="", label="out"];
-		still_no_bp_2 [style="", label="still no bp"];
-		x_2 [style="", label="x"];
+		h_2 [style="branch", label="h"];
+		higher_bp_2 [style="branch point", label="higher BP"];
+		m_2 [style="input", label="m"];
+		o_2 [style="input", label="o"];
+		out_2 [style="output", label="out"];
+		x_2 [style="input", label="x"];
 
-		3 -> out;
 		a -> bp;
-		a_val -> a;
 		bar -> y;
 		bp -> x;
-		c -> diff_bp;
-		diff_bp -> y;
+		c -> diffBP;
+		diffBP -> z;
 		foo -> out;
-		h -> higher_bp;
-		higher_bp -> a_val;
+		g -> higher_bp;
+		higher_bp -> a;
 		in -> bar;
 		in2 -> bar;
-		no_bp -> out;
+		l -> g;
+		n -> g;
 		out -> in;
-		still_no_bp -> no_bp;
+		w -> baz;
 		x -> foo;
 		y -> w;
-		y -> z;
-		3_2 -> out_2;
+		z -> baz;
 		b_2 -> bp_2;
-		b_val_2 -> b_2;
 		bp_2 -> x_2;
 		foo_2 -> out_2;
-		no_bp_2 -> out_2;
-		out_2 -> in2;
-		still_no_bp_2 -> no_bp_2;
+		h_2 -> higher_bp_2;
+		higher_bp_2 -> b_2;
+		m_2 -> h_2;
+		o_2 -> h_2;
+		out_2 -> in2 [label="[bp:b,higher BP:h]", lblstyle="graft"];
 		x_2 -> foo_2;
 
 	}
@@ -1030,61 +325,59 @@
 
 			graph [nodesep="0.5", ranksep="0"];
 
-		3 [style="task", label="3"];
 		a [style="branch", label="a"];
-		a_val [style="", label="1"];
 		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
 		bp [style="branch point", label="bp"];
 		d [style="branch", label="d"];
-		diff_bp [style="branch point", label="different bp"];
+		diffBP [style="branch point", label="different BP"];
 		foo [style="task", label="foo"];
-		h [style="branch", label="h"];
-		higher_bp [style="branch point", label="higher bp"];
-		in [style="", label="in"];
-		in2 [style="", label="in"];
-		no_bp [style="", label="no bp"];
-		out [style="", label="out"];
-		still_no_bp [style="", label="still no bp"];
-		w [style="", label="w"];
-		x [style="", label="x"];
-		y [style="", label="y"];
-		z [style="", label="z"];
-		3_2 [style="task", label="3"];
+		g [style="branch", label="g"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in2 [style="input", label="in"];
+		l [style="input", label="l"];
+		n [style="input", label="n"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
 		b_2 [style="branch", label="b"];
-		b_val_2 [style="", label="2"];
 		bp_2 [style="branch point", label="bp"];
 		foo_2 [style="task", label="foo"];
-		no_bp_2 [style="", label="no bp"];
-		out_2 [style="", label="out"];
-		still_no_bp_2 [style="", label="still no bp"];
-		x_2 [style="", label="x"];
+		h_2 [style="branch", label="h"];
+		higher_bp_2 [style="branch point", label="higher BP"];
+		m_2 [style="input", label="m"];
+		o_2 [style="input", label="o"];
+		out_2 [style="output", label="out"];
+		x_2 [style="input", label="x"];
 
-		3 -> out;
 		a -> bp;
-		a_val -> a;
 		bar -> y;
 		bp -> x;
-		d -> diff_bp;
-		diff_bp -> y;
+		d -> diffBP;
+		diffBP -> z;
 		foo -> out;
-		h -> higher_bp;
-		higher_bp -> a_val;
+		g -> higher_bp;
+		higher_bp -> a;
 		in -> bar;
 		in2 -> bar;
-		no_bp -> out;
+		l -> g;
+		n -> g;
 		out -> in;
-		still_no_bp -> no_bp;
+		w -> baz;
 		x -> foo;
 		y -> w;
-		y -> z;
-		3_2 -> out_2;
+		z -> baz;
 		b_2 -> bp_2;
-		b_val_2 -> b_2;
 		bp_2 -> x_2;
 		foo_2 -> out_2;
-		no_bp_2 -> out_2;
-		out_2 -> in2;
-		still_no_bp_2 -> no_bp_2;
+		h_2 -> higher_bp_2;
+		higher_bp_2 -> b_2;
+		m_2 -> h_2;
+		o_2 -> h_2;
+		out_2 -> in2 [label="[bp:b,higher BP:h]", lblstyle="graft"];
 		x_2 -> foo_2;
 
 	}
@@ -1100,61 +393,955 @@
 
 			graph [nodesep="0.5", ranksep="0"];
 
-		3 [style="task", label="3"];
 		a [style="branch", label="a"];
-		a_val [style="", label="1"];
-		b [style="branch", label="b"];
-		b_val [style="", label="2"];
 		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
 		bp [style="branch point", label="bp"];
 		c [style="branch", label="c"];
-		diff_bp [style="branch point", label="different bp"];
+		diffBP [style="branch point", label="different BP"];
 		foo [style="task", label="foo"];
 		h [style="branch", label="h"];
-		higher_bp [style="branch point", label="higher bp"];
-		in [style="", label="in"];
-		in1 [style="", label="in"];
-		no_bp [style="", label="no bp"];
-		out [style="", label="out"];
-		still_no_bp [style="", label="still no bp"];
-		w [style="", label="w"];
-		x [style="", label="x"];
-		y [style="", label="y"];
-		z [style="", label="z"];
-		3_1 [style="task", label="3"];
-		bp_1 [style="branch point", label="bp"];
-		foo_1 [style="task", label="foo"];
-		no_bp_1 [style="", label="no bp"];
-		out_1 [style="", label="out"];
-		still_no_bp_1 [style="", label="still no bp"];
-		x_1 [style="", label="x"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in2 [style="input", label="in"];
+		m [style="input", label="m"];
+		o [style="input", label="o"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
+		b_2 [style="branch", label="b"];
+		bp_2 [style="branch point", label="bp"];
+		foo_2 [style="task", label="foo"];
+		h_2 [style="branch", label="h"];
+		higher_bp_2 [style="branch point", label="higher BP"];
+		m_2 [style="input", label="m"];
+		o_2 [style="input", label="o"];
+		out_2 [style="output", label="out"];
+		x_2 [style="input", label="x"];
 
-		3 -> out;
-		a -> bp_1;
-		a_val -> a;
-		b -> bp;
-		b_val -> b;
+		a -> bp;
 		bar -> y;
 		bp -> x;
-		c -> diff_bp;
-		diff_bp -> y;
+		c -> diffBP;
+		diffBP -> z;
 		foo -> out;
 		h -> higher_bp;
-		higher_bp -> a_val;
+		higher_bp -> a;
 		in -> bar;
-		in1 -> bar;
-		no_bp -> out;
+		in2 -> bar;
+		m -> h;
+		o -> h;
 		out -> in;
-		still_no_bp -> no_bp;
+		w -> baz;
 		x -> foo;
 		y -> w;
-		y -> z;
-		3_1 -> out_1;
+		z -> baz;
+		b_2 -> bp_2;
+		bp_2 -> x_2;
+		foo_2 -> out_2;
+		h_2 -> higher_bp_2;
+		higher_bp_2 -> b_2;
+		m_2 -> h_2;
+		o_2 -> h_2;
+		out_2 -> in2 [label="[bp:b,higher BP:h]", lblstyle="graft"];
+		x_2 -> foo_2;
+
+	}
+\end{dot2tex}
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
+
+	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
+	digraph G {
+
+			graph [nodesep="0.5", ranksep="0"];
+
+		a [style="branch", label="a"];
+		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
+		bp [style="branch point", label="bp"];
+		d [style="branch", label="d"];
+		diffBP [style="branch point", label="different BP"];
+		foo [style="task", label="foo"];
+		h [style="branch", label="h"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in2 [style="input", label="in"];
+		m [style="input", label="m"];
+		o [style="input", label="o"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
+		b_2 [style="branch", label="b"];
+		bp_2 [style="branch point", label="bp"];
+		foo_2 [style="task", label="foo"];
+		h_2 [style="branch", label="h"];
+		higher_bp_2 [style="branch point", label="higher BP"];
+		m_2 [style="input", label="m"];
+		o_2 [style="input", label="o"];
+		out_2 [style="output", label="out"];
+		x_2 [style="input", label="x"];
+
+		a -> bp;
+		bar -> y;
+		bp -> x;
+		d -> diffBP;
+		diffBP -> z;
+		foo -> out;
+		h -> higher_bp;
+		higher_bp -> a;
+		in -> bar;
+		in2 -> bar;
+		m -> h;
+		o -> h;
+		out -> in;
+		w -> baz;
+		x -> foo;
+		y -> w;
+		z -> baz;
+		b_2 -> bp_2;
+		bp_2 -> x_2;
+		foo_2 -> out_2;
+		h_2 -> higher_bp_2;
+		higher_bp_2 -> b_2;
+		m_2 -> h_2;
+		o_2 -> h_2;
+		out_2 -> in2 [label="[bp:b,higher BP:h]", lblstyle="graft"];
+		x_2 -> foo_2;
+
+	}
+\end{dot2tex}
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
+
+	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
+	digraph G {
+
+			graph [nodesep="0.5", ranksep="0"];
+
+		a [style="branch", label="a"];
+		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
+		bp [style="branch point", label="bp"];
+		c [style="branch", label="c"];
+		diffBP [style="branch point", label="different BP"];
+		foo [style="task", label="foo"];
+		h [style="branch", label="h"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in2 [style="input", label="in"];
+		m [style="input", label="m"];
+		o [style="input", label="o"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
+		b_2 [style="branch", label="b"];
+		bp_2 [style="branch point", label="bp"];
+		foo_2 [style="task", label="foo"];
+		h_2 [style="branch", label="h"];
+		higher_bp_2 [style="branch point", label="higher BP"];
+		m_2 [style="input", label="m"];
+		o_2 [style="input", label="o"];
+		out_2 [style="output", label="out"];
+		x_2 [style="input", label="x"];
+
+		a -> bp;
+		bar -> y;
+		bp -> x;
+		c -> diffBP;
+		diffBP -> z;
+		foo -> out;
+		h -> higher_bp;
+		higher_bp -> a;
+		in -> bar;
+		in2 -> bar;
+		m -> h;
+		o -> h;
+		out -> in;
+		w -> baz;
+		x -> foo;
+		y -> w;
+		z -> baz;
+		b_2 -> bp_2;
+		bp_2 -> x_2;
+		foo_2 -> out_2;
+		h_2 -> higher_bp_2;
+		higher_bp_2 -> b_2;
+		m_2 -> h_2;
+		o_2 -> h_2;
+		out_2 -> in2 [label="[bp:b,higher BP:h]", lblstyle="graft"];
+		x_2 -> foo_2;
+
+	}
+\end{dot2tex}
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
+
+	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
+	digraph G {
+
+			graph [nodesep="0.5", ranksep="0"];
+
+		a [style="branch", label="a"];
+		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
+		bp [style="branch point", label="bp"];
+		d [style="branch", label="d"];
+		diffBP [style="branch point", label="different BP"];
+		foo [style="task", label="foo"];
+		h [style="branch", label="h"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in2 [style="input", label="in"];
+		m [style="input", label="m"];
+		o [style="input", label="o"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
+		b_2 [style="branch", label="b"];
+		bp_2 [style="branch point", label="bp"];
+		foo_2 [style="task", label="foo"];
+		h_2 [style="branch", label="h"];
+		higher_bp_2 [style="branch point", label="higher BP"];
+		m_2 [style="input", label="m"];
+		o_2 [style="input", label="o"];
+		out_2 [style="output", label="out"];
+		x_2 [style="input", label="x"];
+
+		a -> bp;
+		bar -> y;
+		bp -> x;
+		d -> diffBP;
+		diffBP -> z;
+		foo -> out;
+		h -> higher_bp;
+		higher_bp -> a;
+		in -> bar;
+		in2 -> bar;
+		m -> h;
+		o -> h;
+		out -> in;
+		w -> baz;
+		x -> foo;
+		y -> w;
+		z -> baz;
+		b_2 -> bp_2;
+		bp_2 -> x_2;
+		foo_2 -> out_2;
+		h_2 -> higher_bp_2;
+		higher_bp_2 -> b_2;
+		m_2 -> h_2;
+		o_2 -> h_2;
+		out_2 -> in2 [label="[bp:b,higher BP:h]", lblstyle="graft"];
+		x_2 -> foo_2;
+
+	}
+\end{dot2tex}
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
+
+	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
+	digraph G {
+
+			graph [nodesep="0.5", ranksep="0"];
+
+		a [style="branch", label="a"];
+		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
+		bp [style="branch point", label="bp"];
+		c [style="branch", label="c"];
+		diffBP [style="branch point", label="different BP"];
+		foo [style="task", label="foo"];
+		h [style="branch", label="h"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in2 [style="input", label="in"];
+		m [style="input", label="m"];
+		o [style="input", label="o"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
+		b_2 [style="branch", label="b"];
+		bp_2 [style="branch point", label="bp"];
+		foo_2 [style="task", label="foo"];
+		h_2 [style="branch", label="h"];
+		higher_bp_2 [style="branch point", label="higher BP"];
+		m_2 [style="input", label="m"];
+		o_2 [style="input", label="o"];
+		out_2 [style="output", label="out"];
+		x_2 [style="input", label="x"];
+
+		a -> bp;
+		bar -> y;
+		bp -> x;
+		c -> diffBP;
+		diffBP -> z;
+		foo -> out;
+		h -> higher_bp;
+		higher_bp -> a;
+		in -> bar;
+		in2 -> bar;
+		m -> h;
+		o -> h;
+		out -> in;
+		w -> baz;
+		x -> foo;
+		y -> w;
+		z -> baz;
+		b_2 -> bp_2;
+		bp_2 -> x_2;
+		foo_2 -> out_2;
+		h_2 -> higher_bp_2;
+		higher_bp_2 -> b_2;
+		m_2 -> h_2;
+		o_2 -> h_2;
+		out_2 -> in2 [label="[bp:b,higher BP:h]", lblstyle="graft"];
+		x_2 -> foo_2;
+
+	}
+\end{dot2tex}
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
+
+	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
+	digraph G {
+
+			graph [nodesep="0.5", ranksep="0"];
+
+		a [style="branch", label="a"];
+		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
+		bp [style="branch point", label="bp"];
+		d [style="branch", label="d"];
+		diffBP [style="branch point", label="different BP"];
+		foo [style="task", label="foo"];
+		h [style="branch", label="h"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in2 [style="input", label="in"];
+		m [style="input", label="m"];
+		o [style="input", label="o"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
+		b_2 [style="branch", label="b"];
+		bp_2 [style="branch point", label="bp"];
+		foo_2 [style="task", label="foo"];
+		h_2 [style="branch", label="h"];
+		higher_bp_2 [style="branch point", label="higher BP"];
+		m_2 [style="input", label="m"];
+		o_2 [style="input", label="o"];
+		out_2 [style="output", label="out"];
+		x_2 [style="input", label="x"];
+
+		a -> bp;
+		bar -> y;
+		bp -> x;
+		d -> diffBP;
+		diffBP -> z;
+		foo -> out;
+		h -> higher_bp;
+		higher_bp -> a;
+		in -> bar;
+		in2 -> bar;
+		m -> h;
+		o -> h;
+		out -> in;
+		w -> baz;
+		x -> foo;
+		y -> w;
+		z -> baz;
+		b_2 -> bp_2;
+		bp_2 -> x_2;
+		foo_2 -> out_2;
+		h_2 -> higher_bp_2;
+		higher_bp_2 -> b_2;
+		m_2 -> h_2;
+		o_2 -> h_2;
+		out_2 -> in2 [label="[bp:b,higher BP:h]", lblstyle="graft"];
+		x_2 -> foo_2;
+
+	}
+\end{dot2tex}
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
+
+	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
+	digraph G {
+
+			graph [nodesep="0.5", ranksep="0"];
+
+		a [style="branch", label="a"];
+		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
+		bp [style="branch point", label="bp"];
+		c [style="branch", label="c"];
+		diffBP [style="branch point", label="different BP"];
+		foo [style="task", label="foo"];
+		h [style="branch", label="h"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in2 [style="input", label="in"];
+		m [style="input", label="m"];
+		o [style="input", label="o"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
+		b_2 [style="branch", label="b"];
+		bp_2 [style="branch point", label="bp"];
+		foo_2 [style="task", label="foo"];
+		h_2 [style="branch", label="h"];
+		higher_bp_2 [style="branch point", label="higher BP"];
+		m_2 [style="input", label="m"];
+		o_2 [style="input", label="o"];
+		out_2 [style="output", label="out"];
+		x_2 [style="input", label="x"];
+
+		a -> bp;
+		bar -> y;
+		bp -> x;
+		c -> diffBP;
+		diffBP -> z;
+		foo -> out;
+		h -> higher_bp;
+		higher_bp -> a;
+		in -> bar;
+		in2 -> bar;
+		m -> h;
+		o -> h;
+		out -> in;
+		w -> baz;
+		x -> foo;
+		y -> w;
+		z -> baz;
+		b_2 -> bp_2;
+		bp_2 -> x_2;
+		foo_2 -> out_2;
+		h_2 -> higher_bp_2;
+		higher_bp_2 -> b_2;
+		m_2 -> h_2;
+		o_2 -> h_2;
+		out_2 -> in2 [label="[bp:b,higher BP:h]", lblstyle="graft"];
+		x_2 -> foo_2;
+
+	}
+\end{dot2tex}
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
+
+	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
+	digraph G {
+
+			graph [nodesep="0.5", ranksep="0"];
+
+		a [style="branch", label="a"];
+		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
+		bp [style="branch point", label="bp"];
+		d [style="branch", label="d"];
+		diffBP [style="branch point", label="different BP"];
+		foo [style="task", label="foo"];
+		h [style="branch", label="h"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in2 [style="input", label="in"];
+		m [style="input", label="m"];
+		o [style="input", label="o"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
+		b_2 [style="branch", label="b"];
+		bp_2 [style="branch point", label="bp"];
+		foo_2 [style="task", label="foo"];
+		h_2 [style="branch", label="h"];
+		higher_bp_2 [style="branch point", label="higher BP"];
+		m_2 [style="input", label="m"];
+		o_2 [style="input", label="o"];
+		out_2 [style="output", label="out"];
+		x_2 [style="input", label="x"];
+
+		a -> bp;
+		bar -> y;
+		bp -> x;
+		d -> diffBP;
+		diffBP -> z;
+		foo -> out;
+		h -> higher_bp;
+		higher_bp -> a;
+		in -> bar;
+		in2 -> bar;
+		m -> h;
+		o -> h;
+		out -> in;
+		w -> baz;
+		x -> foo;
+		y -> w;
+		z -> baz;
+		b_2 -> bp_2;
+		bp_2 -> x_2;
+		foo_2 -> out_2;
+		h_2 -> higher_bp_2;
+		higher_bp_2 -> b_2;
+		m_2 -> h_2;
+		o_2 -> h_2;
+		out_2 -> in2 [label="[bp:b,higher BP:h]", lblstyle="graft"];
+		x_2 -> foo_2;
+
+	}
+\end{dot2tex}
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
+
+	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
+	digraph G {
+
+			graph [nodesep="0.5", ranksep="0"];
+
+		b [style="branch", label="b"];
+		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
+		bp [style="branch point", label="bp"];
+		c [style="branch", label="c"];
+		diffBP [style="branch point", label="different BP"];
+		foo [style="task", label="foo"];
+		g [style="branch", label="g"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in1 [style="input", label="in"];
+		in2 [style="input", label="in"];
+		l [style="input", label="l"];
+		n [style="input", label="n"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
+		a_1 [style="branch", label="a"];
+		b_2 [style="branch", label="b"];
+		bp_1 [style="branch point", label="bp"];
+		bp_2 [style="branch point", label="bp"];
+		foo_1 [style="task", label="foo"];
+		foo_2 [style="task", label="foo"];
+		g_1 [style="branch", label="g"];
+		h_2 [style="branch", label="h"];
+		higher_bp_1 [style="branch point", label="higher BP"];
+		higher_bp_2 [style="branch point", label="higher BP"];
+		l_1 [style="input", label="l"];
+		m_2 [style="input", label="m"];
+		n_1 [style="input", label="n"];
+		o_2 [style="input", label="o"];
+		out_1 [style="output", label="out"];
+		out_2 [style="output", label="out"];
+		x_1 [style="input", label="x"];
+		x_2 [style="input", label="x"];
+
+		b -> bp;
+		bar -> y;
+		bp -> x;
+		c -> diffBP;
+		diffBP -> z;
+		foo -> out;
+		g -> higher_bp;
+		higher_bp -> b;
+		in -> bar;
+		in1 -> bar;
+		in2 -> bar;
+		l -> g;
+		n -> g;
+		out -> in;
+		w -> baz;
+		x -> foo;
+		y -> w;
+		z -> baz;
+		a_1 -> bp_1;
+		b_2 -> bp_2;
+		bp_1 -> x_1;
+		bp_2 -> x_2;
+		foo_1 -> out_1;
+		foo_2 -> out_2;
+		g_1 -> higher_bp_1;
+		h_2 -> higher_bp_2;
+		higher_bp_1 -> a_1;
+		higher_bp_2 -> b_2;
+		l_1 -> g_1;
+		m_2 -> h_2;
+		n_1 -> g_1;
+		o_2 -> h_2;
+		out_1 -> in1 [label="[bp:a]", lblstyle="graft"];
+		out_2 -> in2 [label="[bp:b,higher BP:h]", lblstyle="graft"];
+		x_1 -> foo_1;
+		x_2 -> foo_2;
+
+	}
+\end{dot2tex}
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
+
+	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
+	digraph G {
+
+			graph [nodesep="0.5", ranksep="0"];
+
+		b [style="branch", label="b"];
+		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
+		bp [style="branch point", label="bp"];
+		d [style="branch", label="d"];
+		diffBP [style="branch point", label="different BP"];
+		foo [style="task", label="foo"];
+		g [style="branch", label="g"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in1 [style="input", label="in"];
+		in2 [style="input", label="in"];
+		l [style="input", label="l"];
+		n [style="input", label="n"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
+		a_1 [style="branch", label="a"];
+		b_2 [style="branch", label="b"];
+		bp_1 [style="branch point", label="bp"];
+		bp_2 [style="branch point", label="bp"];
+		foo_1 [style="task", label="foo"];
+		foo_2 [style="task", label="foo"];
+		g_1 [style="branch", label="g"];
+		h_2 [style="branch", label="h"];
+		higher_bp_1 [style="branch point", label="higher BP"];
+		higher_bp_2 [style="branch point", label="higher BP"];
+		l_1 [style="input", label="l"];
+		m_2 [style="input", label="m"];
+		n_1 [style="input", label="n"];
+		o_2 [style="input", label="o"];
+		out_1 [style="output", label="out"];
+		out_2 [style="output", label="out"];
+		x_1 [style="input", label="x"];
+		x_2 [style="input", label="x"];
+
+		b -> bp;
+		bar -> y;
+		bp -> x;
+		d -> diffBP;
+		diffBP -> z;
+		foo -> out;
+		g -> higher_bp;
+		higher_bp -> b;
+		in -> bar;
+		in1 -> bar;
+		in2 -> bar;
+		l -> g;
+		n -> g;
+		out -> in;
+		w -> baz;
+		x -> foo;
+		y -> w;
+		z -> baz;
+		a_1 -> bp_1;
+		b_2 -> bp_2;
+		bp_1 -> x_1;
+		bp_2 -> x_2;
+		foo_1 -> out_1;
+		foo_2 -> out_2;
+		g_1 -> higher_bp_1;
+		h_2 -> higher_bp_2;
+		higher_bp_1 -> a_1;
+		higher_bp_2 -> b_2;
+		l_1 -> g_1;
+		m_2 -> h_2;
+		n_1 -> g_1;
+		o_2 -> h_2;
+		out_1 -> in1 [label="[bp:a]", lblstyle="graft"];
+		out_2 -> in2 [label="[bp:b,higher BP:h]", lblstyle="graft"];
+		x_1 -> foo_1;
+		x_2 -> foo_2;
+
+	}
+\end{dot2tex}
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
+
+	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
+	digraph G {
+
+			graph [nodesep="0.5", ranksep="0"];
+
+		b [style="branch", label="b"];
+		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
+		bp [style="branch point", label="bp"];
+		c [style="branch", label="c"];
+		diffBP [style="branch point", label="different BP"];
+		foo [style="task", label="foo"];
+		g [style="branch", label="g"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in1 [style="input", label="in"];
+		in2 [style="input", label="in"];
+		l [style="input", label="l"];
+		n [style="input", label="n"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
+		a_1 [style="branch", label="a"];
+		b_2 [style="branch", label="b"];
+		bp_1 [style="branch point", label="bp"];
+		bp_2 [style="branch point", label="bp"];
+		foo_1 [style="task", label="foo"];
+		foo_2 [style="task", label="foo"];
+		g_1 [style="branch", label="g"];
+		h_2 [style="branch", label="h"];
+		higher_bp_1 [style="branch point", label="higher BP"];
+		higher_bp_2 [style="branch point", label="higher BP"];
+		l_1 [style="input", label="l"];
+		m_2 [style="input", label="m"];
+		n_1 [style="input", label="n"];
+		o_2 [style="input", label="o"];
+		out_1 [style="output", label="out"];
+		out_2 [style="output", label="out"];
+		x_1 [style="input", label="x"];
+		x_2 [style="input", label="x"];
+
+		b -> bp;
+		bar -> y;
+		bp -> x;
+		c -> diffBP;
+		diffBP -> z;
+		foo -> out;
+		g -> higher_bp;
+		higher_bp -> b;
+		in -> bar;
+		in1 -> bar;
+		in2 -> bar;
+		l -> g;
+		n -> g;
+		out -> in;
+		w -> baz;
+		x -> foo;
+		y -> w;
+		z -> baz;
+		a_1 -> bp_1;
+		b_2 -> bp_2;
+		bp_1 -> x_1;
+		bp_2 -> x_2;
+		foo_1 -> out_1;
+		foo_2 -> out_2;
+		g_1 -> higher_bp_1;
+		h_2 -> higher_bp_2;
+		higher_bp_1 -> a_1;
+		higher_bp_2 -> b_2;
+		l_1 -> g_1;
+		m_2 -> h_2;
+		n_1 -> g_1;
+		o_2 -> h_2;
+		out_1 -> in1 [label="[bp:a]", lblstyle="graft"];
+		out_2 -> in2 [label="[bp:b,higher BP:h]", lblstyle="graft"];
+		x_1 -> foo_1;
+		x_2 -> foo_2;
+
+	}
+\end{dot2tex}
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
+
+	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
+	digraph G {
+
+			graph [nodesep="0.5", ranksep="0"];
+
+		b [style="branch", label="b"];
+		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
+		bp [style="branch point", label="bp"];
+		d [style="branch", label="d"];
+		diffBP [style="branch point", label="different BP"];
+		foo [style="task", label="foo"];
+		g [style="branch", label="g"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in1 [style="input", label="in"];
+		in2 [style="input", label="in"];
+		l [style="input", label="l"];
+		n [style="input", label="n"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
+		a_1 [style="branch", label="a"];
+		b_2 [style="branch", label="b"];
+		bp_1 [style="branch point", label="bp"];
+		bp_2 [style="branch point", label="bp"];
+		foo_1 [style="task", label="foo"];
+		foo_2 [style="task", label="foo"];
+		g_1 [style="branch", label="g"];
+		h_2 [style="branch", label="h"];
+		higher_bp_1 [style="branch point", label="higher BP"];
+		higher_bp_2 [style="branch point", label="higher BP"];
+		l_1 [style="input", label="l"];
+		m_2 [style="input", label="m"];
+		n_1 [style="input", label="n"];
+		o_2 [style="input", label="o"];
+		out_1 [style="output", label="out"];
+		out_2 [style="output", label="out"];
+		x_1 [style="input", label="x"];
+		x_2 [style="input", label="x"];
+
+		b -> bp;
+		bar -> y;
+		bp -> x;
+		d -> diffBP;
+		diffBP -> z;
+		foo -> out;
+		g -> higher_bp;
+		higher_bp -> b;
+		in -> bar;
+		in1 -> bar;
+		in2 -> bar;
+		l -> g;
+		n -> g;
+		out -> in;
+		w -> baz;
+		x -> foo;
+		y -> w;
+		z -> baz;
+		a_1 -> bp_1;
+		b_2 -> bp_2;
+		bp_1 -> x_1;
+		bp_2 -> x_2;
+		foo_1 -> out_1;
+		foo_2 -> out_2;
+		g_1 -> higher_bp_1;
+		h_2 -> higher_bp_2;
+		higher_bp_1 -> a_1;
+		higher_bp_2 -> b_2;
+		l_1 -> g_1;
+		m_2 -> h_2;
+		n_1 -> g_1;
+		o_2 -> h_2;
+		out_1 -> in1 [label="[bp:a]", lblstyle="graft"];
+		out_2 -> in2 [label="[bp:b,higher BP:h]", lblstyle="graft"];
+		x_1 -> foo_1;
+		x_2 -> foo_2;
+
+	}
+\end{dot2tex}
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
+
+	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
+	digraph G {
+
+			graph [nodesep="0.5", ranksep="0"];
+
+		b [style="branch", label="b"];
+		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
+		bp [style="branch point", label="bp"];
+		c [style="branch", label="c"];
+		diffBP [style="branch point", label="different BP"];
+		foo [style="task", label="foo"];
+		h [style="branch", label="h"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in1 [style="input", label="in"];
+		m [style="input", label="m"];
+		o [style="input", label="o"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
+		a_1 [style="branch", label="a"];
+		bp_1 [style="branch point", label="bp"];
+		foo_1 [style="task", label="foo"];
+		h_1 [style="branch", label="h"];
+		higher_bp_1 [style="branch point", label="higher BP"];
+		m_1 [style="input", label="m"];
+		o_1 [style="input", label="o"];
+		out_1 [style="output", label="out"];
+		x_1 [style="input", label="x"];
+
+		b -> bp;
+		bar -> y;
+		bp -> x;
+		c -> diffBP;
+		diffBP -> z;
+		foo -> out;
+		h -> higher_bp;
+		higher_bp -> b;
+		in -> bar;
+		in1 -> bar;
+		m -> h;
+		o -> h;
+		out -> in;
+		w -> baz;
+		x -> foo;
+		y -> w;
+		z -> baz;
+		a_1 -> bp_1;
 		bp_1 -> x_1;
 		foo_1 -> out_1;
-		no_bp_1 -> out_1;
-		out_1 -> in1;
-		still_no_bp_1 -> no_bp_1;
+		h_1 -> higher_bp_1;
+		higher_bp_1 -> a_1;
+		m_1 -> h_1;
+		o_1 -> h_1;
+		out_1 -> in1 [label="[bp:a]", lblstyle="graft"];
 		x_1 -> foo_1;
 
 	}
@@ -1170,61 +1357,467 @@
 
 			graph [nodesep="0.5", ranksep="0"];
 
-		3 [style="task", label="3"];
-		a [style="branch", label="a"];
-		a_val [style="", label="1"];
 		b [style="branch", label="b"];
-		b_val [style="", label="2"];
 		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
 		bp [style="branch point", label="bp"];
 		d [style="branch", label="d"];
-		diff_bp [style="branch point", label="different bp"];
+		diffBP [style="branch point", label="different BP"];
 		foo [style="task", label="foo"];
 		h [style="branch", label="h"];
-		higher_bp [style="branch point", label="higher bp"];
-		in [style="", label="in"];
-		in1 [style="", label="in"];
-		no_bp [style="", label="no bp"];
-		out [style="", label="out"];
-		still_no_bp [style="", label="still no bp"];
-		w [style="", label="w"];
-		x [style="", label="x"];
-		y [style="", label="y"];
-		z [style="", label="z"];
-		3_1 [style="task", label="3"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in1 [style="input", label="in"];
+		m [style="input", label="m"];
+		o [style="input", label="o"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
+		a_1 [style="branch", label="a"];
 		bp_1 [style="branch point", label="bp"];
 		foo_1 [style="task", label="foo"];
-		no_bp_1 [style="", label="no bp"];
-		out_1 [style="", label="out"];
-		still_no_bp_1 [style="", label="still no bp"];
-		x_1 [style="", label="x"];
+		h_1 [style="branch", label="h"];
+		higher_bp_1 [style="branch point", label="higher BP"];
+		m_1 [style="input", label="m"];
+		o_1 [style="input", label="o"];
+		out_1 [style="output", label="out"];
+		x_1 [style="input", label="x"];
 
-		3 -> out;
-		a -> bp_1;
-		a_val -> a;
 		b -> bp;
-		b_val -> b;
 		bar -> y;
 		bp -> x;
-		d -> diff_bp;
-		diff_bp -> y;
+		d -> diffBP;
+		diffBP -> z;
 		foo -> out;
 		h -> higher_bp;
-		higher_bp -> a_val;
+		higher_bp -> b;
 		in -> bar;
 		in1 -> bar;
-		no_bp -> out;
+		m -> h;
+		o -> h;
 		out -> in;
-		still_no_bp -> no_bp;
+		w -> baz;
 		x -> foo;
 		y -> w;
-		y -> z;
-		3_1 -> out_1;
+		z -> baz;
+		a_1 -> bp_1;
 		bp_1 -> x_1;
 		foo_1 -> out_1;
-		no_bp_1 -> out_1;
-		out_1 -> in1;
-		still_no_bp_1 -> no_bp_1;
+		h_1 -> higher_bp_1;
+		higher_bp_1 -> a_1;
+		m_1 -> h_1;
+		o_1 -> h_1;
+		out_1 -> in1 [label="[bp:a]", lblstyle="graft"];
+		x_1 -> foo_1;
+
+	}
+\end{dot2tex}
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
+
+	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
+	digraph G {
+
+			graph [nodesep="0.5", ranksep="0"];
+
+		b [style="branch", label="b"];
+		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
+		bp [style="branch point", label="bp"];
+		c [style="branch", label="c"];
+		diffBP [style="branch point", label="different BP"];
+		foo [style="task", label="foo"];
+		h [style="branch", label="h"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in1 [style="input", label="in"];
+		m [style="input", label="m"];
+		o [style="input", label="o"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
+		a_1 [style="branch", label="a"];
+		bp_1 [style="branch point", label="bp"];
+		foo_1 [style="task", label="foo"];
+		h_1 [style="branch", label="h"];
+		higher_bp_1 [style="branch point", label="higher BP"];
+		m_1 [style="input", label="m"];
+		o_1 [style="input", label="o"];
+		out_1 [style="output", label="out"];
+		x_1 [style="input", label="x"];
+
+		b -> bp;
+		bar -> y;
+		bp -> x;
+		c -> diffBP;
+		diffBP -> z;
+		foo -> out;
+		h -> higher_bp;
+		higher_bp -> b;
+		in -> bar;
+		in1 -> bar;
+		m -> h;
+		o -> h;
+		out -> in;
+		w -> baz;
+		x -> foo;
+		y -> w;
+		z -> baz;
+		a_1 -> bp_1;
+		bp_1 -> x_1;
+		foo_1 -> out_1;
+		h_1 -> higher_bp_1;
+		higher_bp_1 -> a_1;
+		m_1 -> h_1;
+		o_1 -> h_1;
+		out_1 -> in1 [label="[bp:a]", lblstyle="graft"];
+		x_1 -> foo_1;
+
+	}
+\end{dot2tex}
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
+
+	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
+	digraph G {
+
+			graph [nodesep="0.5", ranksep="0"];
+
+		b [style="branch", label="b"];
+		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
+		bp [style="branch point", label="bp"];
+		d [style="branch", label="d"];
+		diffBP [style="branch point", label="different BP"];
+		foo [style="task", label="foo"];
+		h [style="branch", label="h"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in1 [style="input", label="in"];
+		m [style="input", label="m"];
+		o [style="input", label="o"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
+		a_1 [style="branch", label="a"];
+		bp_1 [style="branch point", label="bp"];
+		foo_1 [style="task", label="foo"];
+		h_1 [style="branch", label="h"];
+		higher_bp_1 [style="branch point", label="higher BP"];
+		m_1 [style="input", label="m"];
+		o_1 [style="input", label="o"];
+		out_1 [style="output", label="out"];
+		x_1 [style="input", label="x"];
+
+		b -> bp;
+		bar -> y;
+		bp -> x;
+		d -> diffBP;
+		diffBP -> z;
+		foo -> out;
+		h -> higher_bp;
+		higher_bp -> b;
+		in -> bar;
+		in1 -> bar;
+		m -> h;
+		o -> h;
+		out -> in;
+		w -> baz;
+		x -> foo;
+		y -> w;
+		z -> baz;
+		a_1 -> bp_1;
+		bp_1 -> x_1;
+		foo_1 -> out_1;
+		h_1 -> higher_bp_1;
+		higher_bp_1 -> a_1;
+		m_1 -> h_1;
+		o_1 -> h_1;
+		out_1 -> in1 [label="[bp:a]", lblstyle="graft"];
+		x_1 -> foo_1;
+
+	}
+\end{dot2tex}
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
+
+	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
+	digraph G {
+
+			graph [nodesep="0.5", ranksep="0"];
+
+		b [style="branch", label="b"];
+		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
+		bp [style="branch point", label="bp"];
+		c [style="branch", label="c"];
+		diffBP [style="branch point", label="different BP"];
+		foo [style="task", label="foo"];
+		h [style="branch", label="h"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in1 [style="input", label="in"];
+		m [style="input", label="m"];
+		o [style="input", label="o"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
+		a_1 [style="branch", label="a"];
+		bp_1 [style="branch point", label="bp"];
+		foo_1 [style="task", label="foo"];
+		h_1 [style="branch", label="h"];
+		higher_bp_1 [style="branch point", label="higher BP"];
+		m_1 [style="input", label="m"];
+		o_1 [style="input", label="o"];
+		out_1 [style="output", label="out"];
+		x_1 [style="input", label="x"];
+
+		b -> bp;
+		bar -> y;
+		bp -> x;
+		c -> diffBP;
+		diffBP -> z;
+		foo -> out;
+		h -> higher_bp;
+		higher_bp -> b;
+		in -> bar;
+		in1 -> bar;
+		m -> h;
+		o -> h;
+		out -> in;
+		w -> baz;
+		x -> foo;
+		y -> w;
+		z -> baz;
+		a_1 -> bp_1;
+		bp_1 -> x_1;
+		foo_1 -> out_1;
+		h_1 -> higher_bp_1;
+		higher_bp_1 -> a_1;
+		m_1 -> h_1;
+		o_1 -> h_1;
+		out_1 -> in1 [label="[bp:a]", lblstyle="graft"];
+		x_1 -> foo_1;
+
+	}
+\end{dot2tex}
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
+
+	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
+	digraph G {
+
+			graph [nodesep="0.5", ranksep="0"];
+
+		b [style="branch", label="b"];
+		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
+		bp [style="branch point", label="bp"];
+		d [style="branch", label="d"];
+		diffBP [style="branch point", label="different BP"];
+		foo [style="task", label="foo"];
+		h [style="branch", label="h"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in1 [style="input", label="in"];
+		m [style="input", label="m"];
+		o [style="input", label="o"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
+		a_1 [style="branch", label="a"];
+		bp_1 [style="branch point", label="bp"];
+		foo_1 [style="task", label="foo"];
+		h_1 [style="branch", label="h"];
+		higher_bp_1 [style="branch point", label="higher BP"];
+		m_1 [style="input", label="m"];
+		o_1 [style="input", label="o"];
+		out_1 [style="output", label="out"];
+		x_1 [style="input", label="x"];
+
+		b -> bp;
+		bar -> y;
+		bp -> x;
+		d -> diffBP;
+		diffBP -> z;
+		foo -> out;
+		h -> higher_bp;
+		higher_bp -> b;
+		in -> bar;
+		in1 -> bar;
+		m -> h;
+		o -> h;
+		out -> in;
+		w -> baz;
+		x -> foo;
+		y -> w;
+		z -> baz;
+		a_1 -> bp_1;
+		bp_1 -> x_1;
+		foo_1 -> out_1;
+		h_1 -> higher_bp_1;
+		higher_bp_1 -> a_1;
+		m_1 -> h_1;
+		o_1 -> h_1;
+		out_1 -> in1 [label="[bp:a]", lblstyle="graft"];
+		x_1 -> foo_1;
+
+	}
+\end{dot2tex}
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
+
+	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
+	digraph G {
+
+			graph [nodesep="0.5", ranksep="0"];
+
+		b [style="branch", label="b"];
+		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
+		bp [style="branch point", label="bp"];
+		c [style="branch", label="c"];
+		diffBP [style="branch point", label="different BP"];
+		foo [style="task", label="foo"];
+		h [style="branch", label="h"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in1 [style="input", label="in"];
+		m [style="input", label="m"];
+		o [style="input", label="o"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
+		a_1 [style="branch", label="a"];
+		bp_1 [style="branch point", label="bp"];
+		foo_1 [style="task", label="foo"];
+		h_1 [style="branch", label="h"];
+		higher_bp_1 [style="branch point", label="higher BP"];
+		m_1 [style="input", label="m"];
+		o_1 [style="input", label="o"];
+		out_1 [style="output", label="out"];
+		x_1 [style="input", label="x"];
+
+		b -> bp;
+		bar -> y;
+		bp -> x;
+		c -> diffBP;
+		diffBP -> z;
+		foo -> out;
+		h -> higher_bp;
+		higher_bp -> b;
+		in -> bar;
+		in1 -> bar;
+		m -> h;
+		o -> h;
+		out -> in;
+		w -> baz;
+		x -> foo;
+		y -> w;
+		z -> baz;
+		a_1 -> bp_1;
+		bp_1 -> x_1;
+		foo_1 -> out_1;
+		h_1 -> higher_bp_1;
+		higher_bp_1 -> a_1;
+		m_1 -> h_1;
+		o_1 -> h_1;
+		out_1 -> in1 [label="[bp:a]", lblstyle="graft"];
+		x_1 -> foo_1;
+
+	}
+\end{dot2tex}
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}[>=latex, scale=2.0, transform shape]
+
+	\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]
+	digraph G {
+
+			graph [nodesep="0.5", ranksep="0"];
+
+		b [style="branch", label="b"];
+		bar [style="task", label="bar"];
+		baz [style="task", label="baz"];
+		bp [style="branch point", label="bp"];
+		d [style="branch", label="d"];
+		diffBP [style="branch point", label="different BP"];
+		foo [style="task", label="foo"];
+		h [style="branch", label="h"];
+		higher_bp [style="branch point", label="higher BP"];
+		in [style="input", label="in"];
+		in1 [style="input", label="in"];
+		m [style="input", label="m"];
+		o [style="input", label="o"];
+		out [style="output", label="out"];
+		w [style="input", label="w"];
+		x [style="input", label="x"];
+		y [style="output", label="y"];
+		z [style="input", label="z"];
+		a_1 [style="branch", label="a"];
+		bp_1 [style="branch point", label="bp"];
+		foo_1 [style="task", label="foo"];
+		h_1 [style="branch", label="h"];
+		higher_bp_1 [style="branch point", label="higher BP"];
+		m_1 [style="input", label="m"];
+		o_1 [style="input", label="o"];
+		out_1 [style="output", label="out"];
+		x_1 [style="input", label="x"];
+
+		b -> bp;
+		bar -> y;
+		bp -> x;
+		d -> diffBP;
+		diffBP -> z;
+		foo -> out;
+		h -> higher_bp;
+		higher_bp -> b;
+		in -> bar;
+		in1 -> bar;
+		m -> h;
+		o -> h;
+		out -> in;
+		w -> baz;
+		x -> foo;
+		y -> w;
+		z -> baz;
+		a_1 -> bp_1;
+		bp_1 -> x_1;
+		foo_1 -> out_1;
+		h_1 -> higher_bp_1;
+		higher_bp_1 -> a_1;
+		m_1 -> h_1;
+		o_1 -> h_1;
+		out_1 -> in1 [label="[bp:a]", lblstyle="graft"];
 		x_1 -> foo_1;
 
 	}
