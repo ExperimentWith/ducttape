@@ -2,7 +2,7 @@
 % unpack.prolog									   %
 % takes a set of nodes, edges, and grafts as input %
 % returns the unpacked graphs (in LaTeX)		   %
-% Caitlin Cassidy - 06 Nov 2016 				   %
+% Caitlin Cassidy - 11 Nov 2016 				   %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 :- dynamic unpacked_node/1.
@@ -18,20 +18,23 @@
 go:-
 	tell('unpacked_graphs.tex'), % open output file
 	print_latex, % print LaTeX formatting
-	setof(Node,(Type,Label,Via)^node(Node,Type,Label,Via),Nodes), % set of nodes in packed graph
-	setof([Parent,Child],edge(Parent,Child),Edges), % set of edges in packed graph
-	print_graph(Nodes,Edges), % print dot2tex packed graph
+	setof([Node,Type,Label,Via],node(Node,Type,Label,Via),Nodes), % set of nodes in packed graph
+	setof([[Parent,ParentType,ParentLabel,ParentVias],[Child,ChildType,ChildLabel,ChildVias]], (edge(Parent, Child),node(Parent,ParentType,ParentLabel,ParentVias),node(Child,ChildType,ChildLabel,ChildVias)), Edges), % set of unpacked edges
+	print_graph(Nodes,Edges,true),!, % print dot2tex packed graph
 	% for each unpacking, print in dot2tex
-	setof([UnpackedNodes,UnpackedEdges],(unpack(UnpackedNodes,UnpackedEdges),print_graph(UnpackedNodes,UnpackedEdges)),Graphs),
+	setof([UnpackedNodes,UnpackedEdges],unpack(UnpackedNodes,UnpackedEdges),Graphs),
+	%remove_duplicategraphs(Graphs,NewGraphs),
+	print_graphs(Graphs,false),
 	write('\\end{document}'), % more LaTeX formatting
 	told. % close output file
+	
 
 % the big one
 % non-deterministacally unpackes input graph
 unpack(UnpackedNodes,UnpackedEdges):-
 	setof([GraftParent, GraftChild, GraftVias, GraftID],graft(GraftParent,GraftChild,GraftVias,GraftID),Grafts), % set of grafts
 	setof(GoalNode,(GoalType,GoalLabel,GoalChild,GoalVia)^(node(GoalNode, GoalType, GoalLabel,GoalVia),not(edge(GoalNode, GoalChild))),Goals), % set of leaves
-	iterate_grafts(Grafts), % unzip each graft
+	iterate_grafts(Grafts),!, % unzip each graft
 	iterate_goals(Goals,[]), % unpack remaining nodes
 	setof(UnboundNode,unpacked_node(UnboundNode),UnboundNodes), % set of unpacked nodes
 	setof([BranchPointName,BranchName],unpacked_branchpoint(BranchPointName,BranchName),UnpackedVias), % set of global branch point values
@@ -40,8 +43,8 @@ unpack(UnpackedNodes,UnpackedEdges):-
 	delete_copies(Sets), % delete all but original copy
 	%setof(Node,(Type,Label,Via)^node(Node,Type,Label,Via),UnpackedNodes), % set of nodes in packed graph
 	%setof([Parent,Child],edge(Parent,Child),UnpackedEdges). % set of edges in packed graph
-	setof(UnpackedNode, unpacked_node(UnpackedNode), UnpackedNodes), % set of unpacked nodes
-	setof([UnpackedParent, UnpackedChild], (unpacked_edge(UnpackedParent, UnpackedChild),unpacked_node(UnpackedParent),unpacked_node(UnpackedChild)), UnpackedEdges). % set of unpacked edges
+	setof([UnpackedNode,NodeType,NodeLabel,NodeVias], (unpacked_node(UnpackedNode),node(UnpackedNode,NodeType,NodeLabel,NodeVias)), UnpackedNodes), % set of unpacked nodes
+	setof([[UnpackedParent,ParentType,ParentLabel,ParentVias], [UnpackedChild,ChildType,ChildLabel,ChildVias]], (unpacked_edge(UnpackedParent, UnpackedChild),unpacked_node(UnpackedParent),unpacked_node(UnpackedChild),node(UnpackedParent,ParentType,ParentLabel,ParentVias),node(UnpackedChild,ChildType,ChildLabel,ChildVias)), UnpackedEdges). % set of unpacked edges
 
 % unzip_graft
 % copies path from graft child to this branch point
@@ -178,35 +181,48 @@ bind_nodes([Node|Tail],Vias):-
 % for each set of copied nodes
 %    deletes all but the first
 delete_copies([]).
-delete_copies([[_|Copies]|T]):-
-	delete_aux(Copies),
+delete_copies([[Original|Copies]|T]):-
+	delete_aux(Original,Copies),
 	delete_copies(T).
 
 % delete_aux
 % retracts each node in a list
-delete_aux([]).
-delete_aux([Node|Tail]):-
+delete_aux(_,[]).
+delete_aux(Original,[Node|Tail]):-
 	retract2(unpacked_node(Node)),
-	delete_aux(Tail).
+	setof(Child,edge(Node,Child),Children),
+	copy_children(Original,Children),
+	delete_aux(Original,Tail),!.
+delete_aux(Original,[Node|Tail]):-
+	delete_aux(Original,Tail).
+
+% attach copy's children to original node
+copy_children(_,[]).
+copy_children(Original,[Child|Tail]):-
+	assert2(unpacked_edge(Original,Child)),
+	copy_children(Original,Tail).
 
 % node(NodeID,Type,Label,EmptyVias).
 node(foo,task,foo,[]).
 node(x,input,x,[]).
 node(bp,'branch point',bp,[]).
 node(a,branch,a,[]).
-node(higher_bp,'branch point','higher BP',[]).
-node(g,branch,g,[]).
+node(higher_bp1,'branch point','higher BP',[]).
+node(higher_bp2,'branch point','higher BP',[]).
+node(g1,branch,g,[]).
+node(g2,branch,g,[]).
 node(l,input,l,[]).
-node(h,branch,h,[]).
+node(h1,branch,h,[]).
+node(h2,branch,h,[]).
 node(m, input,m,[]).
 node(b,branch,b,[]).
 node(n,input,n,[]).
 node(o,input,o,[]).
 node(out,output,out,[]).
 node(bar,task,bar,[]).
-node(in1,input,in,[]).
-node(in2,input,in,[]).
-node(in,input,in,[]).
+node(in1,input,in1,[]).
+node(in2,input,in2,[]).
+node(in,input,in3,[]).
 node(y,output,y,[]).
 node(baz,task,baz,[]).
 node(w,input,w,[]).
@@ -220,15 +236,17 @@ node(d,branch,d,[]).
 edge(x,foo).
 edge(a,bp).
 edge(b,bp).
-edge(higher_bp,a).
-edge(higher_bp,b).
-edge(g,higher_bp).
-edge(h,higher_bp).
+edge(higher_bp1,a).
+edge(higher_bp2,b).
+edge(g1,higher_bp1).
+edge(g2,higher_bp2).
+edge(h1,higher_bp1).
+edge(h2,higher_bp2).
 edge(bp,x).
-edge(l,g).
-edge(m,h).
-edge(n,g).
-edge(o,h).
+edge(l,g1).
+edge(m,h1).
+edge(n,g2).
+edge(o,h2).
 edge(foo,out).
 edge(out,in).
 edge(out,in2).
@@ -248,18 +266,22 @@ edge(d,diffBP).
 graft(out, in1, [[bp, a]], '_1').
 graft(out, in2, [[bp, b],['higher BP',h]], '_2').
 
+print_graphs([],_).
+print_graphs([[Nodes,Edges]|Tail],PrintGrafts):-
+	print_graph(Nodes,Edges,PrintGrafts),
+	print_graphs(Tail,PrintGrafts).
+
 % print LaTeX-ready graph
-print_graph(UnpackedNodes,UnpackedEdges) :-
-	write('\\begin{center}\n\\begin{tikzpicture}[>=latex, scale=2.0, transform shape]\n\n\t\\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]\n\tdigraph G {\n\n\t\t\tgraph [nodesep="0.5", ranksep="0"];\n\n'),
+print_graph(UnpackedNodes,UnpackedEdges,PrintGrafts) :-
+	write('\\begin{center}\n\\begin{tikzpicture}[>=latex, scale=1.0, transform shape]\n\n\t\\begin{dot2tex}[dot,scale=1.0,tikzedgelabels,codeonly]\n\tdigraph G {\n\n\t\t\tgraph [nodesep="0.5", ranksep="0"];\n\n'),
 	print_nodes(UnpackedNodes),
 	write('\n'),
-	print_edges(UnpackedEdges),
+	print_edges(UnpackedEdges,PrintGrafts),
 	write('\n\t}\n\\end{dot2tex}\n\\end{tikzpicture}\n\\end{center}\n\n').
 
 % print formatted nodes
 print_nodes([]).
-print_nodes([Node|Tail]) :-
-	node(Node,Type,Label,Vias),
+print_nodes([[Node,Type,Label,Vias]|Tail]) :-
 	write('\t\t'),
 	write(Node),
 	write(' [style="'),
@@ -270,8 +292,8 @@ print_nodes([Node|Tail]) :-
 	print_nodes(Tail).
 
 % print formatted edges
-print_edges([]).
-print_edges([[Parent,Child]|Tail]):-
+print_edges([],_).
+print_edges([[[Parent,_,_,_],[Child,_,_,_]]|Tail],true):-
 	graft(Parent,Child,Vias,_),
 	write('\t\t'),
 	write(Parent),
@@ -279,14 +301,14 @@ print_edges([[Parent,Child]|Tail]):-
 	write(Child),
 	graft_string(Vias,'',GraftString),
 	write(' [label=\"['),write(GraftString),write(']\", lblstyle="graft"];\n'),
-	print_edges(Tail),!.
-print_edges([[Parent,Child]|Tail]) :-
+	print_edges(Tail,true),!.
+print_edges([[[Parent,_,_,_],[Child,_,_,_]]|Tail],PrintGrafts) :-
 	write('\t\t'),
 	write(Parent),
 	write(' -> '),
 	write(Child),
 	write(';\n'),
-	print_edges(Tail).
+	print_edges(Tail,PrintGrafts).
 	
 graft_string([[BranchPoint,Branch]],SoFar,Return):-
 	string_concat(SoFar,BranchPoint,A),
@@ -297,7 +319,7 @@ graft_string([[BranchPoint,Branch]|Tail],SoFar,Return):-
 	string_concat(SoFar,BranchPoint,A),
 	string_concat(A,':',B),
 	string_concat(B,Branch,C),
-	string_concat(C,',',D),
+	string_concat(C,' , ',D),
 	graft_string(Tail,D,Return).
 
 % assert2 and retract2
