@@ -2,7 +2,7 @@
 % unpack.prolog									   %
 % takes a set of nodes, edges, and grafts as input %
 % returns the unpacked graphs (in LaTeX)		   %
-% Caitlin Cassidy - 11 Nov 2016 				   %
+% Caitlin Cassidy - 13 Nov 2016 				   %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 :- dynamic unpacked_node/1.
@@ -20,26 +20,24 @@ go:-
 	print_latex, % print LaTeX formatting
 	setof([Node,Type,Label,Via],node(Node,Type,Label,Via),Nodes), % set of nodes in packed graph
 	setof([[Parent,ParentType,ParentLabel,ParentVias],[Child,ChildType,ChildLabel,ChildVias]], (edge(Parent, Child),node(Parent,ParentType,ParentLabel,ParentVias),node(Child,ChildType,ChildLabel,ChildVias)), Edges), % set of unpacked edges
-	print_graph(Nodes,Edges,true),!, % print dot2tex packed graph
-	% for each unpacking, print in dot2tex
-	setof([UnpackedNodes,UnpackedEdges],unpack(UnpackedNodes,UnpackedEdges),Graphs),
-	%remove_duplicategraphs(Graphs,NewGraphs),
-	print_graphs(Graphs,false),
+	print_graph(Nodes,Edges,true),!, % print dot2tex packed graph; true = print graft labels; ! = no need to backtrack beyond this point (for speed)
+	setof([UnpackedNodes,UnpackedEdges],unpack(UnpackedNodes,UnpackedEdges),Graphs), % set of possible combos
+	print_graphs(Graphs,false), % print each unpacking; false = do not print graft labels
 	write('\\end{document}'), % more LaTeX formatting
 	told. % close output file
 	
 
 % the big one
-% non-deterministacally unpackes input graph
+% produces one possible unpacking of input graph
 unpack(UnpackedNodes,UnpackedEdges):-
 	setof([GraftParent, GraftChild, GraftVias, GraftID],graft(GraftParent,GraftChild,GraftVias,GraftID),Grafts), % set of grafts
 	setof(GoalNode,(GoalType,GoalLabel,GoalChild,GoalVia)^(node(GoalNode, GoalType, GoalLabel,GoalVia),not(edge(GoalNode, GoalChild))),Goals), % set of leaves
-	iterate_grafts(Grafts),!, % unzip each graft
-	iterate_goals(Goals,[]), % unpack remaining nodes
+	iterate_grafts(Grafts),!, % copy path from each graft to roots; ! = no need to backtrack beyond this point (for speed)
+	iterate_goals(Goals,[]), % unpack from each leaf
 	setof(UnboundNode,unpacked_node(UnboundNode),UnboundNodes), % set of unpacked nodes
 	setof([BranchPointName,BranchName],unpacked_branchpoint(BranchPointName,BranchName),UnpackedVias), % set of global branch point values
 	bind_nodes(UnboundNodes,UnpackedVias), % add unpacked branch points to vias list for each node
-	setof(Copies,(CopyType,CopyLabel,CopyVias)^setof(CopyNode,node(CopyNode,CopyType,CopyLabel,CopyVias),Copies),Sets), % set of copied nodes; e.g. [[a,a_1],[b],[c],[d,d_1,d_2],[e]]
+	setof(Copies,(CopyType,CopyLabel,CopyVias)^setof(CopyNode,(node(CopyNode,CopyType,CopyLabel,CopyVias),unpacked_node(CopyNode)),Copies),Sets), % set of duplicate nodes; e.g. [[a,a_1],[b],[c],[d,d_1,d_2],[e]]
 	delete_copies(Sets), % delete all but original copy
 	%setof(Node,(Type,Label,Via)^node(Node,Type,Label,Via),UnpackedNodes), % set of nodes in packed graph
 	%setof([Parent,Child],edge(Parent,Child),UnpackedEdges). % set of edges in packed graph
@@ -47,8 +45,8 @@ unpack(UnpackedNodes,UnpackedEdges):-
 	setof([[UnpackedParent,ParentType,ParentLabel,ParentVias], [UnpackedChild,ChildType,ChildLabel,ChildVias]], (unpacked_edge(UnpackedParent, UnpackedChild),unpacked_node(UnpackedParent),unpacked_node(UnpackedChild),node(UnpackedParent,ParentType,ParentLabel,ParentVias),node(UnpackedChild,ChildType,ChildLabel,ChildVias)), UnpackedEdges). % set of unpacked edges
 
 % unzip_graft
-% copies path from graft child to this branch point
-% binds nodes to this branch point
+% copies path from graft child to root
+% binds nodes to specified branch values
 unzip_graft(Node, _, _, _) :- % Case 1: Node is a root
 	not(edge(_, Node)).
 unzip_graft(Node, NodeCopy, Vias, GraftID) :- % Case 2: Node is a branch point in Vias
@@ -59,10 +57,10 @@ unzip_graft(Node, NodeCopy, Vias, GraftID) :- % Case 2: Node is a branch point i
 	string_concat(Parent,GraftID,ParentCopy), % create parent copy
 	assert2(node(ParentCopy,branch,BranchName,Vias)), % assert parent copy with graft vias
 	assert2(edge(ParentCopy,NodeCopy)), % assert copied edge
-	unzip_graft(Parent, ParentCopy, Vias, GraftID). % unzip graft
+	unzip_graft(Parent, ParentCopy, Vias, GraftID). % keep going
 unzip_graft(Node, NodeCopy, Vias, GraftID) :- % Case 3: Node is a branch point, but not in vias
 	node(Node, 'branch point', BranchPointName,_), % node is branch point
-	not(member([BranchPointName,_],Vias)), % branch point is not in vias (not bound)
+	not(member([BranchPointName,_],Vias)), % branch point is not in vias
 	setof(Parent, edge(Parent, Node), Parents), % get set of parents
 	unzip_parents(Parents, NodeCopy, Vias, GraftID). % unzip each parent
 unzip_graft(Node, NodeCopy, Vias, GraftID) :- % Case 4: Node is not a branch point
@@ -74,7 +72,7 @@ unzip_graft(Node, NodeCopy, Vias, GraftID) :- % Case 4: Node is not a branch poi
 % unpack_node
 % adds nodes and edges to unpacked graph
 unpack_node(Node,_) :- % Case 1: Node is already unpacked
-	unpacked_node(Node). % do nothing
+	unpacked_node(Node).
 unpack_node(Node,Via) :- % Case 2: Node is a root
 	not(unpacked_node(Node)), % check not unpacked
 	not(edge(_, Node)), % Node has no parent
@@ -141,8 +139,8 @@ unzip_parents([Parent|Tail], NodeCopy, Vias, GraftID) :-
 unpack_parents([],_).
 unpack_parents([[Parent, Child]|Tail],Via) :-
 	assert2(unpacked_edge(Parent, Child)), % assert edge unpacked
-	unpack_node(Parent,Via),
-	unpack_parents(Tail,Via).
+	unpack_node(Parent,Via), % unpack from this parent
+	unpack_parents(Tail,Via). % move on to the next parent
 
 % iterate_grafts
 % unzips each graft
@@ -155,8 +153,6 @@ iterate_grafts([[Parent, Child, Vias, GraftID]|Tail]) :-
 	assert2(edge(ParentCopy,Child)), % assert copied edge
 	retract2(node(Child,ChildType,ChildLabel,_)), % retract child with old vias
 	assert2(node(Child,ChildType,ChildLabel,Vias)), % assert child with graft vias
-	retract2(graft(Parent,Child,Vias,GraftID)), % retract original graft
-	assert2(graft(ParentCopy,Child,Vias,GraftID)), % assert copied graft
 	unzip_graft(Parent, ParentCopy, Vias, GraftID), % unzip graft
 	iterate_grafts(Tail). % keep going
 
@@ -168,7 +164,7 @@ iterate_goals([Node|Tail],Via) :-
 	iterate_goals(Tail,Via).
 
 % bind_nodes
-% adds branch annotations to each node
+% fills in branch values at each node
 bind_nodes([],_).
 bind_nodes([Node|Tail],Vias):-
 	node(Node,Type,Label,OldVias), % get type, label, and original vias
@@ -187,13 +183,12 @@ delete_copies([[Original|Copies]|T]):-
 
 % delete_aux
 % retracts each node in a list
+%     and attaches its children to the original
 delete_aux(_,[]).
 delete_aux(Original,[Node|Tail]):-
 	retract2(unpacked_node(Node)),
-	setof(Child,edge(Node,Child),Children),
+	setof(Child,unpacked_edge(Node,Child),Children),
 	copy_children(Original,Children),
-	delete_aux(Original,Tail),!.
-delete_aux(Original,[Node|Tail]):-
 	delete_aux(Original,Tail).
 
 % attach copy's children to original node
@@ -266,6 +261,7 @@ edge(d,diffBP).
 graft(out, in1, [[bp, a]], '_1').
 graft(out, in2, [[bp, b],['higher BP',h]], '_2').
 
+% iterate through graphs to be printed
 print_graphs([],_).
 print_graphs([[Nodes,Edges]|Tail],PrintGrafts):-
 	print_graph(Nodes,Edges,PrintGrafts),
@@ -273,7 +269,7 @@ print_graphs([[Nodes,Edges]|Tail],PrintGrafts):-
 
 % print LaTeX-ready graph
 print_graph(UnpackedNodes,UnpackedEdges,PrintGrafts) :-
-	write('\\begin{center}\n\\begin{tikzpicture}[>=latex, scale=1.0, transform shape]\n\n\t\\begin{dot2tex}[dot,scale=1.0,tikzedgelabels,codeonly]\n\tdigraph G {\n\n\t\t\tgraph [nodesep="0.5", ranksep="0"];\n\n'),
+	write('\\begin{center}\n\\begin{tikzpicture}[>=latex, scale=2.0, transform shape]\n\n\t\\begin{dot2tex}[dot,scale=2.0,tikzedgelabels,codeonly]\n\tdigraph G {\n\n\t\t\tgraph [nodesep="0.5", ranksep="0"];\n\n'),
 	print_nodes(UnpackedNodes),
 	write('\n'),
 	print_edges(UnpackedEdges,PrintGrafts),
@@ -309,7 +305,8 @@ print_edges([[[Parent,_,_,_],[Child,_,_,_]]|Tail],PrintGrafts) :-
 	write(Child),
 	write(';\n'),
 	print_edges(Tail,PrintGrafts).
-	
+
+% make graft labels pretty(ish)
 graft_string([[BranchPoint,Branch]],SoFar,Return):-
 	string_concat(SoFar,BranchPoint,A),
 	string_concat(A,':',B),
