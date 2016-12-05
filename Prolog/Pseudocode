@@ -1,0 +1,161 @@
+def copy_graft_paths(grafts, nodes,edges):
+    
+    for graft in grafts:
+        create copy of parent with graft via and add to nodes
+        replace (parent,child) edge with (parent_copy,child) edge in edges
+        replace child_via with graft_via
+        unzip_graft(parent,parent_copy,graft_via,graft_id,nodes,edges))
+
+##########################################################################
+
+def unzip_graft(node,node_copy,via,graft_id,nodes,edges):
+    
+    if node has no parents:
+        return
+
+    elif node is a branch_point in via:
+        create copy of correct parent
+        add parent_copy to nodes
+        add (parent_copy,node_copy) edge to edges
+        unzip_graft(parent,parent_copy,via,graft_id,nodes,edges)
+
+    else:
+        for each parent of node:
+            create copy of parent
+            add parent_copy to nodes
+            add (parent_copy,node_copy) edge to edges
+            unzip_graft(parent,parent_copy,via,graft_id,nodes,edges)
+
+##########################################################################
+
+def unnpack_one_possible_graph(goal_nodes,via,packed_nodes,packed_edges,unpacked_nodes,unpacked_edges):
+    
+    for goal_node in goal_nodes:
+        unpack_node(goal_node,via,packed_nodes,packed_edges,unpacked_nodes,unpacked_edges)
+    
+    bind_nodes(via,unpacked_nodes)
+    
+    for node_copies in get_copied_nodes(unpacked_nodes,unpacked_edges):
+        for node_copy in node_copies[1:]:
+            remove node_copy from unpacked_nodes
+            for each child of node_copy
+                replace (node_copy,child) edge with (original_node,child) edge in unpacked_edges
+
+##########################################################################
+
+def unpack_node(node,via,packed_nodes,packed_edges,unpacked_nodes,unpacked_edges):
+    
+    if node in unpacked_nodes:
+        return
+    
+    elif node has no parents:
+        merged_via = merge_vias(via,node_via)
+        add node with merged_via to unpacked_nodes
+    
+    elif node is not a branch_point:
+        merged_via = merge_vias(via,node_via)
+        add node with merged_via to unpacked_nodes
+        for each parent of node:
+            add (parent,node) edge to unpacked_edges
+            unpack_node(parent,merged_via,packed_nodes,packed_edges,unpacked_nodes,unpacked_edges)
+    
+    elif node is a branch_point that is not bound by a graft:
+        merged_via = merge_vias(via,node_via)
+        find branch value in via
+        find parent with branch value
+        add node with merged_via to unpacked_nodes
+        add (parent,node) edge to unpacked_edges
+        unpack_node(parent,merged_via,packed_nodes,packed_edges,unpacked_nodes,unpacked_edges)
+    
+    elif node is a branch_point that is bound by a graft:
+        get parent
+        add node with graft_via to unpacked_nodes
+        add (parent,node) edge to unpacked edges
+        unpack_node(parent,graft_via,packed_nodes,packed_edges,unpacked_nodes,unpacked_edges)
+
+##########################################################################
+
+def bind_nodes(via,unpacked_nodes):
+    for node in unpacked_nodes:
+        set node_vias to merge_vias(via,node_vias)
+
+##########################################################################
+
+def merge_vias(via1,via2):
+    
+    for branch_point in via1:
+        if branch_point not in via2:
+            via2[branch_point] = via1[branch_point]
+    
+    return via2
+
+##########################################################################
+
+def get_branch_combos(branch_points):
+    combos = []
+    vals = []
+    
+    for branch_point in branch_points:
+        add branch_values to vals
+
+    for value_combo in product(vals):
+        add zipped branch_points and branch_values to combos
+
+    return combos
+
+    *or more succinctly*
+    return [dict(zip(branch_points, branch_value)) for branch_value in product(*branch_points.values())]
+
+##########################################################################
+
+def find_branch_points(nodes,edges):
+    
+    branch_points = dict()
+    
+    for node in nodes:
+        if node_type is branch_point:
+            for each parent:
+                add parent_label to branch_points[node_label]
+    
+    return branch_points
+
+##########################################################################
+
+def find goal_nodes(nodes,edges):
+    
+    non_goal_nodes = set()
+    goal_nodes = set()
+    
+    for (parent,child) in edges:
+        add parent to non_goal_nodes
+    
+    for node in nodes:
+        if node not in non_goal_nodes:
+            add node to goal_nodes
+    
+    return goal_nodes
+
+##########################################################################
+
+main:
+
+    read in nodes as (node_id,node_id,node_type,node_label,dict()) tuples
+    read in edges as (parent_id,child_id) tuples
+    read in grafts as (parent_id,child_id,via,graft_id) tuples,
+        where via is a dict mapping each branch_point to a branch_value
+
+    copy_graft_paths(grafts,nodes,edges)
+
+    branch_points = find_branch_points(nodes,edges)
+    goal_nodes = find_goal_nodes(nodes,edges)
+    
+    unpacked_graphs = []
+
+    for via in get_branch_combos(branch_points):
+        unpacked_nodes = set()
+        unpacked_edges = set()
+        
+        unpack_one_possible_graph(goal_nodes,via,nodes,edges,unpacked_nodes,unpacked_edges)
+        unpacked_graphs.append((unpacked_nodes,unpacked_edges))
+
+##########################################################################
