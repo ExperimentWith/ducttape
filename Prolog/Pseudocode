@@ -4,27 +4,27 @@ def copy_graft_paths(grafts, nodes,edges):
         create copy of parent with graft via and add to nodes
         replace (parent,child) edge with (parent_copy,child) edge in edges
         replace child_via with graft_via
-        unzip_graft(parent,parent_copy,graft_via,graft_id,nodes,edges))
+        unzip_graft(parent,parent_copy,graft_via,nodes,edges))
 
 ##########################################################################
 
-def unzip_graft(node,node_copy,via,graft_id,nodes,edges):
+def unzip_graft(node,node_copy,via,nodes,edges):
     
     if node has no parents:
         return
 
     elif node is a branch_point in via:
-        create copy of correct parent
+        create copy of correct parent with via
         add parent_copy to nodes
         add (parent_copy,node_copy) edge to edges
-        unzip_graft(parent,parent_copy,via,graft_id,nodes,edges)
+        unzip_graft(parent,parent_copy,via,nodes,edges)
 
     else:
         for each parent of node:
-            create copy of parent
+            create copy of parent with via
             add parent_copy to nodes
             add (parent_copy,node_copy) edge to edges
-            unzip_graft(parent,parent_copy,via,graft_id,nodes,edges)
+            unzip_graft(parent,parent_copy,via,nodes,edges)
 
 ##########################################################################
 
@@ -32,14 +32,20 @@ def unnpack_one_possible_graph(goal_nodes,via,packed_nodes,packed_edges,unpacked
     
     for goal_node in goal_nodes:
         unpack_node(goal_node,via,packed_nodes,packed_edges,unpacked_nodes,unpacked_edges)
+   
+    sorted_nodes = sorted(unpacked_nodes)
+    nodes_to_keep = []
+    node_attributes = []
     
-    bind_nodes(via,unpacked_nodes)
-    
-    for node_copies in get_copied_nodes(unpacked_nodes,unpacked_edges):
-        for node_copy in node_copies[1:]:
-            remove node_copy from unpacked_nodes
-            for each child of node_copy
-                replace (node_copy,child) edge with (original_node,child) edge in unpacked_edges
+    for node in sorted_nodes:
+        if (original,type,label,via) in node_attributes:
+            remove node from unpacked_nodes
+            original_node = nodes_to_keep[index_in_node_attributes]
+            for each child of node:
+                replace (node,child) edge with (original_node,child) edge in unpacked_edges
+        else:
+            add node to nodes_to_keep
+            add (original,type,label,via) to node_attributes
 
 ##########################################################################
 
@@ -69,15 +75,10 @@ def unpack_node(node,via,packed_nodes,packed_edges,unpacked_nodes,unpacked_edges
     
     elif node is a branch_point that is bound by a graft:
         get parent
-        add node with graft_via to unpacked_nodes
+        merged_via = merge_vias(via,graft_via)
+        add node with merged_via to unpacked_nodes
         add (parent,node) edge to unpacked edges
-        unpack_node(parent,graft_via,packed_nodes,packed_edges,unpacked_nodes,unpacked_edges)
-
-##########################################################################
-
-def bind_nodes(via,unpacked_nodes):
-    for node in unpacked_nodes:
-        set node_vias to merge_vias(via,node_vias)
+        unpack_node(parent,merged_via,packed_nodes,packed_edges,unpacked_nodes,unpacked_edges)
 
 ##########################################################################
 
@@ -141,7 +142,7 @@ main:
 
     read in nodes as (node_id,node_id,node_type,node_label,dict()) tuples
     read in edges as (parent_id,child_id) tuples
-    read in grafts as (parent_id,child_id,via,graft_id) tuples,
+    read in grafts as (parent_id,child_id,via) tuples,
         where via is a dict mapping each branch_point to a branch_value
 
     copy_graft_paths(grafts,nodes,edges)
