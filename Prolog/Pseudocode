@@ -1,7 +1,22 @@
 def copy_graft_paths(grafts, nodes,edges):
     
+    # TODO: Add sanity check to ensure that no branch point occurs more than once in grafts
+    #       for example, do *not* allow grafting branchPointA:foo *and* branchPointB:bar 
+    #                    on the same edge
+    
+    # graft is a tuple of the form (parent, child, via)
+    #
+    # via is a dictionary of the form:
+    #    * key is a branch point
+    #    * value is exactly one branch value
+    #
     for graft in grafts:
-        create copy of parent with graft via and add to nodes
+    	# Parent is some sort of node.
+    	# The copy of parent is also a node;
+    	#     it will have the same type and label as the original parent
+    	#     but the node's uid and node's via of the copy will be different from that of the parent
+    	#
+        create copy of parent with graft.via and add to nodes
         replace (parent,child) edge with (parent_copy,child) edge in edges
         replace child_via with graft_via
         unzip_graft(parent,parent_copy,graft_via,nodes,edges))
@@ -28,7 +43,7 @@ def unzip_graft(node,node_copy,via,nodes,edges):
 
 ##########################################################################
 
-def unnpack_one_possible_graph(goal_nodes,via,packed_nodes,packed_edges,unpacked_nodes,unpacked_edges):
+def unpack_one_possible_graph(goal_nodes,via,packed_nodes,packed_edges,unpacked_nodes,unpacked_edges):
     
     for goal_node in goal_nodes:
         unpack_node(goal_node,via,packed_nodes,packed_edges,unpacked_nodes,unpacked_edges)
@@ -117,6 +132,9 @@ def find_branch_points(nodes,edges):
         if node_type is branch_point:
             for each parent:
                 add parent_label to branch_points[node_label]
+		else:
+			# Do some sort of error checking to ensure that all instances of this branch point 
+			#    contain the same set of branch values
     
     return branch_points
 
@@ -140,23 +158,102 @@ def find goal_nodes(nodes,edges):
 
 main:
 
+	# (node_id,node_id,node_type,node_label,dict())
+	# node_id -> a unique node ID
+	# node_id -> a copy of that unique node ID, will be changed later when copies are made
+	# node_type -> one of branch, branch_point, task, etc
+	# node_label -> for example, the name of the task
+	# dict() -> starts out as an empty via dictionary; 
+	#           as branches are encountered, the branch_point->branch assignments
+	#           will be set in this dictionary
     read in nodes as (node_id,node_id,node_type,node_label,dict()) tuples
+    
+    # (parent_id,child_id) -> edges connecting parents and children
     read in edges as (parent_id,child_id) tuples
+    
+    # (parent_id,child_id,via)
+    # Annotations on edges specifying grafting
     read in grafts as (parent_id,child_id,via) tuples,
         where via is a dict mapping each branch_point to a branch_value
 
+
+	# At this point, we analyze the structure of the packed graph
+
+
+	# Traverse the tree and identify all branch points 
+	#    (and the corresponding branch values) that exist
+	#
+    branch_points = find_branch_points(nodes,edges)
+
+    # Find all nodes which have no children
+    #
+    # Note: this does *not* look at the plan,
+    #       just the topology of the graph
+    #
+    goal_nodes = find_goal_nodes(nodes,edges)
+
+	
+	# At this point, we start modifying the graph. 
+	#
+	# This will ultimately result in a transformation
+	#    from a packed graph to an unpacked graph.
+
+
+	# For each edge that is annotated with a graft,
+	#    make a copy of the subtree rooted at that edge's child.
+	#
+	# Note: This process does *not* create a copy of the child.
+	#
+	# In that new copy, the newly created nodes are annotated
+	#    with this graft information.
+	#
     copy_graft_paths(grafts,nodes,edges)
 
-    branch_points = find_branch_points(nodes,edges)
-    goal_nodes = find_goal_nodes(nodes,edges)
-    
+    # Initialize an empty list wherein the unpacked graphs will be stored
+    #
     unpacked_graphs = []
 
+	# get_branch_combos(branch_points)
+	#
+	# This function takes a dictionary as input:
+	#    the keys are all of the branch_points that exist in the graph
+	#    the value for each key is the set of branch values that branch point can take
+	#
+	# The output is a set of dictionaries 
+	#    representing the cross-product of all branch point/branch combinations.
+	#
+	# In this output, each dictionary is of the following form:
+	#    the keys are all of the branch_points that exist in the graph
+	#    the value for each key is exactly one of the branch values that branch point can take
+	#
+	#
+	# for via in get_branch_combos(branch_points)
+	#
+	# We now take this set of dictionaries,
+	#    and treat each individual dictionary as a via
+	#
+	# Note: At this point we are *not* actually consulting the list of vias from the plan
+	#
     for via in get_branch_combos(branch_points):
+    
+    	# We will now attempt to construct exactly one unpacked graph,
+    	#    namely, the unpacked graph corresponding to the current via.
+    	
+    	# Initialize an empty set of unpacked nodes and
+    	#            an empty set of unpacked edges
         unpacked_nodes = set()
         unpacked_edges = set()
         
+        # Given the leaf nodes (here called goal_nodes) and
+        #       the current via and
+        #       the set of packed nodes (after performing copying at graft points) and
+        #       the set of packed edges (after performing copying at graft points) and
+        #       the empty set of unpacked nodes and
+        #       the empty set of unpacked edges
+        # perform unpacking
         unpack_one_possible_graph(goal_nodes,via,nodes,edges,unpacked_nodes,unpacked_edges)
+        
+        # Store that particular unpacked graph
         unpacked_graphs.append((unpacked_nodes,unpacked_edges))
 
 ##########################################################################
