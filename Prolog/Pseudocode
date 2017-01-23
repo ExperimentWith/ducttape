@@ -1,6 +1,14 @@
+def add_globs_to_grafts(globs,grafts,branch_points):
+
+    for (parent,child,branch_point_name) in globs:
+        for branch_value in branch_points[branch_point_name]:
+            add (parent,child,{branch_point_name:branch_value}) to grafts
+
+#########################################################################
+
 def copy_graft_paths(grafts, nodes,edges):
     
-    # TODO: Add sanity check to ensure that no branch point occurs more than once in grafts
+    # DONE (see unzip_graft)--TODO: Add sanity check to ensure that no branch point occurs more than once in grafts
     #       for example, do *not* allow grafting branchPointA:foo *and* branchPointB:bar 
     #                    on the same edge
     
@@ -16,10 +24,12 @@ def copy_graft_paths(grafts, nodes,edges):
     	#     it will have the same type and label as the original parent
     	#     but the node's uid and node's via of the copy will be different from that of the parent
     	#
+	if conflicting graft exists on (parent,child) edge:
+                exit with error
         create copy of parent with graft.via and add to nodes
         replace (parent,child) edge with (parent_copy,child) edge in edges
         replace child_via with graft_via
-        unzip_graft(parent,parent_copy,graft_via,nodes,edges))
+        unzip_graft(parent,parent_copy,graft_via,nodes,edges)
 
 ##########################################################################
 
@@ -36,6 +46,8 @@ def unzip_graft(node,node_copy,via,nodes,edges):
 
     else:
         for each parent of node:
+	     if conflicting graft exists on (parent,node) edge:
+                exit with error
             create copy of parent with via
             add parent_copy to nodes
             add (parent_copy,node_copy) edge to edges
@@ -135,6 +147,7 @@ def find_branch_points(nodes,edges):
 		else:
 			# Do some sort of error checking to ensure that all instances of this branch point 
 			#    contain the same set of branch values
+			        # cc - but will they?
     
     return branch_points
 
@@ -177,6 +190,10 @@ main:
         where via is a dict mapping each branch_point to a branch_value
 
 
+    # (parent_id,child_id,branch_point_name)
+    # Annotations on edge specifying globbing
+    read in globs as (parent_id,child_id,branch_point_name) tuples
+
 	# At this point, we analyze the structure of the packed graph
 
 
@@ -192,12 +209,17 @@ main:
     #
     goal_nodes = find_goal_nodes(nodes,edges)
 
-	
+
 	# At this point, we start modifying the graph. 
 	#
 	# This will ultimately result in a transformation
 	#    from a packed graph to an unpacked graph.
 
+
+        # For each edge that is annotated with a glob,
+	#     For each possible branch_value the specified branch_point can take
+	#         add a graft at this edge, with this branch_value
+    add_globs_to_grafts(globs,grafts,branch_points)
 
 	# For each edge that is annotated with a graft,
 	#    make a copy of the subtree rooted at that edge's child.
