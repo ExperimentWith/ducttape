@@ -1,0 +1,36 @@
+# Notes on understanding ducttape formalism
+# Caitlin Cassidy - 7 Feb 2017
+
+Terminology:
+
+HyperDAG - directed, acyclic hypergraph
+MetaHyperDAG - and-or HyperDAG
+PhantomMetaHyperDAG - MetaHyperDAG with "phantom" vertices
+
+Phantom vertex - used for literals and/or non-temporal relations
+Epsilon vertex - ?
+
+Derivation - current set of BranchPoint-Branch combos?
+Realization - unpacked graph resulting from a given derivation?
+
+
+
+
+Classes:
+
+BranchPointFactory - keeps track of named BranchPoints
+BranchFactory - maps Branches to BranchPoints
+
+Packed*Walker - ?
+Unpacked*Walker - ?
+    Where * is some type of HyperDAG
+
+
+
+
+Payload types:
+
+Vertex - TaskTemplate
+MetaEdge - BranchPoint
+PhantomVertex - None
+EpsilonVertex - option[TaskTemplate]
