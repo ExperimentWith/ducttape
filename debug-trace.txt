@@ -1,0 +1,121 @@
+(BP=Baseline:
+	(B=Baseline.baseline 
+		:: terminalData=(None         List() isParam=true ArrayBuffer(a='abc'@, b='bar'@) )
+		               :(Some(parent) List() isParam=true ArrayBuffer(c='zazz'@parent)    ) 
+		:: ArrayBuffer()
+	)
+) + grafts=[]
+
+
+
+
+
+Map(
+	parent1 -> ( /* BranchPointTreeGrafts */
+		( /* BranchPointTree*/ 
+			BP=Baseline: 
+				( /* BranchTree */
+					B=Baseline.baseline 
+					:: terminalData= /* terminalData: ArrayBuffer[TerminalData] */
+						( /* TerminalData */
+							None                   /* task: Option[TaskDef] */ 
+							List()                 /* grafts: Seq[Branch] */
+							isParam=true 
+							ArrayBuffer(z='zazz'@) /* specs: ArrayBuffer[SpecPair] */
+						) 
+					:: ArrayBuffer() /* children: ArrayBuffer[BranchPointTreeGrafts] */
+				)
+		)
+		+grafts=[]
+	), 
+		
+	parent2 -> ( /* BranchPointTreeGrafts */
+		( /* BranchPointTree*/
+			BP=Baseline: 
+				(
+					B=Baseline.baseline 
+					:: terminalData= 
+					:: ArrayBuffer(
+						(
+							BP=Q: 
+								(
+									B=Q.q1 
+									:: terminalData=(None List() isParam=true ArrayBuffer(q='qiikw'@)) 
+									:: ArrayBuffer()
+								)
+								(
+									B=Q.q2 
+									:: terminalData=(None List() isParam=true ArrayBuffer(q='qikmiq'@)) 
+									:: ArrayBuffer()
+								)
+								(
+									B=Q.q3 
+									:: terminalData= 
+									:: ArrayBuffer(
+										(
+											BP=Sky: 
+												(
+													B=Sky.blue 
+													:: terminalData=(None List() isParam=true ArrayBuffer(q='blue'@)) 
+													:: ArrayBuffer()
+												)
+												(
+													B=Sky.red 
+													:: terminalData=(Some(parent1) List() isParam=true ArrayBuffer(q='zazz'@parent1)) 
+													:: ArrayBuffer()
+												)
+										)+grafts=[]
+									)
+								)
+						)+grafts=[]
+					)
+				
+				)
+		)
+		+grafts=[]
+	), 
+		
+	hello -> ( /* BranchPointTreeGrafts */
+		( /* BranchPointTree*/
+			BP=Baseline: (
+				B=Baseline.baseline 
+				:: terminalData=(None List() isParam=true ArrayBuffer(a='abc'@, b='bar'@)):(Some(parent1) List() isParam=true ArrayBuffer(c='zazz'@parent1)) 
+				:: ArrayBuffer(
+					(
+						BP=Q: 
+							(
+								B=Q.q1 
+								:: terminalData=(Some(parent2) List() isParam=true ArrayBuffer(myq='qiikw'@parent2)) 
+								:: ArrayBuffer()
+							)
+							(
+								B=Q.q2 
+								:: terminalData=(Some(parent2) List() isParam=true ArrayBuffer(myq='qikmiq'@parent2)) 
+								:: ArrayBuffer()
+							)
+							(
+								B=Q.q3 
+								:: terminalData= 
+								:: ArrayBuffer(
+									(
+										BP=Sky: 
+											(
+												B=Sky.blue 
+												:: terminalData=(Some(parent2) List() isParam=true ArrayBuffer(myq='blue'@parent2)) 
+												:: ArrayBuffer()
+											)
+											(
+												B=Sky.red 
+												:: terminalData=(Some(parent1) List() isParam=true ArrayBuffer(myq='zazz'@parent1)) 
+												:: ArrayBuffer()
+											)
+									)+grafts=[]
+								)
+							)
+					)+grafts=[]
+				)
+			)
+		)
+		+grafts=[]
+	)
+)
