@@ -17,5 +17,5 @@ private[builder] class TerminalData(
 
   val specs = new mutable.ArrayBuffer[SpecPair]
 
-      override def toString() = "(%s %s isParam=%s %s)".format(task, grafts, isParam, specs)
+      override def toString() = "(dependencies=%s; grafts=%s; isParam=%s; specs=%s)".format(task, grafts, isParam, specs)
 }
