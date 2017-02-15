@@ -10,5 +10,9 @@ import ducttape.workflow.Branch
 private[builder] class BranchPointTreeGrafts(
     val tree: BranchPointTree,
     val grafts: Seq[Branch]) {
-  override def toString() = tree + "+grafts=[" + grafts.mkString(",") + "]"
+  override def toString() : String = {
+    val treeStr = tree.toString()
+    val graftStr = "\n\tgrafts=[" + grafts.mkString(",") + "]"
+    return treeStr.replaceAll("\n","\n\t") + graftStr//.replaceAll("ArrayBuffer","") + graftStr
+  }
 }
