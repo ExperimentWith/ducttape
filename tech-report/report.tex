@@ -157,6 +157,22 @@ The \texttt{TaskTemplateBuilder.findTasks()} method performs the following actio
 
 \end{enumerate}
 
+This results in a \texttt{TaskTemplateBuilder.parents} map, with tasks as keys, and values as follows:
+
+TaskTemplate -> BranchPointTreeGrafts, which maps a BranchPointTree to a Seq[Branch] set of grafts
+    BranchPointTree, which contains an ArrayBuffer[BranchTree], listing this BP's corresponding branches
+    A Baseline BP: all tasks have a Baseline BP, with a baseline branch. If the task has no BPs, Baseline has no children.
+        BranchTree, which contains an ArrayBuffer[TerminalData] and an ArrayBuffer[BranchPointTreeGrafts](children)
+        A Baseline.baseline Branch, containing TerminalData and an ArrayBuffer[BranchPointTreeGrafts] of children
+            TerminalData: only leaves have TerminalData, one for each dependency
+                task:    the (highest) task these specs depend on      Option[TaskDef]
+                grafts:  any grafts that were applied to these specs   List()
+                isParam: true if literal, false if temporal            Boolean
+                specs:   used to resolve literals                      ArrayBuffer[SpecPair]
+                    origSpec: the variable name                     Spec
+                    srcTask:  the source task of the value          Option[TaskDef]
+                    srcSpec:  the value assigned to the variable    SpecT
+            Children, an ArrayBuffer[BranchPointTreeGrafts] in which nested BPs appear
 
 \section{Temporal and structural dependencies}
 
