@@ -161,31 +161,31 @@ This results in a \texttt{TaskTemplateBuilder.parents} map, with tasks as keys, 
 
 \texttt{TaskTemplate} -> \texttt{BranchPointTreeGrafts}, which maps a \texttt{BranchPointTree} to a \texttt{Seq[Branch]} set of grafts
     
-    \texttt{BranchPointTree}, which contains an \texttt{ArrayBuffer[BranchTree]}, listing this BP's corresponding branches
+    \quad \texttt{BranchPointTree}, which contains an \texttt{ArrayBuffer[BranchTree]}, listing this BP's corresponding branches
     
-    A \texttt{Baseline} BP: all tasks have a \texttt{Baseline} BP, with a \texttt{baseline} branch. If the task has no BPs, \texttt{Baseline} has no children.
+    \quad A \texttt{Baseline} BP: all tasks have a \texttt{Baseline} BP, with a \texttt{baseline} branch. If the task has no BPs, \texttt{Baseline} has no children.
         
-        \texttt{BranchTree}, which contains an \texttt{ArrayBuffer[TerminalData]} and an \texttt{ArrayBuffer[BranchPointTreeGrafts]}(children)
+        \quad \quad \texttt{BranchTree}, which contains an \texttt{ArrayBuffer[TerminalData]} and an \texttt{ArrayBuffer[BranchPointTreeGrafts]}(children)
         
-        A \texttt{Baseline.baseline} branch, containing \texttt{TerminalData} and an \texttt{ArrayBuffer[BranchPointTreeGrafts]} of children
+        \quad \quad A \texttt{Baseline.baseline} branch, containing \texttt{TerminalData} and an \texttt{ArrayBuffer[BranchPointTreeGrafts]} of children
             
-            \texttt{TerminalData}: only leaves have \texttt{TerminalData}, one for each dependency
+            \quad \quad \quad \texttt{TerminalData}: only leaves have \texttt{TerminalData}, one for each dependency
                 
-                \texttt{task}: the (highest) task these specs depend on; type: \texttt{Option[TaskDef]}
+                \quad \quad \quad \quad \texttt{task}: the (highest) task these specs depend on; type: \texttt{Option[TaskDef]}
                 
-                \texttt{grafts}: any grafts that were applied to these specs; type: \texttt{List()}
+                \quad \quad \quad \quad \texttt{grafts}: any grafts that were applied to these specs; type: \texttt{List()}
                 
-                \texttt{isParam}: true if literal, false if temporal; type: \texttt{Boolean}
+                \quad \quad \quad \quad \texttt{isParam}: true if literal, false if temporal; type: \texttt{Boolean}
                 
-                \texttt{specs}: used to resolve literals; type: \texttt{ArrayBuffer[SpecPair]}
+                \quad \quad \quad \quad \texttt{specs}: used to resolve literals; type: \texttt{ArrayBuffer[SpecPair]}
                     
-                    \texttt{origSpec}: the variable name; type: \texttt{Spec}
+                    \quad \quad \quad \quad \quad \texttt{origSpec}: the variable name; type: \texttt{Spec}
                     
-                    \texttt{srcTask}: the source task of the value; type: \texttt{Option[TaskDef]}
+                    \quad \quad \quad \quad \quad \texttt{srcTask}: the source task of the value; type: \texttt{Option[TaskDef]}
                     
-                    \texttt{srcSpec}: the value assigned to the variable; type: \texttt{SpecT}
+                    \quad \quad \quad \quad \quad \texttt{srcSpec}: the value assigned to the variable; type: \texttt{SpecT}
             
-            \texttt{Children}, an \texttt{ArrayBuffer[BranchPointTreeGrafts]} in which nested BPs appear
+            \quad \quad \quad \texttt{Children}, an \texttt{ArrayBuffer[BranchPointTreeGrafts]} in which nested BPs appear
 
 \section{Temporal and structural dependencies}
 
