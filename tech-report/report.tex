@@ -159,20 +159,33 @@ The \texttt{TaskTemplateBuilder.findTasks()} method performs the following actio
 
 This results in a \texttt{TaskTemplateBuilder.parents} map, with tasks as keys, and values as follows:
 
-TaskTemplate -> BranchPointTreeGrafts, which maps a BranchPointTree to a Seq[Branch] set of grafts
-    BranchPointTree, which contains an ArrayBuffer[BranchTree], listing this BP's corresponding branches
-    A Baseline BP: all tasks have a Baseline BP, with a baseline branch. If the task has no BPs, Baseline has no children.
-        BranchTree, which contains an ArrayBuffer[TerminalData] and an ArrayBuffer[BranchPointTreeGrafts](children)
-        A Baseline.baseline Branch, containing TerminalData and an ArrayBuffer[BranchPointTreeGrafts] of children
-            TerminalData: only leaves have TerminalData, one for each dependency
-                task:    the (highest) task these specs depend on      Option[TaskDef]
-                grafts:  any grafts that were applied to these specs   List()
-                isParam: true if literal, false if temporal            Boolean
-                specs:   used to resolve literals                      ArrayBuffer[SpecPair]
-                    origSpec: the variable name                     Spec
-                    srcTask:  the source task of the value          Option[TaskDef]
-                    srcSpec:  the value assigned to the variable    SpecT
-            Children, an ArrayBuffer[BranchPointTreeGrafts] in which nested BPs appear
+\texttt{TaskTemplate} -> \texttt{BranchPointTreeGrafts}, which maps a \texttt{BranchPointTree} to a \texttt{Seq[Branch]} set of grafts
+    
+    \texttt{BranchPointTree}, which contains an \texttt{ArrayBuffer[BranchTree]}, listing this BP's corresponding branches
+    
+    A \texttt{Baseline} BP: all tasks have a \texttt{Baseline} BP, with a \texttt{baseline} branch. If the task has no BPs, \texttt{Baseline} has no children.
+        
+        \texttt{BranchTree}, which contains an \texttt{ArrayBuffer[TerminalData]} and an \texttt{ArrayBuffer[BranchPointTreeGrafts]}(children)
+        
+        A \texttt{Baseline.baseline} branch, containing \texttt{TerminalData} and an \texttt{ArrayBuffer[BranchPointTreeGrafts]} of children
+            
+            \texttt{TerminalData}: only leaves have \texttt{TerminalData}, one for each dependency
+                
+                \texttt{task}: the (highest) task these specs depend on; type: \texttt{Option[TaskDef]}
+                
+                \texttt{grafts}: any grafts that were applied to these specs; type: \texttt{List()}
+                
+                \texttt{isParam}: true if literal, false if temporal; type: \texttt{Boolean}
+                
+                \texttt{specs}: used to resolve literals; type: \texttt{ArrayBuffer[SpecPair]}
+                    
+                    \texttt{origSpec}: the variable name; type: \texttt{Spec}
+                    
+                    \texttt{srcTask}: the source task of the value; type: \texttt{Option[TaskDef]}
+                    
+                    \texttt{srcSpec}: the value assigned to the variable; type: \texttt{SpecT}
+            
+            \texttt{Children}, an \texttt{ArrayBuffer[BranchPointTreeGrafts]} in which nested BPs appear
 
 \section{Temporal and structural dependencies}
 
@@ -181,7 +194,15 @@ TaskTemplate -> BranchPointTreeGrafts, which maps a BranchPointTree to a Seq[Bra
 See \texttt{WorkflowBuilder.build()}
 
 \begin{enumerate}
+
 \item For each task template, create a vertex. Store these vertices in a map, where the keys are globally-unique task names.
+
+\item Build a sequence of Hyperedges, consisting of both nestedBranchEdges and terminalEdges, in which nested branch points and
+      literals are assigned phantom edges and all other vertices are assigned normal edges.
+
+\item Call \texttt{traverse} on each phantom vertex, recursively adding meta edges as appropriate. Meta edges map Branches to 
+      BranchPoints one-to-one, as opposed to Hyperedges, in which multiple Branches can share the same sink.
+
 \end{enumerate}
 
 
