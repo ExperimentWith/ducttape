@@ -29,6 +29,10 @@
 \usepackage{fontspec}
 \defaultfontfeatures{Mapping=tex-text}
 
+% Use Tikz to draw
+\usepackage{tikz}
+\usetikzlibrary{arrows,shapes,snakes,automata,backgrounds,petri}
+
 
 \title{Ducttape Technical Report}
 \author{Lane Schwartz \and Jonathan Clark}
@@ -186,6 +190,34 @@ This results in a \texttt{TaskTemplateBuilder.parents} map, with tasks as keys, 
                     \quad \quad \quad \quad \quad \texttt{srcSpec}: the value assigned to the variable; type: \texttt{SpecT}
             
             \quad \quad \quad \texttt{Children}, an \texttt{ArrayBuffer[BranchPointTreeGrafts]} in which nested BPs appear
+
+
+\begin{description}
+\item[abc] ntshaonsetu snthsaonetus ntaoheus sanothes
+\item[def] thsatnohusnth snthasuntaeh
+\item[ghi] \ \\
+      \begin{description}
+          \item[baz] nested level 2
+          \item[] thsnth sthnsnth
+          \item[] tsnhaoeustnh
+      \end{description}
+\end{description}
+
+
+
+\begin{tikzpicture}[node distance=1.3cm,>=stealth',bend angle=45,auto]
+
+  \tikzstyle{branch}=[circle,thick,draw=blue!75,fill=blue!20,minimum size=6mm]
+  \tikzstyle{branchpoint}=[place,draw=red!75,fill=red!20]
+  \tikzstyle{task}=[rectangle,thick,draw=black!75,fill=black!20,minimum size=4mm]
+
+  \node [branch] (b1)                                    {abc};
+  \node [branch] (b2)   [below of=b1]                    {def};
+
+  \draw [->] (b1) -- (b2);
+
+\end{tikzpicture}
+
 
 \section{Temporal and structural dependencies}
 
