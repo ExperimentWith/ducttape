@@ -199,19 +199,6 @@ This results in a \texttt{TaskTemplateBuilder.parents} map, with task names as k
 \end{description}
 
 
-\begin{tikzpicture}[node distance=1.3cm,>=stealth',bend angle=45,auto]
-
-  \tikzstyle{branch}=[circle,thick,draw=blue!75,fill=blue!20,minimum size=6mm]
-  \tikzstyle{branchpoint}=[place,draw=red!75,fill=red!20]
-  \tikzstyle{task}=[rectangle,thick,draw=black!75,fill=black!20,minimum size=4mm]
-
-  \node [branch] (b1)                                    {abc};
-  \node [branch] (b2)   [below of=b1]                    {def};
-
-  \draw [->] (b1) -- (b2);
-
-\end{tikzpicture}
-
 
 \section{Temporal and structural dependencies}
 
@@ -223,11 +210,34 @@ See \texttt{WorkflowBuilder.build()}
 
 \item For each task template, create a vertex. Store these vertices in a map, where the keys are globally-unique task names.
 
-\item Build a sequence of Hyperedges, consisting of both nestedBranchEdges and terminalEdges, in which nested branch points and
-      literals are assigned phantom edges and all other vertices are assigned normal edges.
+\item Add Hyperedges by calling \texttt{WorkflowBuilder.traverse} on each vertex. \texttt{traverse} is mutually recursive with
+      \texttt{getHyperedges}, which adds a phantom vertex (and edge) and \texttt{traverse}s that vertex if it encounters a
+      nested branch point. If it does not encounter a nested branch point, \texttt{getHyperedges} adds a phantom vertex (and
+      edge) for vertices with no temporal dependencies and a normal edge for vertices with temporal dependencies. In either
+      case, the recursion succeeds, and we are done \texttt{traverse}-ing. The resulting vertices and hyperedges for our minimal
+      tape is given in FigureSomethingOrOther, in which directed arrows represent normal edges, and non-directed arrows denote
+      phantom edges.
 
-\item Call \texttt{traverse} on each phantom vertex, recursively adding meta edges as appropriate. Meta edges map Branches to 
-      BranchPoints one-to-one, as opposed to Hyperedges, in which multiple Branches can share the same sink.
+\begin{tikzpicture}[node distance=1.3cm,>=stealth',bend angle=45,auto]
+
+  \tikzstyle{branch}=[circle,thick,draw=black!75,fill=blue!20,minimum size=6mm]
+  \tikzstyle{branchpoint}=[place,draw=black!75,fill=red!20]
+  \tikzstyle{task}=[rectangle,thick,draw=black!75,fill=black!20,minimum size=4mm]
+  \tikzstyle{param}=[rectangle,thick,draw=black!75,fill=green!20,minimum size=4mm]
+  \tikzstyle{input}=[rectangle,thick,draw=black!75,fill=white!20,minimum size=4mm]
+
+  \node [task]  (t1)                                    {parent1};
+  \node [param] (p1)   [above of=t1]                    {"z=\'zazz\'"};
+
+  \node [task] (t2)    [right of =t1]                   {hello};
+  \node [input] (p2)   [above of=t2]                    {in};
+
+  \draw [-] (p1) -- (t1);
+  \draw [->] (p2) -- (t2);
+
+\end{tikzpicture}
+
+\item metaedges
 
 \end{enumerate}
 
