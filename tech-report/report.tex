@@ -29,6 +29,11 @@
 \usepackage{fontspec}
 \defaultfontfeatures{Mapping=tex-text}
 
+% redefine max depth of itemize
+\usepackage{enumitem}
+\setlistdepth{10}
+\renewlist{itemize}{itemize}{10}
+
 % Use Tikz to draw
 \usepackage{tikz}
 \usetikzlibrary{arrows,shapes,snakes,automata,backgrounds,petri}
@@ -161,48 +166,37 @@ The \texttt{TaskTemplateBuilder.findTasks()} method performs the following actio
 
 \end{enumerate}
 
-This results in a \texttt{TaskTemplateBuilder.parents} map, with tasks as keys, and values as follows:
-
-\texttt{TaskTemplate} -> \texttt{BranchPointTreeGrafts}, which maps a \texttt{BranchPointTree} to a \texttt{Seq[Branch]} set of grafts
-    
-    \quad \texttt{BranchPointTree}, which contains an \texttt{ArrayBuffer[BranchTree]}, listing this BP's corresponding branches
-    
-    \quad A \texttt{Baseline} BP: all tasks have a \texttt{Baseline} BP, with a \texttt{baseline} branch. If the task has no BPs, \texttt{Baseline} has no children.
-        
-        \quad \quad \texttt{BranchTree}, which contains an \texttt{ArrayBuffer[TerminalData]} and an \texttt{ArrayBuffer[BranchPointTreeGrafts]}(children)
-        
-        \quad \quad A \texttt{Baseline.baseline} branch, containing \texttt{TerminalData} and an \texttt{ArrayBuffer[BranchPointTreeGrafts]} of children
-            
-            \quad \quad \quad \texttt{TerminalData}: only leaves have \texttt{TerminalData}, one for each dependency
-                
-                \quad \quad \quad \quad \texttt{task}: the (highest) task these specs depend on; type: \texttt{Option[TaskDef]}
-                
-                \quad \quad \quad \quad \texttt{grafts}: any grafts that were applied to these specs; type: \texttt{List()}
-                
-                \quad \quad \quad \quad \texttt{isParam}: true if literal, false if temporal; type: \texttt{Boolean}
-                
-                \quad \quad \quad \quad \texttt{specs}: used to resolve literals; type: \texttt{ArrayBuffer[SpecPair]}
-                    
-                    \quad \quad \quad \quad \quad \texttt{origSpec}: the variable name; type: \texttt{Spec}
-                    
-                    \quad \quad \quad \quad \quad \texttt{srcTask}: the source task of the value; type: \texttt{Option[TaskDef]}
-                    
-                    \quad \quad \quad \quad \quad \texttt{srcSpec}: the value assigned to the variable; type: \texttt{SpecT}
-            
-            \quad \quad \quad \texttt{Children}, an \texttt{ArrayBuffer[BranchPointTreeGrafts]} in which nested BPs appear
-
+This results in a \texttt{TaskTemplateBuilder.parents} map, with task names as keys, and values as follows:
 
 \begin{description}
-\item[abc] ntshaonsetu snthsaonetus ntaoheus sanothes
-\item[def] thsatnohusnth snthasuntaeh
-\item[ghi] \ \\
-      \begin{description}
-          \item[baz] nested level 2
-          \item[] thsnth sthnsnth
-          \item[] tsnhaoeustnh
-      \end{description}
+\item[\texttt{BranchPointTreeGrafts}] The subtree for each task
+    \begin{description}
+    \item[\texttt{Seq[Branch]}] The set of grafts for this task
+    \item[\texttt{BranchPointTree}] Maps the branch point name to its corresponding branches
+        \begin{description}
+        \item[\texttt{Baseline}] Each task has a \texttt{Baseline} branch point.
+        \item[\texttt{BranchTree}] The subtree of the branch point
+            \begin{description}
+            \item[\texttt{Baseline.baseline}] Each \texttt{Baseline} branch point has a \texttt{baseline} branch
+                \begin{description}
+                \item[\texttt{Children}] An \texttt{ArrayBuffer[BranchPointTreeGrafts]} denoting nested branch points
+                \item[\texttt{TerminalData}] Only leaves have \texttt{TerminalData}, one for each task dependency
+                    \begin{description}
+                    \item[\texttt{task}] The task these specs depend on
+                    \item[\texttt{grafts}] Any grafts that were applied to these specs
+                    \item[\texttt{isParam}] True if the dependency is literal, false if temporal
+                    \item[\texttt{specs}] Used to resolve literals
+                        \begin{description}
+                        \item[\texttt{origSpec}] The variable name
+                        \item[\texttt{srcTask}] The source task of the value
+                        \item[\texttt{srcSpec}] The value assigned to the variable
+                        \end{description}
+                    \end{description}
+                \end{description}
+            \end{description}
+        \end{description}
+    \end{description}
 \end{description}
-
 
 
 \begin{tikzpicture}[node distance=1.3cm,>=stealth',bend angle=45,auto]
@@ -242,3 +236,4 @@ See \texttt{WorkflowBuilder.build()}
 \bibliography{report}
 
 \end{document}
+
