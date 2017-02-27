@@ -34,11 +34,6 @@
 \setlistdepth{10}
 \renewlist{itemize}{itemize}{10}
 
-% Use Tikz to draw
-\usepackage{tikz}
-\usetikzlibrary{arrows,shapes,snakes,automata,backgrounds,petri}
-\usepackage[forceshell,outputdir={auto_generated/}]{dot2texi}
-
 \title{Ducttape Technical Report}
 \author{Lane Schwartz \and Jonathan Clark}
 
@@ -208,172 +203,51 @@ See \texttt{WorkflowBuilder.build()}
 
 For illustrative purposes, the following section discusses output for the following minimal \texttt{.tape} file:
 
-\begin{quotation}
-	global {
-		\quad foo="bar"
-	}
+\begin{verbatim}
+    global {
+        foo="bar"
+    }
 	
-	task parent1 :: z="zazz" {}
+    task parent1 :: z="zazz" {}
 	
-	task parent2 :: q=(Q: q1="qiikw" q2="qikmiq" q3=(Sky: blue red=\$z@parent1)) {}
+    task parent2 :: q=(Q: q1="qiikw" q2="qikmiq" q3=(Sky: blue red=\$z@parent1)) {}
 	
-	task hello :: a="abc" b=\$foo c=\$z@parent1 myq=\$q@parent2 > out {
-		\quad echo "Hello" > \${out}
-	}
+    task hello :: a="abc" b=\$foo c=\$z@parent1 myq=\$q@parent2 > out {
+        echo "Hello" > \${out}
+    }
 	
-	task world < in=\$out@hello > out2 {
-		\quad echo "World" > \${out2}
-	}
+    task world < in=\$out@hello > out2 {
+        echo "World" > \${out2}
+    }
 	
-	plan {
-	
-		\quad reach world via (Q: *) * (Sky: *)
-	
-	}
-\end{quotation}
+    plan {
+        reach world via (Q: *) * (Sky: *)
+    }
+\end{verbatim}
 
 \begin{enumerate}
 
 \item For each task template, create a vertex. Store these vertices in a map, where the keys are globally-unique task names.
       We create vertices by calling \texttt{addVertex} on the \texttt{PhantomMetaHyperDagBuilder}, which in turn calls \texttt{addVertex}
       on the \texttt{MetaHyperDagBuilder}, which calls \texttt{addVertex} on the \texttt{HyperDagBuilder}. \texttt{HyperDagBuilder.addVertex}
-      then creates a \texttt{PackedVertex} and adds it to the HyperDag. We add phantom vertices in much the same way, but pass \texttt{None}
-      instead of a \texttt{TaskTemplate}.
+      then creates a \texttt{PackedVertex} and adds it to the HyperDag. A \texttt{PackedVertex} is a generic vertex type and the parent of other
+      vertices such as phantom and epsilon vertices. A regular \texttt{PackedVertex} contains a numeric UID, a \texttt{TaskTemplate}, and an
+      \texttt{Option[String]} comment to be used for GraphViz, while a phantom vertex takes \texttt{None} instead of a \texttt{TaskTemplate}, and an
+      epsilon vertex takes \texttt{null}.
 
-\item Find Hyperedges by calling \texttt{WorkflowBuilder.traverse} on each newly-created vertex. \texttt{traverse} is mutually recursive with
-      \texttt{getHyperedges}, which adds a phantom vertex (and edge) and \texttt{traverse}s that vertex if it encounters a
-      nested branch point. If it does not encounter a nested branch point, \texttt{getHyperedges} adds a phantom vertex (and
-      edge) for vertices with no temporal dependencies and a normal edge for vertices with temporal dependencies. In either
-      case, the recursion succeeds, and we are done \texttt{traverse}-ing. The resulting vertices and hyperedges for our minimal
-      tape is given in FigureSomethingOrOther, in which green nodes denote normal vertices, blue nodes denote phantom vertices, dark gray
-      nodes denote branches, and edges are annotated with \texttt{SpecGroup}s.
+\item Find Hyperedges that need to be created by calling \texttt{WorkflowBuilder.traverse} on each newly-created \texttt{PackedVertex}. \texttt{traverse}
+      is mutually recursive with \texttt{getHyperedges}, which adds a phantom vertex and \texttt{traverse}s that vertex if it encounters a
+      nested branch point in the current node's \texttt{BranchPointTreeGrafts}. If it does not encounter a nested branch point, \texttt{getHyperedges}
+      adds a phantom vertex for each \texttt{TerminalData} with no temporal dependencies (such as a parameter) and a normal vertex for each
+      \texttt{TerminalData} with temporal dependencies (such as an input). In either case, the recursion succeeds, and we are done \texttt{traverse}-ing.
 
-\tikzstyle{vertex}=[rectangle,thick,draw=black!75,fill=green!20]
-\tikzstyle{phantom}=[rectangle,thick,draw=black!75,fill=blue!20]
-\tikzstyle{epsilon}=[rectangle,thick,draw=black!75,fill=red!20]
-\tikzstyle{branch}=[rectangle,thick,draw=black!75,fill=black!20]
-\tikzstyle{spec}=[rectangle,thick,draw=black!75,fill=black!5]
-
-\begin{tikzpicture}[>=latex, scale=0.5, transform shape]
-\begin{dot2tex}[dot,tikzedgelabels,codeonly]
-
-digraph G {
-
-  graph [nodesep="1", ranksep="1"];
-
-  v00 [style="vertex", label="parent1"];
-  v01 [style="vertex", label="parent2"];
-  v02 [style="vertex", label="hello"];
-  v03 [style="vertex", label="world"];
-  v04 [style="phantom", label="parent1.literals"];
-  v06 [style="phantom", label="world.literals"];
-  v08 [style="phantom", label="hello.literals"];
-  v09 [style="phantom", label="hello.Baseline.baseline.nestedBranch[]"];
-  v10 [style="phantom", label="hello.Q.q3.nestedBranch[]"];
-  v14 [style="phantom", label="parent2.literals"];
-  v15 [style="phantom", label="parent2.Baseline.baseline.nestedBranch[]"];
-  v16 [style="phantom", label="parent2.Q.q3.nestedBranch"];
-  
-  b01 [style="branch", label="Sky.blue"];
-  b02 [style="branch", label="Sky.red"];
-  b03 [style="branch", label="Baseline.baseline"];
-  b04 [style="branch", label="Q.q1"];
-  b05 [style="branch", label="Q.q2"];
-  b06 [style="branch", label="Q.q3"];
-
-  b03 -> v04 [label="z='zazz'@", lblstyle="spec"];
-
-  b03 -> v02 [label="in=@hello", lblstyle="spec"];
-
-  b01 -> v08 [label="myq='blue'@parent2", lblstyle="spec"];
-  b02 -> v08 [label="myq='zazz'@parent1", lblstyle="spec"];
-  b04 -> v08 [label="myq='qiikw'@parent2", lblstyle="spec"];
-  b05 -> v08 [label="myq='qikmiq'@parent2", lblstyle="spec"];
-  b06 -> v10 [label="empty", lblstyle="spec"];
-  b03 -> v09 [label="empty", lblstyle="spec"];
-  b03 -> v08 [label="a='abc'@,b='bar'@", lblstyle="spec"];
-  b03 -> v08 [label="c='zazz'@parent1", lblstyle="spec"];
-
-  b01 -> v14 [label="q='blue'@", lblstyle="spec"];
-  b02 -> v14 [label="q='zazz'@parent1", lblstyle="spec"];
-  b04 -> v14 [label="q='qiikw'@", lblstyle="spec"];
-  b05 -> v14 [label="q='qikmiq'@", lblstyle="spec"];
-  b06 -> v16 [label="empty", lblstyle="spec"];
-  b03 -> v15 [label="empty", lblstyle="spec"];
-
-}
-
-\end{dot2tex}
-\end{tikzpicture}
-
-\item When we are finished finding hyperedges for the task, we call \texttt{addMetaEdge} on the \texttt{PhantomMetaHyperDagBuilder},
-      which calls \texttt{addMetaEdge} on the \texttt{MetaHyperDagBuilder}. \texttt{MetaHyperDagBuilder.addMetaEdge} adds an
-      epsilon vertex and a \texttt{HyperEdge} to the \texttt{HyperDagBuilder}. Epsilon vertices pair each task with its respective
-      branch points. Our minimal example produces eight epsilon vertices: a \texttt{Baseline:task} vertex for each task, \texttt{Q:task}
-      vertices for \texttt{hello} and \texttt{parent2}, and \texttt{Sky:task} vertices for \texttt{hello} and \texttt{parent2}. 
-
-\begin{tikzpicture}[>=latex, scale=0.5, transform shape]
-\begin{dot2tex}[dot,tikzedgelabels,codeonly]
-
-digraph G {
-
-  graph [nodesep="1", ranksep="1"];
-
-  v00 [style="vertex", label="parent1"];
-  v01 [style="vertex", label="parent2"];
-  v02 [style="vertex", label="hello"];
-  v03 [style="vertex", label="world"];
-  v04 [style="phantom", label="parent1.literals"];
-  v05 [style="epsilon", label="Baseline:parent1"];
-  v06 [style="phantom", label="world.literals"];
-  v07 [style="epsilon", label="Baseline:world"];
-  v08 [style="phantom", label="hello.literals"];
-  v09 [style="phantom", label="hello.Baseline.baseline.nestedBranch[]"];
-  v10 [style="phantom", label="hello.Q.q3.nestedBranch[]"];
-  v11 [style="epsilon", label="Sky:hello"];
-  v12 [style="epsilon", label="Q:hello"];
-  v13 [style="epsilon", label="Baseline:hello"];
-  v14 [style="phantom", label="parent2.literals"];
-  v15 [style="phantom", label="parent2.Baseline.baseline.nestedBranch[]"];
-  v16 [style="phantom", label="parent2.Q.q3.nestedBranch"];
-  v17 [style="epsilon", label="Sky:parent2"];
-  v18 [style="epsilon", label="Q:parent2"];
-  v19 [style="epsilon", label="Baseline:parent2"];
-
-  b01 [style="branch", label="Sky.blue"];
-  b02 [style="branch", label="Sky.red"];
-  b03 [style="branch", label="Baseline.baseline"];
-  b04 [style="branch", label="Q.q1"];
-  b05 [style="branch", label="Q.q2"];
-  b06 [style="branch", label="Q.q3"];
-
-  b03 -> v04 [label="z='zazz'@", lblstyle="spec"];
-
-  b03 -> v02 [label="in=@hello", lblstyle="spec"];
-
-  b01 -> v08 [label="myq='blue'@parent2", lblstyle="spec"];
-  b02 -> v08 [label="myq='zazz'@parent1", lblstyle="spec"];
-  b04 -> v08 [label="myq='qiikw'@parent2", lblstyle="spec"];
-  b05 -> v08 [label="myq='qikmiq'@parent2", lblstyle="spec"];
-  b06 -> v10 [label="empty", lblstyle="spec"];
-  b03 -> v09 [label="empty", lblstyle="spec"];
-  b03 -> v08 [label="a='abc'@,b='bar'@", lblstyle="spec"];
-  b03 -> v08 [label="c='zazz'@parent1", lblstyle="spec"];
-
-  b01 -> v14 [label="q='blue'@", lblstyle="spec"];
-  b02 -> v14 [label="q='zazz'@parent1", lblstyle="spec"];
-  b04 -> v14 [label="q='qiikw'@", lblstyle="spec"];
-  b05 -> v14 [label="q='qikmiq'@", lblstyle="spec"];
-  b06 -> v16 [label="empty", lblstyle="spec"];
-  b03 -> v15 [label="empty", lblstyle="spec"];
-
-  v04 -> v05 [label="z='zazz'@", lblstyle="spec"];
-  v02 -> v07 [label="in=@hello", lblstyle="spec"];
-
-}
-
-\end{dot2tex}
-\end{tikzpicture}
+\item Once \texttt{getHyperedges} succeeds, the resulting sequence is passed to a \texttt{PhantomMetaHyperDagBuilder.addMetaEdge}, along with the current
+      branch point and a sink vertex. \texttt{PhantomMetaHyperDagBuilder.addMetaEdge} calls \texttt{MetaHyperDagBuilder.addMetaEdge}, which creates a new
+      epsilon vertex and \texttt{MetaEdge} and calls \texttt{HyperDagBuilder.addHyperEdge} for each hyperedge in the passed sequence. Epsilon vertices pair
+      tasks with their respective branch points. Our minimal example produces eight epsilon vertices: a \texttt{Baseline:task} vertex for each task,
+      \texttt{Q:task} vertices for \texttt{hello} and \texttt{parent2}, and \texttt{Sky:task} vertices for \texttt{hello} and \texttt{parent2}. A \texttt{MetaEdge}
+      consists of a sink epsilon vertex, the associated branch point, and the sequence of hyperedges. A \texttt{HyperEdge} consists of a numeric UID, a branch,
+      and an array of edge labels. These edge labels are isomorphic to the branch's source vertices.
 
 \end{enumerate}
 
