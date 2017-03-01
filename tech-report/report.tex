@@ -257,8 +257,7 @@ For illustrative purposes, the following section discusses output for the follow
       and the sequence of hyperedges. A \texttt{HyperEdge} consists of a numeric UID, a branch, and an array of edge labels. These edge labels are isomorphic to the
       branch's source vertices.
 
-\item Create a new \texttt{HyperWorkFlow} by calling \texttt{PhantomMetaHyperDagBuilder.build}, which calls \texttt{MetaHyperDagBuilder.build}, which adds add single
-      hyperedge that represents all incoming meta-edges for all non-epsilon vertices and calls \texttt{HyperDagBuilder.build}, which constructs a new \texttt{HyperDag},
+\item Create a new \texttt{HyperWorkFlow} by calling \texttt{PhantomMetaHyperDagBuilder.build}, which calls \texttt{MetaHyperDagBuilder.build}, which adds a hyperedge from each epsilon vertex to its corresponding task vertex or phantom nested branch point vertex and calls \texttt{HyperDagBuilder.build}, which constructs a new \texttt{HyperDag},
       shown in Figure \ref{hyperdag}.
 
 \begin{figure}
