@@ -34,6 +34,11 @@
 \setlistdepth{10}
 \renewlist{itemize}{itemize}{10}
 
+% graphviz
+\usepackage[forceshell,outputdir={auto_generated/}]{dot2texi}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,shadows,shadows.blur,positioning,fit}
+
 \title{Ducttape Technical Report}
 \author{Lane Schwartz \and Jonathan Clark}
 
@@ -236,18 +241,80 @@ For illustrative purposes, the following section discusses output for the follow
       epsilon vertex takes \texttt{null}.
 
 \item Find Hyperedges that need to be created by calling \texttt{WorkflowBuilder.traverse} on each newly-created \texttt{PackedVertex}. \texttt{traverse}
-      is mutually recursive with \texttt{getHyperedges}, which adds a phantom vertex and \texttt{traverse}s that vertex if it encounters a
-      nested branch point in the current node's \texttt{BranchPointTreeGrafts}. If it does not encounter a nested branch point, \texttt{getHyperedges}
-      adds a phantom vertex for each \texttt{TerminalData} with no temporal dependencies (such as a parameter) and a normal vertex for each
-      \texttt{TerminalData} with temporal dependencies (such as an input). In either case, the recursion succeeds, and we are done \texttt{traverse}-ing.
+      is mutually recursive with \texttt{getHyperedges}. If \texttt{getHyperedges} encounters a nested branch point in the current node's
+      \texttt{BranchPointTreeGrafts}, it adds a phantom vertex to the \texttt{Dags} and \texttt{traverse}s that vertex. If it does not encounter a nested branch point,
+      \texttt{getHyperedges} examines the vertex's \texttt{TerminalData}. For each \texttt{TerminalData} with  no temporal dependencies (such as a parameter),
+      \texttt{getHyperedges} adds a phantom vertex to the sequence of hyperedges. For each \texttt{TerminalData} with temporal dependencies (such as an input),
+      \texttt{getHyperedges} adds a normal vertex to the sequence of hyperedges. In either case, no new vertices are created in the \texttt{HyperDag}, the recursion
+      succeeds, and we are done \texttt{traverse}-ing.
 
-\item Once \texttt{getHyperedges} succeeds, the resulting sequence is passed to a \texttt{PhantomMetaHyperDagBuilder.addMetaEdge}, along with the current
-      branch point and a sink vertex. \texttt{PhantomMetaHyperDagBuilder.addMetaEdge} calls \texttt{MetaHyperDagBuilder.addMetaEdge}, which creates a new
-      epsilon vertex and \texttt{MetaEdge} and calls \texttt{HyperDagBuilder.addHyperEdge} for each hyperedge in the passed sequence. Epsilon vertices pair
-      tasks with their respective branch points. Our minimal example produces eight epsilon vertices: a \texttt{Baseline:task} vertex for each task,
-      \texttt{Q:task} vertices for \texttt{hello} and \texttt{parent2}, and \texttt{Sky:task} vertices for \texttt{hello} and \texttt{parent2}. A \texttt{MetaEdge}
-      consists of a sink epsilon vertex, the associated branch point, and the sequence of hyperedges. A \texttt{HyperEdge} consists of a numeric UID, a branch,
-      and an array of edge labels. These edge labels are isomorphic to the branch's source vertices.
+\item Once \texttt{getHyperedges} succeeds, the resulting sequence is passed to \texttt{PhantomMetaHyperDagBuilder.addMetaEdge}, along with the current
+      branch point and a sink epsilon vertex. Epsilon vertices pair tasks with their respective branch points. Our minimal example produces eight epsilon
+      vertices: a \texttt{Baseline:task} vertex for each task, \texttt{Q:task} vertices for \texttt{hello} and \texttt{parent2}, and \texttt{Sky:task} vertices
+      for \texttt{hello} and \texttt{parent2}. \texttt{PhantomMetaHyperDagBuilder.addMetaEdge} calls \texttt{MetaHyperDagBuilder.addMetaEdge}, which creates a new
+      epsilon vertex and \texttt{MetaEdge} in the \texttt{PhantomMetaHyperDag} and calls \texttt{HyperDagBuilder.addHyperEdge} for each hyperedge in the passed
+      sequence, which creates a new \texttt{HyperEdge} in the \texttt{HyperDag}. A \texttt{MetaEdge} consists of a sink epsilon vertex, the associated branch point,
+      and the sequence of hyperedges. A \texttt{HyperEdge} consists of a numeric UID, a branch, and an array of edge labels. These edge labels are isomorphic to the
+      branch's source vertices.
+
+\item Create a new \texttt{HyperWorkFlow} by calling \texttt{PhantomMetaHyperDagBuilder.build}, which calls \texttt{MetaHyperDagBuilder.build}, which adds add single
+      hyperedge that represents all incoming meta-edges for all non-epsilon vertices and calls \texttt{HyperDagBuilder.build}, which constructs a new \texttt{HyperDag},
+      shown in Figure \ref{hyperdag}.
+
+\begin{figure}
+\begin{tikzpicture}[>=latex, scale=0.25, transform shape]
+\begin{dot2tex}[dot,tikzedgelabels,codeonly]
+digraph G {
+"parent1:0" [fillcolor="white",style="filled"]
+"Epsilon:Baseline:parent1:5" -> "parent1:0" [label="\n"]
+"Phantom:parent2.Baseline.baseline.nestedBranch[]:15" [fillcolor="gray",style="filled"]
+"Epsilon:Q:parent2:18" -> "Phantom:parent2.Baseline.baseline.nestedBranch[]:15" [label="\n"]
+"Phantom:hello.Baseline.baseline.nestedBranch[]:9" [fillcolor="gray",style="filled"]
+"Epsilon:Q:hello:12" -> "Phantom:hello.Baseline.baseline.nestedBranch[]:9" [label="\n"]
+"parent2:1" [fillcolor="white",style="filled"]
+"Epsilon:Baseline:parent2:19" -> "parent2:1" [label="\n"]
+"Phantom:parent2.Q.q3.nestedBranch[]:16" [fillcolor="gray",style="filled"]
+"Epsilon:Sky:parent2:17" -> "Phantom:parent2.Q.q3.nestedBranch[]:16" [label="\n"]
+"hello:2" [fillcolor="white",style="filled"]
+"Epsilon:Baseline:hello:13" -> "hello:2" [label="\n"]
+"Epsilon:Sky:parent2:17" [fillcolor="yellow",style="filled"]
+"Phantom:parent2.literals:14" -> "Epsilon:Sky:parent2:17" [label="Sky.blue\n[]\nq='blue'@"]
+"Phantom:parent2.literals:14" -> "Epsilon:Sky:parent2:17" [label="Sky.red\n[]\nq='zazz'@parent1"]
+"world:3" [fillcolor="white",style="filled"]
+"Epsilon:Baseline:world:7" -> "world:3" [label="\n"]
+"Epsilon:Q:parent2:18" [fillcolor="yellow",style="filled"]
+"Phantom:parent2.literals:14" -> "Epsilon:Q:parent2:18" [label="Q.q1\n[]\nq='qiikw'@"]
+"Phantom:parent2.literals:14" -> "Epsilon:Q:parent2:18" [label="Q.q2\n[]\nq='qikmiq'@"]
+"Phantom:parent2.Q.q3.nestedBranch[]:16" -> "Epsilon:Q:parent2:18" [label="Q.q3\n[]\n"]
+"Phantom:hello.Q.q3.nestedBranch[]:10" [fillcolor="gray",style="filled"]
+"Epsilon:Sky:hello:11" -> "Phantom:hello.Q.q3.nestedBranch[]:10" [label="\n"]
+"Phantom:parent1.literals:4" [fillcolor="gray",style="filled"]
+"Epsilon:Sky:hello:11" [fillcolor="yellow",style="filled"]
+"Phantom:hello.literals:8" -> "Epsilon:Sky:hello:11" [label="Sky.blue\n[]\nmyq='blue'@parent2"]
+"Phantom:hello.literals:8" -> "Epsilon:Sky:hello:11" [label="Sky.red\n[]\nmyq='zazz'@parent1"]
+"Epsilon:Q:hello:12" [fillcolor="yellow",style="filled"]
+"Phantom:hello.literals:8" -> "Epsilon:Q:hello:12" [label="Q.q1\n[]\nmyq='qiikw'@parent2"]
+"Phantom:hello.literals:8" -> "Epsilon:Q:hello:12" [label="Q.q2\n[]\nmyq='qikmiq'@parent2"]
+"Phantom:hello.Q.q3.nestedBranch[]:10" -> "Epsilon:Q:hello:12" [label="Q.q3\n[]\n"]
+"Epsilon:Baseline:parent2:19" [fillcolor="yellow",style="filled"]
+"Phantom:parent2.Baseline.baseline.nestedBranch[]:15" -> "Epsilon:Baseline:parent2:19" [label="Baseline.baseline\n[]\n"]
+"Epsilon:Baseline:hello:13" [fillcolor="yellow",style="filled"]
+"Phantom:hello.Baseline.baseline.nestedBranch[]:9" -> "Epsilon:Baseline:hello:13" [label="Baseline.baseline\n[]\n"]
+"Phantom:hello.literals:8" -> "Epsilon:Baseline:hello:13" [label="Baseline.baseline\n[]\na='abc'@\nb='bar'@"]
+"Phantom:hello.literals:8" -> "Epsilon:Baseline:hello:13" [label="Baseline.baseline\n[]\nc='zazz'@parent1"]
+"Epsilon:Baseline:parent1:5" [fillcolor="yellow",style="filled"]
+"Phantom:parent1.literals:4" -> "Epsilon:Baseline:parent1:5" [label="Baseline.baseline\n[]\nz='zazz'@"]
+"Phantom:world.literals:6" [fillcolor="gray",style="filled"]
+"Epsilon:Baseline:world:7" [fillcolor="yellow",style="filled"]
+"hello:2" -> "Epsilon:Baseline:world:7" [label="Baseline.baseline\n[]\nin=@hello"]
+"Phantom:parent2.literals:14" [fillcolor="gray",style="filled"]
+"Phantom:hello.literals:8" [fillcolor="gray",style="filled"]
+}
+\end{dot2tex}
+\end{tikzpicture}
+\caption{The resulting packed HyperDag}
+\label{hyperdag}
+\end{figure}
 
 \end{enumerate}
 
