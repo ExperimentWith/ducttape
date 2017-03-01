@@ -95,9 +95,9 @@ class HyperDag[V,H,E](val roots: Seq[PackedVertex[V]],
     }
     def colorizeV(v: PackedVertex[V]): String = {
       if (v.toString.startsWith("Phantom")) {
-        "grey"
+        "gray"
       } else if(v.toString.startsWith("Epsilon")) {
-        "cornsilk"
+        "yellow"
       } else {
         "white"
       }  
