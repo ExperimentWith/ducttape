@@ -257,8 +257,9 @@ For illustrative purposes, the following section discusses output for the follow
       and the sequence of hyperedges. A \texttt{HyperEdge} consists of a numeric UID, a branch, and an array of edge labels. These edge labels are isomorphic to the
       branch's source vertices.
 
-\item Create a new \texttt{HyperWorkFlow} by calling \texttt{PhantomMetaHyperDagBuilder.build}, which calls \texttt{MetaHyperDagBuilder.build}, which adds a hyperedge from each epsilon vertex to its corresponding task vertex or phantom nested branch point vertex and calls \texttt{HyperDagBuilder.build}, which constructs a new \texttt{HyperDag},
-      shown in Figure \ref{hyperdag}.
+\item Create a new \texttt{HyperWorkFlow} by calling \texttt{PhantomMetaHyperDagBuilder.build}, which calls \texttt{MetaHyperDagBuilder.build}, which adds a hyperedge
+      from each epsilon vertex to its corresponding task vertex or phantom nested branch point vertex and calls \texttt{HyperDagBuilder.build}, which constructs a new
+      \texttt{HyperDag}, shown in Figure \ref{hyperdag}.
 
 \begin{figure}
 \begin{tikzpicture}[>=latex, scale=0.25, transform shape]
@@ -317,6 +318,50 @@ digraph G {
 
 \end{enumerate}
 
+\section{Unpacking the HyperDag}
+
+See \texttt{Plans.getPlannedVertices}
+
+\begin{enumerate}
+
+\item Map vertices to grafts (\texttt{Set[Branch]}) by building \texttt{immediateGrafts}. For each \texttt{SpecGroup} \textit{spec}
+      in each \texttt{HyperEdge} \textit{he} for each \texttt{PackedVertex} \textit{v} in the \texttt{HyperDag},  if \textit{spec}'s
+      grafts are not empty, add the grafts to \texttt{immediateGrafts[v]}.
+
+\item Recursively find dependencies by calling \texttt{visitDependencies} and building \texttt{graftRelaxations}, which is another
+      vertex->grafts map. In \texttt{visitDependencies}, if \textit{dep} does not exist in \texttt{graftRelaxations}, we add it as a key, 
+      set its value to \texttt{grafts}, and call \texttt{visitDependencies} on each of its parents. If \textit{dep} does exist in
+      \texttt{graftRelaxations}, the recursion succeeds.
+
+\item For each realization plan in the workflow (or the union of all plans if unspecified), find candidates by calling \texttt{getCandidates},
+      which calls \texttt{Hyperworkflow.unpackedWalker}. \texttt{unpackedWalker} builds a munger by initializing the following, in order:
+
+	\begin{description}
+
+	\item[\texttt{EdgeStateInitializer}] adds each edge's state to a holding buffer
+
+	\item[texttt{BranchGraftMunger}] allows the unpacker to recognize and handle grafts
+
+	\item[\texttt{GlobalBranchPointConstraint}] enforces global branch point consistency
+
+	\item[\texttt{EdgeStateMerger}] merges the edge state's holding buffer into the hyperedgeState
+
+	\item[\texttt{InPlanConstraint}] checks the final hyperedge state for plan membership
+
+	\item[\texttt{PhantomMetaHyperDag.unpackedWalker}] creates a new \texttt{UnpackedPhantomMetaDagWalker}. \texttt{UnpackedPhantomMetaDagWalker}
+	      creates a new \texttt{UnpackedMetaDagWalker}, which creates a new \texttt{mutable.HashMap[(PackedVertex[V],Seq[D]), UnpackedVertex[V,H,E,D]]}
+	      of epsilons and--you guessed it--\texttt{UnpackedDagWalker}. \texttt{UnpackedDagWalker} unpacks the roots by adding a new \texttt{UnpackedVertex}
+	      to the \texttt{agenda} for each.
+
+	\end{description}
+
+      This brings us up through Plans.scala, line 190.
+
+\item Filter candidate realizations by those allowed in the cross-product of realizations for the plan.
+
+\item Do backward dependency resolution starting at goals
+
+\end{enumerate}
 
 \bibliographystyle{plainnat}
 \bibliography{report}
