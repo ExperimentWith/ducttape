@@ -29,6 +29,15 @@
 \usepackage{fontspec}
 \defaultfontfeatures{Mapping=tex-text}
 
+% redefine max depth of itemize
+\usepackage{enumitem}
+\setlistdepth{10}
+\renewlist{itemize}{itemize}{10}
+
+% graphviz
+\usepackage[forceshell,outputdir={auto_generated/}]{dot2texi}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,shadows,shadows.blur,positioning,fit}
 
 \title{Ducttape Technical Report}
 \author{Lane Schwartz \and Jonathan Clark}
@@ -157,19 +166,205 @@ The \texttt{TaskTemplateBuilder.findTasks()} method performs the following actio
 
 \end{enumerate}
 
+This results in a \texttt{TaskTemplateBuilder.parents} map, with task names as keys, and values as follows:
+
+\begin{description}
+\item[\texttt{BranchPointTreeGrafts}] The subtree for each task
+    \begin{description}
+    \item[\texttt{Seq[Branch]}] The set of grafts for this task
+    \item[\texttt{BranchPointTree}] Maps the branch point name to its corresponding branches
+        \begin{description}
+        \item[\texttt{Baseline}] Each task has a \texttt{Baseline} branch point.
+        \item[\texttt{BranchTree}] The subtree of the branch point
+            \begin{description}
+            \item[\texttt{Baseline.baseline}] Each \texttt{Baseline} branch point has a \texttt{baseline} branch
+                \begin{description}
+                \item[\texttt{Children}] An \texttt{ArrayBuffer[BranchPointTreeGrafts]} denoting nested branch points
+                \item[\texttt{TerminalData}] Only leaves have \texttt{TerminalData}, one for each task dependency
+                    \begin{description}
+                    \item[\texttt{task}] The task these specs depend on
+                    \item[\texttt{grafts}] Any grafts that were applied to these specs
+                    \item[\texttt{isParam}] True if the dependency is literal, false if temporal
+                    \item[\texttt{specs}] Used to resolve literals
+                        \begin{description}
+                        \item[\texttt{origSpec}] The variable name
+                        \item[\texttt{srcTask}] The source task of the value
+                        \item[\texttt{srcSpec}] The value assigned to the variable
+                        \end{description}
+                    \end{description}
+                \end{description}
+            \end{description}
+        \end{description}
+    \end{description}
+\end{description}
+
+
 
 \section{Temporal and structural dependencies}
 
 \section{Constructing a packed hyperDAG}
 
-See \texttt{WorkflowBuilder.build()}
+See \texttt{WorkflowBuilder.build()} 
+
+For illustrative purposes, the following section discusses output for the following minimal \texttt{.tape} file:
+
+\begin{verbatim}
+    global {
+        foo="bar"
+    }
+	
+    task parent1 :: z="zazz" {}
+	
+    task parent2 :: q=(Q: q1="qiikw" q2="qikmiq" q3=(Sky: blue red=\$z@parent1)) {}
+	
+    task hello :: a="abc" b=\$foo c=\$z@parent1 myq=\$q@parent2 > out {
+        echo "Hello" > \${out}
+    }
+	
+    task world < in=\$out@hello > out2 {
+        echo "World" > \${out2}
+    }
+	
+    plan {
+        reach world via (Q: *) * (Sky: *)
+    }
+\end{verbatim}
 
 \begin{enumerate}
+
 \item For each task template, create a vertex. Store these vertices in a map, where the keys are globally-unique task names.
+      We create vertices by calling \texttt{addVertex} on the \texttt{PhantomMetaHyperDagBuilder}, which in turn calls \texttt{addVertex}
+      on the \texttt{MetaHyperDagBuilder}, which calls \texttt{addVertex} on the \texttt{HyperDagBuilder}. \texttt{HyperDagBuilder.addVertex}
+      then creates a \texttt{PackedVertex} and adds it to the HyperDag. A \texttt{PackedVertex} is a generic vertex type and the parent of other
+      vertices such as phantom and epsilon vertices. A regular \texttt{PackedVertex} contains a numeric UID, a \texttt{TaskTemplate}, and an
+      \texttt{Option[String]} comment to be used for GraphViz, while a phantom vertex takes \texttt{None} instead of a \texttt{TaskTemplate}, and an
+      epsilon vertex takes \texttt{null}.
+
+\item Find Hyperedges that need to be created by calling \texttt{WorkflowBuilder.traverse} on each newly-created \texttt{PackedVertex}. \texttt{traverse}
+      is mutually recursive with \texttt{getHyperedges}. If \texttt{getHyperedges} encounters a nested branch point in the current node's
+      \texttt{BranchPointTreeGrafts}, it adds a phantom vertex to the \texttt{Dags} and \texttt{traverse}s that vertex. If it does not encounter a nested branch point,
+      \texttt{getHyperedges} examines the vertex's \texttt{TerminalData}. For each \texttt{TerminalData} with  no temporal dependencies (such as a parameter),
+      \texttt{getHyperedges} adds a phantom vertex to the sequence of hyperedges. For each \texttt{TerminalData} with temporal dependencies (such as an input),
+      \texttt{getHyperedges} adds a normal vertex to the sequence of hyperedges. In either case, no new vertices are created in the \texttt{HyperDag}, the recursion
+      succeeds, and we are done \texttt{traverse}-ing.
+
+\item Once \texttt{getHyperedges} succeeds, the resulting sequence is passed to \texttt{PhantomMetaHyperDagBuilder.addMetaEdge}, along with the current
+      branch point and a sink epsilon vertex. Epsilon vertices pair tasks with their respective branch points. Our minimal example produces eight epsilon
+      vertices: a \texttt{Baseline:task} vertex for each task, \texttt{Q:task} vertices for \texttt{hello} and \texttt{parent2}, and \texttt{Sky:task} vertices
+      for \texttt{hello} and \texttt{parent2}. \texttt{PhantomMetaHyperDagBuilder.addMetaEdge} calls \texttt{MetaHyperDagBuilder.addMetaEdge}, which creates a new
+      epsilon vertex and \texttt{MetaEdge} in the \texttt{PhantomMetaHyperDag} and calls \texttt{HyperDagBuilder.addHyperEdge} for each hyperedge in the passed
+      sequence, which creates a new \texttt{HyperEdge} in the \texttt{HyperDag}. A \texttt{MetaEdge} consists of a sink epsilon vertex, the associated branch point,
+      and the sequence of hyperedges. A \texttt{HyperEdge} consists of a numeric UID, a branch, and an array of edge labels. These edge labels are isomorphic to the
+      branch's source vertices.
+
+\item Create a new \texttt{HyperWorkFlow} by calling \texttt{PhantomMetaHyperDagBuilder.build}, which calls \texttt{MetaHyperDagBuilder.build}, which adds a hyperedge
+      from each epsilon vertex to its corresponding task vertex or phantom nested branch point vertex and calls \texttt{HyperDagBuilder.build}, which constructs a new
+      \texttt{HyperDag}, shown in Figure \ref{hyperdag}.
+
+\begin{figure}
+\begin{tikzpicture}[>=latex, scale=0.25, transform shape]
+\begin{dot2tex}[dot,tikzedgelabels,codeonly]
+digraph G {
+"parent1:0" [fillcolor="white",style="filled"]
+"Epsilon:Baseline:parent1:5" -> "parent1:0" [label="\n"]
+"Phantom:parent2.Baseline.baseline.nestedBranch[]:15" [fillcolor="gray",style="filled"]
+"Epsilon:Q:parent2:18" -> "Phantom:parent2.Baseline.baseline.nestedBranch[]:15" [label="\n"]
+"Phantom:hello.Baseline.baseline.nestedBranch[]:9" [fillcolor="gray",style="filled"]
+"Epsilon:Q:hello:12" -> "Phantom:hello.Baseline.baseline.nestedBranch[]:9" [label="\n"]
+"parent2:1" [fillcolor="white",style="filled"]
+"Epsilon:Baseline:parent2:19" -> "parent2:1" [label="\n"]
+"Phantom:parent2.Q.q3.nestedBranch[]:16" [fillcolor="gray",style="filled"]
+"Epsilon:Sky:parent2:17" -> "Phantom:parent2.Q.q3.nestedBranch[]:16" [label="\n"]
+"hello:2" [fillcolor="white",style="filled"]
+"Epsilon:Baseline:hello:13" -> "hello:2" [label="\n"]
+"Epsilon:Sky:parent2:17" [fillcolor="yellow",style="filled"]
+"Phantom:parent2.literals:14" -> "Epsilon:Sky:parent2:17" [label="Sky.blue\n[]\nq='blue'@"]
+"Phantom:parent2.literals:14" -> "Epsilon:Sky:parent2:17" [label="Sky.red\n[]\nq='zazz'@parent1"]
+"world:3" [fillcolor="white",style="filled"]
+"Epsilon:Baseline:world:7" -> "world:3" [label="\n"]
+"Epsilon:Q:parent2:18" [fillcolor="yellow",style="filled"]
+"Phantom:parent2.literals:14" -> "Epsilon:Q:parent2:18" [label="Q.q1\n[]\nq='qiikw'@"]
+"Phantom:parent2.literals:14" -> "Epsilon:Q:parent2:18" [label="Q.q2\n[]\nq='qikmiq'@"]
+"Phantom:parent2.Q.q3.nestedBranch[]:16" -> "Epsilon:Q:parent2:18" [label="Q.q3\n[]\n"]
+"Phantom:hello.Q.q3.nestedBranch[]:10" [fillcolor="gray",style="filled"]
+"Epsilon:Sky:hello:11" -> "Phantom:hello.Q.q3.nestedBranch[]:10" [label="\n"]
+"Phantom:parent1.literals:4" [fillcolor="gray",style="filled"]
+"Epsilon:Sky:hello:11" [fillcolor="yellow",style="filled"]
+"Phantom:hello.literals:8" -> "Epsilon:Sky:hello:11" [label="Sky.blue\n[]\nmyq='blue'@parent2"]
+"Phantom:hello.literals:8" -> "Epsilon:Sky:hello:11" [label="Sky.red\n[]\nmyq='zazz'@parent1"]
+"Epsilon:Q:hello:12" [fillcolor="yellow",style="filled"]
+"Phantom:hello.literals:8" -> "Epsilon:Q:hello:12" [label="Q.q1\n[]\nmyq='qiikw'@parent2"]
+"Phantom:hello.literals:8" -> "Epsilon:Q:hello:12" [label="Q.q2\n[]\nmyq='qikmiq'@parent2"]
+"Phantom:hello.Q.q3.nestedBranch[]:10" -> "Epsilon:Q:hello:12" [label="Q.q3\n[]\n"]
+"Epsilon:Baseline:parent2:19" [fillcolor="yellow",style="filled"]
+"Phantom:parent2.Baseline.baseline.nestedBranch[]:15" -> "Epsilon:Baseline:parent2:19" [label="Baseline.baseline\n[]\n"]
+"Epsilon:Baseline:hello:13" [fillcolor="yellow",style="filled"]
+"Phantom:hello.Baseline.baseline.nestedBranch[]:9" -> "Epsilon:Baseline:hello:13" [label="Baseline.baseline\n[]\n"]
+"Phantom:hello.literals:8" -> "Epsilon:Baseline:hello:13" [label="Baseline.baseline\n[]\na='abc'@\nb='bar'@"]
+"Phantom:hello.literals:8" -> "Epsilon:Baseline:hello:13" [label="Baseline.baseline\n[]\nc='zazz'@parent1"]
+"Epsilon:Baseline:parent1:5" [fillcolor="yellow",style="filled"]
+"Phantom:parent1.literals:4" -> "Epsilon:Baseline:parent1:5" [label="Baseline.baseline\n[]\nz='zazz'@"]
+"Phantom:world.literals:6" [fillcolor="gray",style="filled"]
+"Epsilon:Baseline:world:7" [fillcolor="yellow",style="filled"]
+"hello:2" -> "Epsilon:Baseline:world:7" [label="Baseline.baseline\n[]\nin=@hello"]
+"Phantom:parent2.literals:14" [fillcolor="gray",style="filled"]
+"Phantom:hello.literals:8" [fillcolor="gray",style="filled"]
+}
+\end{dot2tex}
+\end{tikzpicture}
+\caption{The resulting packed HyperDag}
+\label{hyperdag}
+\end{figure}
+
 \end{enumerate}
 
+\section{Unpacking the HyperDag}
+
+See \texttt{Plans.getPlannedVertices}
+
+\begin{enumerate}
+
+\item Map vertices to grafts (\texttt{Set[Branch]}) by building \texttt{immediateGrafts}. For each \texttt{SpecGroup} \textit{spec}
+      in each \texttt{HyperEdge} \textit{he} for each \texttt{PackedVertex} \textit{v} in the \texttt{HyperDag},  if \textit{spec}'s
+      grafts are not empty, add the grafts to \texttt{immediateGrafts[v]}.
+
+\item Recursively find dependencies by calling \texttt{visitDependencies} and building \texttt{graftRelaxations}, which is another
+      vertex->grafts map. In \texttt{visitDependencies}, if \textit{dep} does not exist in \texttt{graftRelaxations}, we add it as a key, 
+      set its value to \texttt{grafts}, and call \texttt{visitDependencies} on each of its parents. If \textit{dep} does exist in
+      \texttt{graftRelaxations}, the recursion succeeds.
+
+\item For each realization plan in the workflow (or the union of all plans if unspecified), find candidates by calling \texttt{getCandidates},
+      which calls \texttt{Hyperworkflow.unpackedWalker}. \texttt{unpackedWalker} builds a munger by initializing the following, in order:
+
+	\begin{description}
+
+	\item[\texttt{EdgeStateInitializer}] adds each edge's state to a holding buffer
+
+	\item[texttt{BranchGraftMunger}] allows the unpacker to recognize and handle grafts
+
+	\item[\texttt{GlobalBranchPointConstraint}] enforces global branch point consistency
+
+	\item[\texttt{EdgeStateMerger}] merges the edge state's holding buffer into the hyperedgeState
+
+	\item[\texttt{InPlanConstraint}] checks the final hyperedge state for plan membership
+
+	\item[\texttt{PhantomMetaHyperDag.unpackedWalker}] creates a new \texttt{UnpackedPhantomMetaDagWalker}. \texttt{UnpackedPhantomMetaDagWalker}
+	      creates a new \texttt{UnpackedMetaDagWalker}, which creates a new \texttt{mutable.HashMap[(PackedVertex[V],Seq[D]), UnpackedVertex[V,H,E,D]]}
+	      of epsilons and--you guessed it--\texttt{UnpackedDagWalker}. \texttt{UnpackedDagWalker} unpacks the roots by adding a new \texttt{UnpackedVertex}
+	      to the \texttt{agenda} for each.
+
+	\end{description}
+
+      This brings us up through Plans.scala, line 190.
+
+\item Filter candidate realizations by those allowed in the cross-product of realizations for the plan.
+
+\item Do backward dependency resolution starting at goals
+
+\end{enumerate}
 
 \bibliographystyle{plainnat}
 \bibliography{report}
 
 \end{document}
+

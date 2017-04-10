@@ -98,6 +98,9 @@ class HyperDag[V,H,E](val roots: Seq[PackedVertex[V]],
         "gray"
 /*      } else if(v.toString.startsWith("Epsilon")) {
         "yellow"*/
+        "gray"
+      } else if(v.toString.startsWith("Epsilon")) {
+        "yellow"
       } else {
         "white"
       }  
