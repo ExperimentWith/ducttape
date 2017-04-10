@@ -86,7 +86,7 @@ object Ducttape extends Logging {
   
   def main(args: Array[String]) {
     LogUtils.initJavaLogging()
-
+    
     val ducttapeVersion: String = try { 
       Files.readJarResource("/version.info").head
     } catch {
@@ -418,7 +418,7 @@ object Ducttape extends Logging {
       opts.typeFlag.value match {
         case Some("debug") => {
           err.println("Generating GraphViz dot visualization of PhantomMetaHyperDAG...")
-          println(workflow.dag.toGraphVizDebug)
+          //println(workflow.dag.toGraphVizDebug)
         }
         case Some("packed") => {
           err.println("Generating GraphViz dot visualization of packed workflow...")
@@ -569,7 +569,7 @@ object Ducttape extends Logging {
         case _ => err.println("Doing nothing")
       }
     }
-
+    
     // TODO: Have run() function in each mode?
     ex2err(opts.mode match {
       case "list" => list

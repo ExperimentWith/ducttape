@@ -169,6 +169,7 @@ class UnpackedDagWalker[V,H,E,D,F](
         // for each possible realization of the parent vertex of the current component edge
         // (represented by the current recursive call to unpack())...
         for (parentRealization: Seq[D] <- myParentReals) {
+          //println(myParentReals)
           // check if we meet external semantic constraints
           munger.traverseEdge(v, he, edge, parentRealization, prevState) match {
             case None => {

@@ -25,8 +25,10 @@ import ducttape.workflow.TaskTemplate
 import ducttape.workflow.builder.WorkflowBuilder
 import ducttape.versioner.WorkflowVersionInfo
 import ducttape.util.Optional
-
 import grizzled.slf4j.Logging
+import ducttape.hyperdag.walker.UnpackedPhantomMetaDagWalker
+import ducttape.hyperdag.walker.UnpackedPhantomMetaDagWalker
+import ducttape.hyperdag.walker.UnpackedPhantomMetaDagWalker
 
 // TODO: Disconnect from CLI and move to workflow package
 object Plans extends Logging {
@@ -51,6 +53,9 @@ object Plans extends Logging {
     def explainCallbackCurried(vertexName: => String, msg: => String, accepted: Boolean)
       = explainCallback(plan.name, vertexName, msg, accepted)
 
+    //println(workflow.unpackedWalker(PatternFilter(plan.realizations, graftRelaxations), explainCallbackCurried))
+     val foo =  workflow.unpackedWalker(PatternFilter(plan.realizations, graftRelaxations), explainCallbackCurried)
+     println(foo)
     // this is the most important place for us to pass the filter to unpackedWalker!
     workflow.unpackedWalker(PatternFilter(plan.realizations, graftRelaxations), explainCallbackCurried).
       foreach(numCores, { v: UnpackedWorkVert =>
@@ -134,7 +139,7 @@ object Plans extends Logging {
       // recursively find all dependencies of this vertex & add graft relaxations
       visitDependencies(v, v, grafts)
     }
-    
+  
     debug {
       for ( (v, set) <- graftRelaxations) {
         debug(s"Found graft relaxation: ${v} -> ${set.toString}")
@@ -183,6 +188,12 @@ object Plans extends Logging {
           //   since some branch points may become visible or invisible based on which branches are active.
           val candidates: Map[(String,Realization), RealTask]
             = getCandidates(workflow, plan, explainCallback, graftRelaxations)
+            
+          //println(graftRelaxations)
+          for (a: ((String,Realization),RealTask) <- candidates){
+            println(a)
+          }
+          //exit(0)
           
           if (verbose) {
             val matches = candidates.map(_._1).map(_._1).toSet.toSeq.sorted

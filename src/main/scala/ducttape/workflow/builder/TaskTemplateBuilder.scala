@@ -97,6 +97,8 @@ private[builder] class TaskTemplateBuilder(
     }.toMap
     
     val taskTemplates: Seq[TaskTemplate] = parents.keys.toSeq
+    //for ((k,v) <- parents) printf("%s:%s\n\n", k, v)
+    //exit(0)
     new FoundTasks(taskTemplates, parents, branchPoints)
   }
   

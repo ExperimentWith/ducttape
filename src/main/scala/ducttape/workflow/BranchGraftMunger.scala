@@ -32,6 +32,7 @@ class BranchGraftMunger(
       e: SpecGroup,
       parentReal: Seq[Branch],
       prevState: UnpackState): Option[UnpackState] = {
+    println("BranchGraftMunger")
     
     heOpt match {
       case Some(he) => {

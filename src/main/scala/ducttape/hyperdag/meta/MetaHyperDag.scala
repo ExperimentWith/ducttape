@@ -15,6 +15,8 @@ import ducttape.hyperdag.walker.RealizationMunger
 import ducttape.hyperdag.walker.DefaultRealizationMunger
 import ducttape.hyperdag.walker.Traversal
 import ducttape.hyperdag.walker.Arbitrary
+import ducttape.workflow.SpecGroup
+import ducttape.viz.GraphViz
 
 /** essentially -- an AND-OR HyperDAG 
  * an implementation of MetaHyperDAGs based on transforming
@@ -104,18 +106,55 @@ class MetaHyperDag[V,M,H,E](val delegate: HyperDag[V,H,E],
   def sink(e: HyperEdge[H,E]): PackedVertex[V] = sink(outMetaEdge(e))
   def sink(e: MetaEdge[M,H,E]): PackedVertex[V] = delegate.children(e.epsilonV).head
 
-//  def toGraphViz(): String = delegate.toGraphViz(vertices, parents, {v => v.toString})
-  def toGraphViz(): String = delegate.toGraphViz()
+  def toGraphViz(): String = toGraphViz(metaEdgesByEpsilon, { v => v.toString })
+  //def toGraphViz(): String = delegate.toGraphViz()
 
-  // visualize with all epsilon and phantom vertices
-  def toGraphVizDebug(): String = delegate.toGraphViz()
-//  def toGraphVizDebug(): String = {
-//    def stringify(v: PackedVertex[Option[V]]): String = v match {
-//        case _ if delegate.isPhantom(v) => "Phantom#" + v.id
-//        case _ if isEpsilon(v) => "Epsilon:" + metaEdgesByEpsilon(v).m.toString + "#" + v.id
-//        case _ => v.toString
-//    }
-//    delegate.toGraphViz(delegate.vertices, delegate.parents, stringify)
-//  }
+  def toGraphViz(vertexMap: Map[PackedVertex[_],MetaEdge[M,H,E]],
+                 stringifyV: PackedVertex[_] => String): String = {
+      
+    // TODO: Expose these
+    // XXX: HACK
+    def stringifyH(h: H): String = if (h == null) "" else h.toString
+    def stringifyE(e: E): String = if (e == null) {
+      ""
+    } else if(e.isInstanceOf[SpecGroup]) {
+      val sg = e.asInstanceOf[SpecGroup]
+      sg.toString(withNewlines=true)
+    } else {
+      e.toString
+    }
+    def colorizeV(v: PackedVertex[_]): String = {
+      if (v.toString.startsWith("Phantom")) {
+        "gray"
+      } else if(v.toString.startsWith("Epsilon")) {
+        "yellow"
+      } else {
+        "white"
+      }  
+    }
+      
+    val str = new StringBuilder(1000)
+    str ++= "digraph G {\n"
+    for ((v: PackedVertex[_], me: MetaEdge[M,H,E]) <- vertexMap) {
+      val color = colorizeV(v)
+      str ++= "\"%s\" [fillcolor=\"%s\",style=\"filled\"]\n".format(GraphViz.escape(stringifyV(v)), color)
+      for (he: HyperEdge[H,E] <- inHyperEdges(me)) {
+        for ( (ant, e) <- sources(he).zip(he.e)) {
+          val color = colorizeV(ant)
+          str ++= "\"%s\" [fillcolor=\"%s\",style=\"filled\"]\n".format(GraphViz.escape(stringifyV(ant)), color)
+          str ++= "\"%s\" -> \"%s\" [label=\"%s\"]\n".format(
+                  GraphViz.escape(stringifyV(ant)),
+                  GraphViz.escape(stringifyV(v)),
+                  GraphViz.escape(stringifyH(he.h)))
+        }
+      }      
+      str ++= "\"%s\" -> \"%s\" [label=\"%s\"]\n".format(
+              GraphViz.escape(stringifyV(v)),
+              GraphViz.escape(stringifyV(sink(me))),
+              GraphViz.escape("")) 
+    }
+    str ++= "}\n"
+    str.toString
+  }
 }
 

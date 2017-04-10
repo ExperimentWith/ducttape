@@ -43,5 +43,12 @@ class PhantomMetaHyperDagBuilder[V,M,H,E](epsilonV: V = null, epsilonH: H = null
   }
   
   // create an immutable version of this graph
-  def build() = new PhantomMetaHyperDag[V,M,H,E](delegate.build())
+  def build() = {
+    /*for ((v: PackedVertex[_], me: MetaEdge[M,H,E]) <- delegate.build().metaEdgesByEpsilon){
+      print(v + " : " + me + "\n")
+    }*/
+    //print(delegate.build().toGraphViz())
+    //exit(0)
+    new PhantomMetaHyperDag[V,M,H,E](delegate.build())
+  }
 }

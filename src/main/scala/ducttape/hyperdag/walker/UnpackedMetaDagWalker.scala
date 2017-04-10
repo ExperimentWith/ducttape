@@ -95,7 +95,7 @@ class UnpackedMetaDagWalker[V,M,H,E,D,F](
   // TODO: private.
   val delegate = new UnpackedDagWalker[V,H,E,D,F](
     dag.delegate, MetaRealizationMunger.andThen(munger), VertexFilterAdapter, toD, traversal)
-
+ 
   override def complete(item: UnpackedMetaVertex[V,H,E,D], continue: Boolean = true) = {
     debug(s"Completing: ${item}")
     delegate.complete(item.dual, continue)

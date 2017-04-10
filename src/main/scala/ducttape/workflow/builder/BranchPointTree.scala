@@ -35,5 +35,9 @@ private[builder] class BranchPointTree(val branchPoint: BranchPoint) {
     child.children.flatMap { grandchild: BranchPointTreeGrafts => grandchild.tree.specs }
   }
 
-  override def toString() = "(BP=" + branchPoint + ": " + children.mkString + ")"
+  override def toString(): String = {
+    val str =  "\nBP=" + branchPoint + ": "
+    val childrenStr = children.toString()
+    return str + childrenStr.replaceAll("\n","\n\t")
+  }
 }

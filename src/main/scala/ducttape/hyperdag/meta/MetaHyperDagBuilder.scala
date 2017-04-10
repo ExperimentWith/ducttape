@@ -40,6 +40,8 @@ class MetaHyperDagBuilder[V,M,H,E](epsilonV: V = null, epsilonH: H = null, epsil
     // associate this epsilon vertex with its metaedge
     val me = new MetaEdge[M,H,E](meEpsilonV, m, hyperedges)
     metaEdgesByEpsilon += meEpsilonV -> me
+    
+    //print(meEpsilonV + ": " + hyperedges + "\n")
 
     // delay adding the meta-edges to the delegate builder
     // until we know we've accumulated all of them
@@ -57,6 +59,14 @@ class MetaHyperDagBuilder[V,M,H,E](epsilonV: V = null, epsilonH: H = null, epsil
       delegate.addHyperEdge(epsilonH, epsilonParents, sink)
     }.toSet
 
+    //for ((v: HyperEdge[H,E], me: (Seq[PackedVertex[V]],PackedVertex[V])) <- delegate.build().edges){
+    //  print(v + " ~ " + me + "\n")
+    //}
+/*    for ((v: PackedVertex[_], me: MetaEdge[M,H,E]) <- metaEdgesByEpsilon){
+      print(v + " : " + me + "\n")
+    }*/
+    //print(delegate.build().toGraphViz())
+    //exit(0)
     new MetaHyperDag[V,M,H,E](delegate.build(), metaEdgesByEpsilon, epsilonEdges)
   }
 }

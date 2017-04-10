@@ -24,6 +24,7 @@ object EdgeStateInitializer extends HyperWorkflowStateMunger with Logging {
                             parentReal: Seq[Branch],
                             prevState: UnpackState): Option[UnpackState] = {
 
+    println("realizationStateMunger")
     debug("Vertex=%s; he=%s; Updating prevState: %s".format(v, heOpt, prevState))
     
     assert(prevState.edgeState.isEmpty, "There should be no previous edge state at this point")
@@ -48,6 +49,7 @@ object EdgeStateMerger extends HyperWorkflowStateMunger with Logging {
                             parentReal: Seq[Branch],
                             prevState: UnpackState): Option[UnpackState] = {
 
+    println("EdgeStateMunger")
     // left operand determines return type (an efficient immutable.HashMap)
     val result = new UnpackState(
         hyperedgeState = prevState.hyperedgeState ++ prevState.edgeState,

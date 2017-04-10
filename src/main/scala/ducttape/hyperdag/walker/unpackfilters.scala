@@ -69,8 +69,13 @@ trait RealizationMunger[V,H,E,D,F] {
   // 3) Called for each incoming component edge of the current hyperedge
   //    he is passed mainly for debugging, but we've already observed the hyperedge
   //    in beginHyperedge()
+  var iters2 = 0
   def traverseEdge(v: PackedVertex[V], heOpt: Option[HyperEdge[H,E]], e: E, parentReal: Seq[D], prevState: F): Option[F]
-    = Some(prevState)
+    = {
+    println("RealizationMunger")
+    iters2 += 1
+    Some(prevState)
+  }
   
   // 4) Finish the hyperedge
   // when we finish traversing the hyperedge, we're free to accept it or not, but we should be done modifying realizations
@@ -115,8 +120,16 @@ class CompositeRealizationMunger[V,H,E,D,F](
       case Some(intermediate) => second.beginHyperedge(v, he, intermediate) 
     }
   }
-  
+  var iters = 1
   override def traverseEdge(v: PackedVertex[V], he: Option[HyperEdge[H,E]], e: E, parentRealization: Seq[D], prevState: F): Option[F] = {
+    if (iters <= 10000){
+      //println(iters + "> Vertex> " + v + "; Hyperedge> " + he + "; Edge> " + e + "; Realization> " + parentRealization + "; PrevSate>" + prevState)
+      println("CompositeRealizationMunger")
+    }
+    else{
+      exit(0)
+    }
+    iters += 1
     first.traverseEdge(v, he, e, parentRealization, prevState) match {
       case None => None
       case Some(intermediate) => second.traverseEdge(v, he, e, parentRealization, intermediate) 
@@ -138,8 +151,14 @@ trait DefaultRealizationStates[V,H,E,D] extends RealizationMunger[V,H,E,D,immuta
     case None => new immutable.HashSet[D]
     case Some(d) => new immutable.HashSet[D] + d  
   }
+  var iters3 = 1
   override def traverseEdge(v: PackedVertex[V], heOpt: Option[HyperEdge[H,E]], e: E, parentReal: Seq[D], prevState: immutable.HashSet[D]): Option[immutable.HashSet[D]]
-    = Some(prevState ++ parentReal)
+    = {
+    //println("Traversing hyperedge " + heOpt + ". Called " + iters3 + " times.")
+    println("DefaultRealizationStates")
+    iters3 += 1
+    Some(prevState ++ parentReal)
+  }
 
   override def toRealization(state: immutable.HashSet[D]): Seq[D] = state.toSeq
 }

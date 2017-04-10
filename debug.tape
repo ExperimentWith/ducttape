@@ -1,17 +1,12 @@
-global {
-	foo="bar"
+task foo
+    :: param=(Letter: a b c d e f g h i)
+     > letter
+{
+    echo ${param} > ${letter}
 }
 
-task parent1 :: z="zazz" {}
-
-task parent2 :: q=(Q: q1="qiikw" q2="qikmiq" q3=(Sky: blue red=$z@parent1)) {}
-
-task hello :: a="abc" b=$foo c=$z@parent1 myq=$q@parent2 > out {
-	echo "Hello" > ${out}
-}
-
-plan {
-
-	reach hello via (Q: *) * (Sky: *)
-
+task bar
+    < letters=$letter@foo[Letter:*]
+{
+    echo ${letters}
 }

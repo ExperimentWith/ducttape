@@ -212,16 +212,18 @@ class WorkflowBuilder(wd: WorkflowDefinition, configSpecs: Seq[ConfigAssignment]
     // structure necessary if it encounters nested branch points
     val hyperedges: Seq[(Branch, Seq[(PackedVertex[Option[TaskTemplate]], SpecGroup)])]
       = getHyperedges(task, specPhantomV, curNode, nestedBranches)
-
+    
     if (!hyperedges.isEmpty) {
       val name = "Epsilon:%s:%s".format(branchPoint.toString, task.name)
       debug("Task=%s %s: Adding metaedge '%s' for branchPoint %s to HyperDAG: Component hyperedges are: %s".
         format(task, name, nestedBranches, branchPoint, hyperedges))
       dag.addMetaEdge(branchPoint, hyperedges, sinkV, comment=name)
+      //print(branchPoint + " : " + sinkV + " : " + name + " : " + hyperedges + "\n")
     } else {
       debug("Task=%s %s: No metaedge for branchPoint %s is needed (zero component hyperedges)".
         format(task, nestedBranches, branchPoint))
     }
+
   }
 
   // create dependency pointers based on workflow definition
@@ -291,6 +293,7 @@ class WorkflowBuilder(wd: WorkflowDefinition, configSpecs: Seq[ConfigAssignment]
       val nestedBranchInfo: BranchPointTreeGrafts = foundTasks.parents(taskT)
       val specPhantomV: PackedVertex[Option[TaskTemplate]] = dag.addPhantomVertex(comment = "Phantom:%s.literals".format(taskT.name))
       traverse(taskT, specPhantomV, nestedBranchInfo, Nil, v)
+
     }
 
     // organize packages

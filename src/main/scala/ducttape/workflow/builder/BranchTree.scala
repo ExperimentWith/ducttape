@@ -50,5 +50,9 @@ private[builder] class BranchTree(val branch: Branch) {
       }
   }
 
-  override def toString() = "(B=" + branch + " :: terminalData=" + terminalData.mkString(":") + " :: " + children + ")"
+  override def toString() : String = {
+    val str = "\nB=" + branch + "\n\t:: terminalData=" + terminalData.mkString(":") + "\n\t:: "
+    val childrenStr = children.toString
+    return str + childrenStr.replaceAll("\n","\n\t")
+  }
 }

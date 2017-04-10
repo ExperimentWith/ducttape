@@ -34,6 +34,8 @@ class HyperDagBuilder[V,H,E] extends Logging {
     require(vertices(sink), "Add sink first")
     require(sources.size > 0, "No sources specified")
 
+    //print(sink + " : " + h + " : " + sources + "\n")
+    
     val he = new HyperEdge[H,E](edgeId, h, edgeLabels)
     edgeId += 1
 
