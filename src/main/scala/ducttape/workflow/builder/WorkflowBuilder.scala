@@ -264,6 +264,7 @@ class WorkflowBuilder(wd: WorkflowDefinition, configSpecs: Seq[ConfigAssignment]
       element.children.foreach(findBranchPoints(_))
     }
     findBranchPoints(wd)
+    trace("WorkflowBuilder found %d branches".format(branchFactory.size))
     // branchFactory and branchPointFactory now know all the branches and branch points that exist
 
     // resolver has no knowledge of DAGs nor the dag builder

@@ -72,7 +72,7 @@ trait RealizationMunger[V,H,E,D,F] {
   var iters2 = 0
   def traverseEdge(v: PackedVertex[V], heOpt: Option[HyperEdge[H,E]], e: E, parentReal: Seq[D], prevState: F): Option[F]
     = {
-    println("RealizationMunger")
+    //println("RealizationMunger")
     iters2 += 1
     Some(prevState)
   }
@@ -122,6 +122,7 @@ class CompositeRealizationMunger[V,H,E,D,F](
   }
   var iters = 1
   override def traverseEdge(v: PackedVertex[V], he: Option[HyperEdge[H,E]], e: E, parentRealization: Seq[D], prevState: F): Option[F] = {
+    /*
     if (iters <= 10000){
       //println(iters + "> Vertex> " + v + "; Hyperedge> " + he + "; Edge> " + e + "; Realization> " + parentRealization + "; PrevSate>" + prevState)
       println("CompositeRealizationMunger")
@@ -129,6 +130,8 @@ class CompositeRealizationMunger[V,H,E,D,F](
     else{
       exit(0)
     }
+    * 
+    */
     iters += 1
     first.traverseEdge(v, he, e, parentRealization, prevState) match {
       case None => None
@@ -155,7 +158,7 @@ trait DefaultRealizationStates[V,H,E,D] extends RealizationMunger[V,H,E,D,immuta
   override def traverseEdge(v: PackedVertex[V], heOpt: Option[HyperEdge[H,E]], e: E, parentReal: Seq[D], prevState: immutable.HashSet[D]): Option[immutable.HashSet[D]]
     = {
     //println("Traversing hyperedge " + heOpt + ". Called " + iters3 + " times.")
-    println("DefaultRealizationStates")
+    //println("DefaultRealizationStates")
     iters3 += 1
     Some(prevState ++ parentReal)
   }

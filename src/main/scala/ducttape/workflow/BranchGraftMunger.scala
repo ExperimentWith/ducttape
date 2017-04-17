@@ -32,11 +32,13 @@ class BranchGraftMunger(
       e: SpecGroup,
       parentReal: Seq[Branch],
       prevState: UnpackState): Option[UnpackState] = {
-    println("BranchGraftMunger")
+    //println("BranchGraftMunger")
     
     heOpt match {
       case Some(he) => {
-        trace ("Considering if we need to apply a graft for he '%s' with sink '%s': ".format(he, v, prevState))
+        
+        trace ("Considering if we need to apply a graft for he '%s' with sink '%s':\t%s".format(he, v, (Thread.currentThread().getStackTrace().mkString("\t")), prevState))
+    
         if (e == null || e.grafts.size == 0) {
           // no grafting required. do nothing
           trace("No grafting required")

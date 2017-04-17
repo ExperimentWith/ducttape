@@ -100,7 +100,7 @@ class InPlanConstraint(policy: PlanPolicy, explainCallback: ExplainCallback)
                             e: SpecGroup,
                             parentReal: Seq[Branch],
                             prevState: UnpackState): Option[UnpackState] = {
-    println("InPlanConstraint")
+    //println("InPlanConstraint")
     assert(prevState != null)
     assert(parentReal != null)
     assert(!parentReal.exists(_ == null))

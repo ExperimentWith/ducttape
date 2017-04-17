@@ -2,6 +2,8 @@
 
 package ducttape.hyperdag
 
+import grizzled.slf4j.Logging
+
 /**
  * An UnpackedVertex is returned by a walker while traversing and
  * unpacking a HyperDAG.
@@ -20,7 +22,10 @@ package ducttape.hyperdag
 class UnpackedVertex[V,H,E,D](val packed: PackedVertex[V],
                               val edge: Option[HyperEdge[H,E]],
                               val realization: Seq[D],
-                              val parentRealizations: Seq[Seq[D]]) {
+                              val parentRealizations: Seq[Seq[D]]) extends Logging {
+  
+  debug("Stack trace for creating unpacked vertex:\n%s\nCreating UnpackedVertex:\t%s\t%s\t%s".format((Thread.currentThread().getStackTrace().mkString("\n")),this.toString,edge,parentRealizations))
+  
   // TODO: More smearing of hash codes
   override def hashCode() = packed.id ^ realization.hashCode
   override def equals(that: Any) = that match {

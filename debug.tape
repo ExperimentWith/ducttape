@@ -1,12 +1,13 @@
 task foo
-    :: param=(Letter: a b c d e f g h i)
-     > letter
+	:: param=(Letter: a b c)
+	> letter
 {
     echo ${param} > ${letter}
 }
 
 task bar
-    < letters=$letter@foo[Letter:*]
+	< in=$letter@foo[Letter:*]
 {
-    echo ${letters}
+	echo ${in}
 }
+

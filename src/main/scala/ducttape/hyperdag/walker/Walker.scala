@@ -42,6 +42,7 @@ trait Walker[A] extends Iterable[A] with Logging { // TODO: Should this be a Tra
   // TODO: Add a .par(j) method that returns a parallel walker
   // j = numCores (as in make -j)
   def foreach[U](j: Int, f: A => U) {
+    println("In foreach j=%s".format(j))
     import java.util.concurrent._
     import collection.JavaConversions._
 
@@ -62,6 +63,7 @@ trait Walker[A] extends Iterable[A] with Logging { // TODO: Should this be a Tra
     }
     
     val tasks: Seq[Callable[Unit]] = (0 until j).map(i => new Callable[Unit] {
+      println("In task %s".format(i))
       override def call {
         var running = true
         while (running) {

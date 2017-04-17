@@ -57,4 +57,7 @@ class BranchFactory(bpf: BranchPointFactory) extends Logging {
     return map(branchPoint)
   }
   
+  def size(): Int = {
+    return pool.size
+  }
 }

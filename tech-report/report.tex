@@ -102,7 +102,9 @@ This object is error-checked by \texttt{StaticChecker} and by \texttt{WorkflowCh
 
 Finally, the \texttt{WorkflowDefinition} is used to construct a \texttt{ducttape.workflow.\-builder.WorkflowBuilder}.
 %
-The \texttt{WorkflowBuilder.build()} method is responsible for converting the AST into a \texttt{HyperWorkflow}.
+At construction time, the \texttt{ducttape.workflow.builder.WorkflowBuilder} simply creates a \texttt{BranchPointFactory}, a \texttt{BranchFactory}, and a \texttt{PhantomMetaHyperDagBuilder}.
+%
+Later, the \texttt{WorkflowBuilder.build()} method is responsible for converting the AST into a \texttt{HyperWorkflow}.
 
 %\begin{enumerate}
 %\item 

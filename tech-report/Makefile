@@ -17,10 +17,10 @@ update: report.pdf
 all: clean show
 
 %.pdf: $(wildcard *.tex) $(wildcard *.bib) | auto_generated
-	xelatex $* && bibtex $* && xelatex $* && xelatex $*
+	xelatex --shell-escape $* && bibtex $* && xelatex --shell-escape $* && xelatex --shell-escape $*
 
 quick: | auto_generated
-	xelatex report && ${OPEN} report.pdf
+	xelatex --shell-escape report && ${OPEN} report.pdf
 
 auto_generated:
 	mkdir auto_generated

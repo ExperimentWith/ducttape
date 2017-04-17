@@ -13,7 +13,9 @@ import scala.util.parsing.input.Positional
 import ducttape.syntax.AbstractSyntaxTree._
 import ducttape.util.IO
 
-object GrammarParser extends RegexParsers {
+import grizzled.slf4j.Logging
+
+object GrammarParser extends RegexParsers with Logging {
 
   override val skipWhitespace = false;
 
@@ -32,6 +34,7 @@ object GrammarParser extends RegexParsers {
     
     return result match {
       case Success(elements: Seq[ASTType], _) => {
+        trace("Workflow file %s contains %s elements".format(file, elements.size))
         elements.foreach(addFileInfo(_, file))
         new WorkflowDefinition(elements, Seq(file), isImported).collapseImports
       }

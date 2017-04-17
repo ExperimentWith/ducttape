@@ -280,9 +280,11 @@ object Ducttape extends Logging {
         System.err.println("No plans specified in workflow -- Using default one-off realization plan: " +
                            "Each realization will have no more than 1 non-baseline branch")
 
+     System.err.println("About to get planned vertices...")
       // pass in user-specified plan name -- iff it was specified by the user -- otherwise use all plans
       val planPolicy: PlanPolicy
         = Plans.getPlannedVertices(workflow, planNames=opts.plans, verbose=verbose)
+      System.err.println("Checking planned vertices...")
       checkUnpackedWorkflow(planPolicy)
       planPolicy
     }
@@ -418,7 +420,7 @@ object Ducttape extends Logging {
       opts.typeFlag.value match {
         case Some("debug") => {
           err.println("Generating GraphViz dot visualization of PhantomMetaHyperDAG...")
-          //println(workflow.dag.toGraphVizDebug)
+          println(workflow.dag.toGraphViz)
         }
         case Some("packed") => {
           err.println("Generating GraphViz dot visualization of packed workflow...")

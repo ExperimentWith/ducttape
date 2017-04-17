@@ -23,7 +23,7 @@ object GlobalBranchPointConstraint extends HyperWorkflowStateMunger with Logging
                             e: SpecGroup,
                             parentReal: Seq[Branch],
                             prevState: UnpackState): Option[UnpackState] = {
-    println("GlobalBranchPointConstraint")
+    //println("GlobalBranchPointConstraint")
     assert(prevState != null)
     assert(parentReal != null)
     assert(!parentReal.exists(_ == null))

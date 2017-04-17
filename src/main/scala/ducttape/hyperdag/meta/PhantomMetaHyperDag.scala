@@ -95,6 +95,6 @@ class PhantomMetaHyperDag[V,M,H,E](val delegate: MetaHyperDag[Option[V],M,H,E]) 
     
   lazy val size = vertices.size
   
-  //def toGraphViz(): String = delegate.toGraphViz()
+  def toGraphViz(): String = delegate.toGraphViz()
   //def toGraphVizDebug(): String = delegate.toGraphVizDebug()
 }
