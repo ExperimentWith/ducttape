@@ -1,5 +1,5 @@
 task foo
-	:: param=(Letter: a b c)
+	:: param=(Letter: a b c d)
 	> letter
 {
     echo ${param} > ${letter}

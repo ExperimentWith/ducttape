@@ -292,6 +292,7 @@ class UnpackedDagWalker[V,H,E,D,F](
           // * do this only if we got a key (thus updating the agenda and taken)
           waitingToTakeLock.notifyAll()
         }
+        //println(key)
         key
       }
     } // getNext
@@ -338,8 +339,12 @@ class UnpackedDagWalker[V,H,E,D,F](
       if (continue) {
         // first, match fronteir vertices
         // note: consequent is an edge unlike the packed walker
+        println()
+        println(key.v)
         for (consequentE: HyperEdge[H,E] <- dag.outEdges(key.v)) {
           val consequentV = dag.sink(consequentE)
+          //println(key.v + " -> " + consequentV + "     " +consequentE)
+          println("\t" + consequentE)
           def newActiveVertex() = { // thunk
             // get() will throw if we don't get a valid state -- we should be guaranteed a valid state
             // TODO: Can the following line be written prettier? Also, consequentE should never be null
