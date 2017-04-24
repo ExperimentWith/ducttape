@@ -341,7 +341,18 @@ class UnpackedDagWalker[V,H,E,D,F](
         // note: consequent is an edge unlike the packed walker
         println()
         println(key.v)
+        var x:HyperEdge[H,E] = null
         for (consequentE: HyperEdge[H,E] <- dag.outEdges(key.v)) {
+          if (x==null) {
+            x = consequentE
+            print("First\t")
+          } else {
+            if (consequentE.equals(x)) {
+              print("Dup\t")
+            } else {
+              print("New\t")
+            }
+          }
           val consequentV = dag.sink(consequentE)
           //println(key.v + " -> " + consequentV + "     " +consequentE)
           println("\t" + consequentE)
