@@ -39,7 +39,10 @@ class HyperDagBuilder[V,H,E] extends Logging {
 
     for (src <- sources) {
       assert(src != sink)
-      outEdges.getOrElseUpdate(src, new mutable.ListBuffer) += he
+      val o = outEdges.getOrElseUpdate(src, new mutable.ListBuffer)
+      if (! o.contains(he)) {
+        o += he
+      }
     }
     inEdges.getOrElseUpdate(sink, new mutable.ListBuffer) += he
     debug("addHyperEdge: %s ===> %s".format(sources, sink))
