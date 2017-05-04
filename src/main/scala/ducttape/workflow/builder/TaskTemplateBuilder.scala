@@ -29,11 +29,13 @@ private[builder] class TaskTemplateBuilder(
   
   def findTasks(): FoundTasks = {
     
+    /** Sequence of all task definition, including those constructed via function calls */
     val tasks: Seq[TaskDef] = 
       // Concatenate regular task definitions
       // with task definitions constructed via function calls
       (wd.tasks ++ wd.functionCallTasks)
 
+    /** Maps from a task's name to the task definition object */
     val taskMap: Map[Namespace,TaskDef] = {
       tasks.
       // Make each element in the list a tuple, 
