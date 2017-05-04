@@ -40,4 +40,5 @@ tech-report/*.blg
 tech-report/*.out
 tech-report/*.fdb_latexmk
 tech-report/*.fls
+tech-report/*.synctex.gz
 tech-report/auto/
