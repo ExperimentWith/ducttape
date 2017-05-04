@@ -4,7 +4,7 @@ XDG_OPEN:=$(shell which xdg-open 2> /dev/null)
 MAC_OPEN:=$(shell which open 2> /dev/null)
 OPEN:=$(if $(XDG_OPEN),$(XDG_OPEN),$(MAC_OPEN))
 
-OKULAR:=$(strip $(shell qdbus | grep okular))
+OKULAR:=$(strip $(shell qdbus 2> /dev/null | grep okular))
 
 
 show: report.pdf
@@ -16,12 +16,15 @@ update: report.pdf
 
 all: clean show
 
-%.pdf: $(wildcard *.tex) $(wildcard *.bib)
-	xelatex $* && bibtex $* && xelatex $* && xelatex $*
+%.pdf: $(wildcard *.tex) $(wildcard *.bib) | auto_generated
+	xelatex --shell-escape $* && bibtex $* && xelatex --shell-escape $* && xelatex --shell-escape $*
 
-quick:
-	xelatex report && ${OPEN} report.pdf
+quick: | auto_generated
+	xelatex --shell-escape report && ${OPEN} report.pdf
+
+auto_generated:
+	mkdir auto_generated
 
 clean:
-	rm -rf auto *.aux *.bbl *.blg *.log *.out *~ *.pdf
+	rm -rf auto *.aux *.bbl *.blg *.log *.out *~ *.pdf auto_generated
 

@@ -38,4 +38,6 @@ tech-report/*.toc
 tech-report/*.bbl
 tech-report/*.blg
 tech-report/*.out
+tech-report/*.fdb_latexmk
+tech-report/*.fls
 tech-report/auto/
