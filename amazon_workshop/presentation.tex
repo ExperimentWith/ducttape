@@ -1,0 +1,250 @@
+\documentclass[10pt]{beamer}
+\usepackage{pgfpages}
+
+\setbeameroption{show notes on second screen}
+\usetheme[progressbar=frametitle]{metropolis}
+\usepackage{appendixnumberbeamer}
+
+\usepackage{booktabs}
+%\usepackage[scale=2]{ccicons}
+
+\usepackage{pgfplots}
+\usepgfplotslibrary{dateplot}
+
+\usepackage{xspace}
+\newcommand{\themename}{\textbf{\textsc{metropolis}}\xspace}
+
+\usepackage{listings,color}
+\definecolor{verbgray}{gray}{0.9}
+\lstnewenvironment{code}{%
+  \lstset{backgroundcolor=\color{verbgray},
+  frame=single,
+  framerule=0pt,
+  basicstyle=\ttfamily,
+  columns=fullflexible}}{}
+
+\title{ducttape}
+\subtitle{Simple and Reliable Workflow management for replicable scientific computing}
+\date{\today}
+\author{Caitlin Cassidy}
+\institute{The University of Illinois at Urbana-Champaign}
+%\titlegraphic{\hfill\includegraphics[width=1.5cm]{UIUC}}
+
+\begin{document}
+
+\maketitle
+
+%\begin{frame}{Table of contents}
+%  \setbeamertemplate{section in toc}[sections numbered]
+%  \tableofcontents[hideallsubsections]
+%\end{frame}
+
+%\section{Introduction}
+
+\begin{frame}[fragile]{Introduction: What is ducttape?}
+
+  \textbf{ducttape} is workflow management for scientific computing in Unix.
+
+  It enables you to:
+
+  \begin{itemize}
+
+  \item Write tasks using bash and have dependencies among tasks automatically managed
+  \item Track the versions of the software used, the data used, and even the task descriptions themselves in a very detailed way
+  \item Quickly and easily run your workflow under multiple input conditions while re-using intermediate results, without copy-pasting
+
+  \end{itemize}
+
+  ducttape can be downloaded and installed at \url{http://jhclark.github.com/ducttape}.
+
+\note{Testing beamer notes...?}
+\end{frame}
+
+\section{The Basics}
+
+\begin{frame}[fragile]{Running a simple command}
+Commands are encased in \texttt{task}s and follow bash syntax.
+\begin{code}
+task hello_world {
+  echo hello
+  echo >&2 $someone
+}
+\end{code}
+Global variables are defined in a \texttt{global} block.
+\begin{code}
+global {
+  someone=world
+  ducttape_structure=flat
+}
+\end{code}
+\end{frame}
+
+\begin{frame}[fragile]{Input and Output}
+Tasks can take any number of input and output files.
+\begin{code}
+task hello_input < a=/etc/passwd b=/etc/hosts {
+  echo "I will be doing nothing with files $a and $b"
+  cat $a>/dev/null
+  cat $b>/dev/null
+}
+
+task hello_output > x=x.txt y=y.txt {
+  echo writing files $x and $y...
+  echo hello > $x
+  echo world > $y
+}
+\end{code}
+Ducttape will assign the paths for output files as \texttt{./hello\_output/x.txt} and \texttt{./hello\_output/y.txt}.
+\end{frame}
+
+\begin{frame}[fragile]{Running tasks with dependencies}
+Dependencies are introduced when one task takes the output of another as input.
+  \begin{code}
+task first > out {
+  for i in {1..10}; do
+    echo $i >> $out
+  done
+}
+
+task and_then < in=$out@first > out {
+  cat < $in > $out
+}
+  \end{code}
+\end{frame}
+
+\begin{frame}[fragile]{Using parameters}
+Parameters are for variables that aren't files. They are listed after inputs and outputs, using a double colon.
+\begin{code}
+task param_step < in=/etc/passwd > out :: N=5 {
+  echo "$in has $(wc -l < $in) lines"
+  echo "The parameter N is $N"
+  echo $N > $out
+}
+\end{code}
+This distinction means that parameters don't introduce temporal dependencies, so \texttt{no\_dep} can start running in parallel with \texttt{param\_step}.
+\begin{code}
+task no_dep :: X=$N@param_step {
+  #echo "X=$N" # a bug! this would be caught by 
+                 # ducttape's static analysis of bash
+  echo "X=$X"
+}
+\end{code}
+\end{frame}
+
+\section{Advanced Features}
+
+\begin{frame}[fragile]{Hyperworkflows}
+Experimentation often requires one to run similar sequences of tasks in a variety of configurations. To compactly represent such workflows, ducttape provides HyperWorkflows.
+\begin{code}
+task one < in=(Size: sm=small.txt lg=large.txt) > out {
+  cat < $in > $out
+}
+
+task two < in=$out@one :: N=(N: one=1 two=2) {
+  head -n $N < $in
+}
+\end{code}
+In this example \texttt{Size} is a branch point with branches \texttt{sm} and \texttt{lg}, which allows ducttape to run \texttt{one} twice: once with \texttt{small.txt} as input, and once with \texttt{large.txt}. Because \texttt{two} has a temporal dependency with \texttt{one}, it will also be run for each of \texttt{Size}'s branches.
+\end{frame}
+
+\begin{frame}[fragile]{Sequence Branch Points}
+Branches can also be created based on re-running the task multiple times, which can be useful when the underlying task makes calls to a random number generator
+\begin{code}
+task run_several_times > out :: trial=(WhichTrial: 1..10) {
+  # Use bash's built-in random number generator
+  echo $RANDOM > $out
+}
+\end{code}
+With branching, ducttape adds another layer to the directory structure, e.g. \texttt{./run\_several\_times/WhichTrial.1/out}.
+\end{frame}
+
+\begin{frame}[fragile]{Custom realization plans}
+ducttape allows us to specify a number of configurations in a \texttt{plan} block. The following is a plan that specifies three goals and their branches. The \texttt{*} indicates either a crossproduct or a glob operator. In the latter case, it indicates that all branches of a branch point should be run.
+\begin{code}
+plan Basics {
+  reach two via (Size: smaller) * (N: one two) * (M: 1..10)
+  reach one, two via (Size: bigger) * (N: one) * (M: 2 8)
+  reach two via (Size: bigger) * (N: *) * (M: 1)
+}
+\end{code}
+\end{frame}
+
+\begin{frame}[fragile]{Branch Grafting}
+Branch points allow you to run a single task and all of its dependents under a particular set of conditions (the realization). But what if you want some dependents to only use a specific configuration? For this, ducttape provides branch grafts.
+\begin{code}
+task prep < in=(DataSet: train=lg.txt test=sm.txt) > out {
+  cat < $in > $out
+}
+
+task trainer < in=$out@prep[DataSet:train] > model {
+   cat < $in > $model
+}
+
+task tester < in=$out@prep[DataSet:test] > hyps {
+  cat < $in > $hyps
+}
+\end{code}
+\end{frame}
+
+\begin{frame}[fragile]{Nested Branch Points}
+ducttape supports nesting of branch points, such that branches of one branch point can themselves consist of another branch point.
+\begin{code}
+task one :: o="world" {}
+
+task two
+    :: t=(Size: s="sm" m="md" l=(Set: trn tst=$o@one)) {}
+
+task three :: a="foo" b="bar" c=$o@one d=$t@two > out {
+  echo "Hello" > ${out}
+}
+\end{code}
+\end{frame}
+
+\section{What's New?}
+
+\begin{frame}[fragile]{Globbing}
+Sometimes it is useful to have a single task that has access to multiple branches; for example, when evaluating statistical significance of several simulations as compared to a baseline. We can do this with the glob operator in place of a graft.
+\begin{code}
+task foo :: param=(Letter: a b c d) > letter {
+    echo ${param} > ${letter}
+}
+
+task bar < in=$letter@foo[Letter:*] {
+    echo ${in}
+}
+\end{code}
+\end{frame}
+
+\begin{frame}[fragile]{The Problem}
+Running a globbed \texttt{.tape} slows significantly as the number of branches increases. Until recently, a glob of 10 branches would seemingly cause ducttape to hang. An analysis of the source code revealed that duplicate hyperedges were being added to the hypergraph for each branch, causing the traversal to visit the same vertex n**n times.
+
+By preventing the hypergraph builder from adding duplicate edges, the globbed \texttt{.tape} file runs in a fraction of the time.
+
+***bar graphs ooooooooooh***
+
+\end{frame}
+
+\section{Conclusion}
+
+\begin{frame}{Summary}
+
+  ducttape is a workflow management system that automatically resolves dependencies and realizations of tasks. Features such as branching, grafting, and globbing allow the user to implement a variety of scientific computing tasks compactly.
+  
+  The ducttape source code can be downloaded and installed from
+
+  \begin{center}\url{https://github.com/jhclark/ducttape}\end{center}
+
+\end{frame}
+
+\begin{frame}[standout]
+  Questions?
+\end{frame}
+
+\begin{frame}[allowframebreaks]{References}
+
+  \bibliography{demo}
+  \bibliographystyle{abbrv}
+
+\end{frame}
+
+\end{document}
