@@ -1,19 +1,21 @@
 \documentclass[10pt]{beamer}
-\usepackage{pgfpages}
 
+\usepackage{pgfpages}
 \setbeameroption{show notes on second screen}
+
 \usetheme[progressbar=frametitle]{metropolis}
 \usepackage{appendixnumberbeamer}
 
 \usepackage{booktabs}
 %\usepackage[scale=2]{ccicons}
 
-\usepackage{pgfplots}
-\usepgfplotslibrary{dateplot}
+%\usepackage{pgfplots}
+%\usepgfplotslibrary{dateplot}
 
 \usepackage{xspace}
 \newcommand{\themename}{\textbf{\textsc{metropolis}}\xspace}
 
+% define code environment
 \usepackage{listings,color}
 \definecolor{verbgray}{gray}{0.9}
 \lstnewenvironment{code}{%
@@ -54,8 +56,6 @@
   \item Quickly and easily run your workflow under multiple input conditions while re-using intermediate results, without copy-pasting
 
   \end{itemize}
-
-  ducttape can be downloaded and installed at \url{http://jhclark.github.com/ducttape}.
 
 \note{Testing beamer notes...?}
 \end{frame}
@@ -200,7 +200,18 @@ task three :: a="foo" b="bar" c=$o@one d=$t@two > out {
 \end{code}
 \end{frame}
 
-\section{What's New?}
+\section{The ducttape Formalism}
+
+\begin{frame}[fragile]{Data Structure}
+ducttape's primary stucture is the \texttt{HyperDAG}. It is composed of:
+\begin{description}
+\item[regular vertices] for tasks
+\item[phantom vertices] for parameters and non-temporal dependencies
+\item[epsilon vertices] for branch points
+\item[hyperedges] \texttt{and} syntax, one for each branch
+\item[metaedges] \texttt{or} syntax, a bundle of hyperedges
+\end{description}
+\end{frame}
 
 \begin{frame}[fragile]{Globbing}
 Sometimes it is useful to have a single task that has access to multiple branches; for example, when evaluating statistical significance of several simulations as compared to a baseline. We can do this with the glob operator in place of a graft.
@@ -216,7 +227,7 @@ task bar < in=$letter@foo[Letter:*] {
 \end{frame}
 
 \begin{frame}[fragile]{The Problem}
-Running a globbed \texttt{.tape} slows significantly as the number of branches increases. Until recently, a glob of 10 branches would seemingly cause ducttape to hang. An analysis of the source code revealed that duplicate hyperedges were being added to the hypergraph for each branch, causing the traversal to visit the same vertex n**n times.
+Running a globbed \texttt{.tape} slows significantly as the number of branches increases. Until recently, a glob of 10 branches would seemingly cause ducttape to hang. An analysis of the source code revealed that duplicate hyperedges were being added to the hypergraph for each branch, causing the traversal to visit the same vertex $n^n$ times.
 
 By preventing the hypergraph builder from adding duplicate edges, the globbed \texttt{.tape} file runs in a fraction of the time.
 
