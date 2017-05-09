@@ -3,7 +3,6 @@
 package ducttape.hyperdag.walker
 
 import ducttape.hyperdag.PackedVertex
-import ducttape.hyperdag.PhantomHyperDag
 import ducttape.hyperdag.meta.PhantomMetaHyperDag
 
 // iterates over non-None packed vertices

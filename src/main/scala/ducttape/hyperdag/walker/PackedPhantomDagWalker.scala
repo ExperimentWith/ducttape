@@ -2,6 +2,8 @@
 
 package ducttape.hyperdag.walker
 
+//TODO: Delete this class, since it appears to never be used
+/*
 import ducttape.hyperdag.PackedVertex
 import ducttape.hyperdag.PhantomHyperDag
 import ducttape.hyperdag.meta.PhantomMetaHyperDag
@@ -25,3 +27,4 @@ class PackedPhantomDagWalker[V](dag: PhantomHyperDag[V,_,_]) extends Walker[Pack
   def getRunning(): Traversable[PackedVertex[V]] = dag.removePhantoms(delegate.getRunning)
   def getReady(): Traversable[PackedVertex[V]] = dag.removePhantoms(delegate.getReady)
 }
+*/

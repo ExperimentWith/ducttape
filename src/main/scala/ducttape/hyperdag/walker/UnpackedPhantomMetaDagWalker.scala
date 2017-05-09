@@ -3,7 +3,6 @@
 package ducttape.hyperdag.walker
 
 import collection._
-import ducttape.hyperdag.PhantomHyperDag
 import ducttape.hyperdag.UnpackedVertex
 import ducttape.util.MultiSet
 import ducttape.hyperdag.PackedVertex
