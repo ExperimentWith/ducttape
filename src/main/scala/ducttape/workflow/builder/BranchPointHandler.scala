@@ -49,7 +49,7 @@ object BranchPointHandler extends Logging {
       case bp @ SequentialBranchPoint(branchPointNameOpt: Option[_], sequence: Sequence) => {
         val branchPointName = getName(branchPointNameOpt, bp)
         val branchSpecs = generateBranchSpecs(branchPointName, sequence.start, sequence.end, sequence.increment)
-        debug("Generated sequence branch specs: " + branchSpecs)
+        debug("Generated sequence branch specs: " + branchPointName + ":" + sequence.toString)
         handleBranchPoint(branchPointName, branchSpecs, isFromSeq=true)
       }
       
