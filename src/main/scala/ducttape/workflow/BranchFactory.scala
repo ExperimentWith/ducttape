@@ -70,6 +70,11 @@ class BranchFactory() extends Logging {
     return branchPointFactory.get(branchPointName)
   }
   
+  def size() : (Int,Int) = {
+    val branchPoints = getAll().keys.size
+    val branches = pool.size
+    return (branchPoints, branches)
+  }
   
   // first identify all branch points that are present in the workflow so that
   // we can identify and store which elements are branch points
