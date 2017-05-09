@@ -124,4 +124,7 @@ class HyperWorkflow(val dag: PhantomMetaHyperDag[TaskTemplate,BranchPoint,Branch
       andThen(inPlanConstraint)
     dag.unpackedWalker[Branch,UnpackState](munger, inPlanConstraint, toD, traversal, observe)(RealizationOrdering)
   }
+  
+  def toGraphViz(): String = dag.toGraphViz()
+  def toGraphVizDebug(): String = dag.toGraphVizDebug()
 }

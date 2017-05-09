@@ -95,9 +95,9 @@ class HyperDag[V,H,E](val roots: Seq[PackedVertex[V]],
     }
     def colorizeV(v: PackedVertex[V]): String = {
       if (v.toString.startsWith("Phantom")) {
-        "grey"
+        "gray"
       } else if(v.toString.startsWith("Epsilon")) {
-        "cornsilk"
+        "yellow"
       } else {
         "white"
       }  
@@ -106,15 +106,16 @@ class HyperDag[V,H,E](val roots: Seq[PackedVertex[V]],
     val str = new StringBuilder(1000)
     str ++= "digraph G {\n"
     for (v: PackedVertex[V] <- vertexList) {
-      val color = colorizeV(v)
-      str ++= "\"%s\" [fillcolor=\"%s\",style=\"filled\"]\n".format(GraphViz.escape(stringifyV(v)), color)
-      for (he: HyperEdge[H,E] <- inEdgesFunc(v)) {
-        for ( (ant, e) <- sources(he).zip(he.e)) {
-          str ++= "\"%s\" -> \"%s\" [label=\"%s\"]\n".format(
+      if(v.toString.startsWith("Epsilon")){
+        val color = colorizeV(v)
+        str ++= "\"%s\" [fillcolor=\"%s\",style=\"filled\"]\n".format(GraphViz.escape(stringifyV(v)), color)
+        for (he: HyperEdge[H,E] <- inEdgesFunc(v)) {
+          for ( (ant, e) <- sources(he).zip(he.e)) {
+            str ++= "\"%s\" -> \"%s\" [label=\"%s\"]\n".format(
                   GraphViz.escape(stringifyV(ant)),
                   GraphViz.escape(stringifyV(v)),
-                  GraphViz.escape(Seq(stringifyH(he.h),
-                                      stringifyE(e)).mkString("\n")))
+                  GraphViz.escape(stringifyH(he.h)))                      
+          }
         }
       }
     }

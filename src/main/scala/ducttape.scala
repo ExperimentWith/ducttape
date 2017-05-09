@@ -224,7 +224,15 @@ object Ducttape extends Logging {
     val (numBranchPoints, numBranches) = branchFactory.size
     System.err.println(s"Found ${numBranches} total branches in ${numBranchPoints} branch points")
     val workflow: HyperWorkflow = ex2err(builder.build(branchFactory))
-
+    System.err.println("Hyperworkflow has been constructed")
+    
+    {
+      val pw = new java.io.PrintWriter(new java.io.File("workflow.dot" ))
+      pw.write(workflow.toGraphVizDebug())
+      pw.close
+    }
+    System.exit(0)
+    
     val traversal: Traversal = opts.traversal.getOrElse("DepthFirst").toLowerCase.charAt(0) match {
       case 'a' => Arbitrary
       case 'b' => BreadthFirst
