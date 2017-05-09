@@ -24,7 +24,7 @@ import grizzled.slf4j.Logging
 private[builder] class TaskTemplateBuilder(
     wd: WorkflowDefinition,
     private[builder] val confSpecs: Map[String,Spec],
-    private[builder] val branchPointFactory: BranchPointFactory,
+    //private[builder] val branchPointFactory: BranchPointFactory,
     private[builder] val branchFactory: BranchFactory) extends Logging {
   
   def findTasks(): FoundTasks = {

@@ -11,7 +11,6 @@ object BranchGraftGlob {
   
   def expand(
       branchGraftElements: Seq[BranchGraftElement],
-      branchPointFactory: BranchPointFactory, 
       branchFactory: BranchFactory,
       accumulator: Seq[BranchGraftElement] = Seq.empty)
     : Seq[Seq[BranchGraftElement]] = {
@@ -23,10 +22,10 @@ object BranchGraftGlob {
           val branches = branchFactory.getAll(branchGraftElement.branchPointName).toSeq
           return branches.flatMap( (branch: Branch) => {
             val expandedBranchGraftElement = new BranchGraftElement(branchGraftElement.branchPointName, branch.name)
-            expand(branchGraftElements.tail, branchPointFactory, branchFactory, accumulator++Seq(expandedBranchGraftElement)) 
+            expand(branchGraftElements.tail, branchFactory, accumulator++Seq(expandedBranchGraftElement)) 
           })
         } else {
-          return expand(branchGraftElements.tail, branchPointFactory, branchFactory, accumulator++Seq(branchGraftElement))
+          return expand(branchGraftElements.tail, branchFactory, accumulator++Seq(branchGraftElement))
         }
       }
     }

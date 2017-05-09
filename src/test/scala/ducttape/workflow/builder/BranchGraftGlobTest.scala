@@ -22,8 +22,7 @@ class BranchGraftGlobTest extends WordSpec {
 
   }
 
-  val branchPointFactory = new BranchPointFactory
-  val branchFactory = new BranchFactory(branchPointFactory)
+  val branchFactory = new BranchFactory()
 
   val branchesPerBranchPoint = 3
   
@@ -44,7 +43,7 @@ class BranchGraftGlobTest extends WordSpec {
           new BranchGraftElement("C","c1")
       )
 
-      val expandedBranchGraftElements = BranchGraftGlob.expand(unexpandedBranchGraftElements, branchPointFactory, branchFactory)
+      val expandedBranchGraftElements = BranchGraftGlob.expand(unexpandedBranchGraftElements, branchFactory)
 
       expectResult(1)(expandedBranchGraftElements.size)
 
@@ -63,7 +62,7 @@ class BranchGraftGlobTest extends WordSpec {
           new BranchGraftElement("C","c1")
       )
 
-      val expandedBranchGraftElements = BranchGraftGlob.expand(unexpandedBranchGraftElements, branchPointFactory, branchFactory)
+      val expandedBranchGraftElements = BranchGraftGlob.expand(unexpandedBranchGraftElements, branchFactory)
 
       expectResult(branchesPerBranchPoint)(expandedBranchGraftElements.size)
 
@@ -79,7 +78,7 @@ class BranchGraftGlobTest extends WordSpec {
           new BranchGraftElement("C","*")
       )
 
-      val expandedBranchGraftElements = BranchGraftGlob.expand(unexpandedBranchGraftElements, branchPointFactory, branchFactory)
+      val expandedBranchGraftElements = BranchGraftGlob.expand(unexpandedBranchGraftElements, branchFactory)
 
       expectResult(branchesPerBranchPoint*branchesPerBranchPoint)(expandedBranchGraftElements.size)
 
@@ -95,7 +94,7 @@ class BranchGraftGlobTest extends WordSpec {
           new BranchGraftElement("C","*")
       )
 
-      val expandedBranchGraftElements = BranchGraftGlob.expand(unexpandedBranchGraftElements, branchPointFactory, branchFactory)
+      val expandedBranchGraftElements = BranchGraftGlob.expand(unexpandedBranchGraftElements, branchFactory)
 
       expectResult(Math.pow(branchesPerBranchPoint, 3))(expandedBranchGraftElements.size)
 

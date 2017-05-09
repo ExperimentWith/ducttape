@@ -74,7 +74,7 @@ class HyperWorkflow(val dag: PhantomMetaHyperDag[TaskTemplate,BranchPoint,Branch
                     val plans: Seq[RealizationPlan],
                     val submitters: Seq[SubmitterDef], // TODO: Resolve earlier?
                     val versioners: Seq[VersionerDef],
-                    val branchPointFactory: BranchPointFactory,
+                    //val branchPointFactory: BranchPointFactory,
                     val branchFactory: BranchFactory,
                     traversal: Traversal = Arbitrary)
     extends Logging {

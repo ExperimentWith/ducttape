@@ -103,7 +103,7 @@ object VariableHandler extends Logging {
           }
         }
         */
-        val expandedGlobs = BranchGraftGlob.expand(unexpandedBranchGraftElements, taskTemplateBuilder.branchPointFactory, taskTemplateBuilder.branchFactory)
+        val expandedGlobs = BranchGraftGlob.expand(unexpandedBranchGraftElements, taskTemplateBuilder.branchFactory)
         
         expandedGlobs.flatMap( (branchGraftElements: Seq[BranchGraftElement]) => {
         

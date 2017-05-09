@@ -64,8 +64,8 @@ class WorkflowBuilder(wd: WorkflowDefinition, configSpecs: Seq[ConfigAssignment]
 
   import WorkflowBuilder._
 
-  val branchPointFactory = new BranchPointFactory
-  val branchFactory = new BranchFactory(branchPointFactory)
+  //val branchPointFactory = new BranchPointFactory
+  //val branchFactory = new BranchFactory(branchPointFactory)
   // see [[ducttape.workflow.Types]] for an explanation of how generic HyperDAG types
   // correspond to workflow-specific types
   val dag = new PhantomMetaHyperDagBuilder[TaskTemplate, BranchPoint, Branch, SpecGroup]()
@@ -79,7 +79,7 @@ class WorkflowBuilder(wd: WorkflowDefinition, configSpecs: Seq[ConfigAssignment]
     }
   }
 
-  def buildPlans(planDefs: Seq[PlanDefinition]): Seq[RealizationPlan] = {
+  def buildPlans(planDefs: Seq[PlanDefinition], branchFactory: BranchFactory): Seq[RealizationPlan] = {
     planDefs.flatMap { planDef: PlanDefinition =>
       val numReachClauses = planDef.crossProducts.size
       var i = 0
@@ -87,7 +87,7 @@ class WorkflowBuilder(wd: WorkflowDefinition, configSpecs: Seq[ConfigAssignment]
         i += 1
         val realizations: Map[BranchPoint, Set[String]] = cross.value.map { implicit ref: BranchPointRef =>
           catcher {
-            val branchPoint: BranchPoint = branchPointFactory(ref.name)
+            val branchPoint: BranchPoint = branchFactory.getBranchPoint(ref.name)
             // TODO: Change branches back to Branch after we get the baseline/branch name duality hammered out?
             val branches: Set[String] = ref.branchNames.flatMap { element: ASTType =>
               element match {
@@ -233,43 +233,11 @@ class WorkflowBuilder(wd: WorkflowDefinition, configSpecs: Seq[ConfigAssignment]
  	 At that point it needs to create a new GlobSpec type
  	 
    */
-  def build(): HyperWorkflow = {
-    val confSpecs: Map[String, Spec] = configSpecs.map { a: ConfigAssignment => (a.spec.name, a.spec) }.toMap
-
-    // first identify all branch points that are present in the workflow so that
-    // we can identify and store which elements are branch points
-    def findBranchPoints(element: ASTType) {
-      element match {
-        case BranchPointDef(nameOpt: Option[String], branchSpecs: Seq[Spec]) => {
-          nameOpt match {
-            case Some(branchPointName) => {
-              // the get() method of BranchPointFactory and BranchFactory
-              // cause these factories to globally remember the set of 
-              // branches and branch points
-              val branchPoint = branchPointFactory.get(branchPointName)
-              for ( (branchSpec, idx) <- branchSpecs.zipWithIndex) {
-                val isBaseline = (idx == 0)
-                val branch = branchFactory.get(branchSpec.name, branchPoint, isBaseline)
-              }
-            }
-            case None => {
-              throw new FileFormatException("Anonymous branch points are not yet supported", element)
-            }
-          }
-        }
-        case _ => ;
-      }
-      element.children.foreach(findBranchPoints(_))
-    }
-    findBranchPoints(wd)
-    // branchFactory and branchPointFactory now know all the branches and branch points that exist
-
-    // resolver has no knowledge of DAGs nor the dag builder
-    val resolver = new TaskTemplateBuilder(wd, confSpecs, branchPointFactory, branchFactory)
-
+  def build(branchFactory: BranchFactory): HyperWorkflow = {
+        
     // first, find temporal and structural dependencies among tasks and store them as an edge map
     // also, pre-resolve any non-temporal dependencies such as parameters
-    val foundTasks: FoundTasks = resolver.findTasks()
+    val foundTasks: FoundTasks = WorkflowBuilder.findTasks(wd, configSpecs, branchFactory)
 
     // == we've just completed our first pass over the workflow file and linked everything together ==
 
@@ -295,7 +263,7 @@ class WorkflowBuilder(wd: WorkflowDefinition, configSpecs: Seq[ConfigAssignment]
 
     // organize packages
     val packageDefs = wd.packages.map { p => (p.name, p) }.toMap
-    val plans: Seq[RealizationPlan] = buildPlans(wd.plans)
+    val plans: Seq[RealizationPlan] = buildPlans(wd.plans, branchFactory)
 
     // TODO: More checking on submitters and versioners?
     val submitters: Seq[SubmitterDef] = wd.submitters ++ builtins.flatMap { b: WorkflowDefinition => b.submitters }
@@ -303,7 +271,7 @@ class WorkflowBuilder(wd: WorkflowDefinition, configSpecs: Seq[ConfigAssignment]
     val versioners: Seq[VersionerDef] = wd.versioners ++ builtins.flatMap { b: WorkflowDefinition => b.versioners }
     debug("Workflow has versioners: %s".format(versioners.map(_.name).mkString(" ")))
 
-    val result = new HyperWorkflow(dag.build(), wd, packageDefs, plans, submitters, versioners, branchPointFactory, branchFactory)
+    val result = new HyperWorkflow(dag.build(), wd, packageDefs, plans, submitters, versioners, branchFactory)
     debug("Workflow has %d vertices".format(result.dag.size))
     result
   } // end build()
@@ -313,6 +281,28 @@ class WorkflowBuilder(wd: WorkflowDefinition, configSpecs: Seq[ConfigAssignment]
 // can be factored out into their own files
 object WorkflowBuilder {
 
+  def findBranchPoints(element: ASTType): BranchFactory = {
 
+    val branchFactory = new BranchFactory()
+    
+    branchFactory.findBranchPoints(element)
+    
+    return branchFactory
+  }
+  
+  
+  def findTasks(wd: WorkflowDefinition, configSpecs: Seq[ConfigAssignment], branchFactory: BranchFactory): FoundTasks = {
+    
+    val confSpecs: Map[String, Spec] = configSpecs.map { a: ConfigAssignment => (a.spec.name, a.spec) }.toMap
+    
+    // resolver has no knowledge of DAGs nor the dag builder
+    val resolver = new TaskTemplateBuilder(wd, confSpecs, branchFactory)
+
+    // first, find temporal and structural dependencies among tasks and store them as an edge map
+    // also, pre-resolve any non-temporal dependencies such as parameters
+    val foundTasks: FoundTasks = resolver.findTasks()
+    
+    return foundTasks
+  }
 
 }

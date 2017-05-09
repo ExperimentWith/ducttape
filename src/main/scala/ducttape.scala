@@ -220,7 +220,9 @@ object Ducttape extends Logging {
     }
     
     val builder = new WorkflowBuilder(wd, confSpecs, builtins)
-    val workflow: HyperWorkflow = ex2err(builder.build())
+    val branchFactory = ex2err(WorkflowBuilder.findBranchPoints(wd))
+    println("Found branches")
+    val workflow: HyperWorkflow = ex2err(builder.build(branchFactory))
 
     val traversal: Traversal = opts.traversal.getOrElse("DepthFirst").toLowerCase.charAt(0) match {
       case 'a' => Arbitrary

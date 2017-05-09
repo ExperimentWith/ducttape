@@ -92,13 +92,13 @@ object BranchPointHandler extends Logging {
 
     import state._
     
-    val branchPoint = taskTemplateBuilder.branchPointFactory.get(branchPointName)
+    val branchPoint = taskTemplateBuilder.branchFactory.getBranchPoint(branchPointName)
 
         for ( (branchSpec, idx) <- branchSpecs.zipWithIndex) {
 
           debug("Task=%s; bp=%s; new branchSpec=%s".format(taskDef, branchPoint, branchSpec))
           val isBaseline = (idx == 0)
-          val branch = taskTemplateBuilder.branchFactory.get(branchSpec.name, branchPoint, isBaseline)
+          val branch = taskTemplateBuilder.branchFactory.apply(branchSpec.name, branchPoint)
 
           // Statically enforce grafts that happen within a nested
           // branch point (occur in our branch tree)
