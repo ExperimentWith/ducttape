@@ -228,7 +228,7 @@ object Ducttape extends Logging {
     
     {
       val pw = new java.io.PrintWriter(new java.io.File("workflow.dot" ))
-      pw.write(workflow.toGraphVizDebug())
+      pw.write(workflow.toHyperGraphViz())
       pw.close
     }
     System.exit(0)

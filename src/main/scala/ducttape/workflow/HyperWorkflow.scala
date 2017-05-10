@@ -127,4 +127,5 @@ class HyperWorkflow(val dag: PhantomMetaHyperDag[TaskTemplate,BranchPoint,Branch
   
   def toGraphViz(): String = dag.toGraphViz()
   def toGraphVizDebug(): String = dag.toGraphVizDebug()
+  def toHyperGraphViz(): String = dag.toHyperGraphViz()
 }

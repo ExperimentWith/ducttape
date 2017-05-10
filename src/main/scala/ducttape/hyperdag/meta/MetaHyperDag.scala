@@ -15,6 +15,7 @@ import ducttape.hyperdag.walker.RealizationMunger
 import ducttape.hyperdag.walker.DefaultRealizationMunger
 import ducttape.hyperdag.walker.Traversal
 import ducttape.hyperdag.walker.Arbitrary
+import ducttape.workflow.Branch
 import ducttape.workflow.SpecGroup
 import ducttape.viz.GraphViz
 
@@ -158,6 +159,72 @@ class MetaHyperDag[V,M,H,E](val delegate: HyperDag[V,H,E],
     }
     str ++= "}\n"
     str.toString
+  }
+  
+  def toHyperGraphViz(): String = {
+    
+    val s = new StringBuilder(1000)
+    s ++= "digraph G {\n"
+    
+    for (vertex <- delegate.vertices) {
+      s.append("\t\"vertex").append(vertex.id.toString).append("\" ")
+
+      if (vertex.value.isInstanceOf[Option[_]]) {
+        val option = vertex.value.asInstanceOf[Option[_]]
+        var (color,label,style) = option match {
+          case Some(null) => ("red", "ε", "shape=box, style=\"filled,rounded\", ")
+          case Some(task) => ("orange", task.toString, "style=\"filled,rounded\", shape=box, ")
+          case None       => ("grey", if (vertex.comment==None) "👤" else vertex.comment.get, "style=filled, shape=oval, ")
+        }
+        if (metaEdgesByEpsilon.contains(vertex)) {
+          label = metaEdgesByEpsilon(vertex).m.toString
+        }
+        s.append("[margin=\"0.01,0.01\", height=0.0, width=0.0, fontcolor=white, fillcolor=").append(color).append(", color=").append(color).append(", ").append(style).append("label=\"").append(label).append("\"]\n")
+      }
+    }
+    
+    var heIndex = 0
+    for ((hyperEdge,values) <- delegate.edges) {   
+      val sources = values._1
+      val sink = values._2
+      s.append("\t\"he").append(heIndex).append("\" [")
+      if (hyperEdge.h != null) {
+        s.append("margin=\"0.01,0.01\", height=0.0, width=0.0, style=filled, fillcolor=blue, color=blue, fontcolor=white, shape=oval")
+        s.append(", label=\"").append(hyperEdge.h.asInstanceOf[Branch].name).append("\"")
+      } else {
+        s.append("shape=point")
+      }
+      s.append("]\n")
+      val edges = hyperEdge.e // .asInstanceOf[SpecGroup]
+      for ((source,edge) <- (sources, edges).zipped.toList) {
+      //for (source <- sources) {
+        s.append("\t\"vertex").append(source.id).append("\" -> \"").append("he").append(heIndex).append("\" [arrowhead=none")
+        if (epsilonEdges.contains(hyperEdge)) {
+          s.append(", color=gray")
+        }
+        if (metaEdgesByEpsilon.contains(sink)) {
+          s.append(", color=red")
+        }
+        if (edge!=null) s.append(", label=\"").append(edge.toString).append("\"")
+        s.append("]\n")
+      }
+      s.append("\t\"he").append(heIndex).append("\" -> \"").append("vertex").append(sink.id).append("\" [")
+      if (metaEdgesByEpsilon.contains(sink)) {
+        s.append("color=red, penwidth=2")
+        //s.append(metaEdgesByEpsilon(sink).m)
+      } else {
+        //s.append("label=\"").append(hyperEdge.e).append("\"")
+      }
+      if (epsilonEdges.contains(hyperEdge)) {
+        s.append("color=gray")
+      }
+      s.append("]\n")
+      heIndex += 1
+    }
+    
+      
+    s ++= "}\n"
+    return s.toString
   }
   
 }

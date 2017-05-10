@@ -97,4 +97,5 @@ class PhantomMetaHyperDag[V,M,H,E](val delegate: MetaHyperDag[Option[V],M,H,E]) 
   
   def toGraphViz(): String = delegate.toGraphViz()
   def toGraphVizDebug(): String = delegate.toGraphVizDebug()
+  def toHyperGraphViz(): String = delegate.toHyperGraphViz()
 }
