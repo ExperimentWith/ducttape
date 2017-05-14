@@ -220,7 +220,7 @@ object BranchPointHandler extends Logging {
       }
     }
     
-    private def getName(branchPointNameOpt: Option[String], astElem: ASTType) = branchPointNameOpt match {
+    def getName(branchPointNameOpt: Option[String], astElem: ASTType) = branchPointNameOpt match {
       case Some(name) => name
       case None => throw new FileFormatException("Branch point name is required", astElem)
     }    

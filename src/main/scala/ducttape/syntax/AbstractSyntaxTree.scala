@@ -26,7 +26,7 @@ object AbstractSyntaxTree {
     def children: Seq[ASTType]
   }
 
-  class Comments(val value: Option[String]) extends ASTType {
+  case class Comments(val value: Option[String]) extends ASTType {
     override def children = Nil
     override def toString() = value match {
       case Some(s:String) => s

@@ -60,6 +60,14 @@ class BranchFactory() extends Logging {
   /**
    * Gets all branches for a particular branch point
    */
+  def getAll(branchPoint: BranchPoint) : Iterable[Branch] = { 
+    val map = getAll()
+    return map(branchPoint)
+  }
+  
+  /**
+   * Gets all branches for a particular branch point
+   */
   def getAll(branchPointName: String) : Iterable[Branch] = { 
     val branchPoint = branchPointFactory.get(branchPointName)
     val map = getAll()

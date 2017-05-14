@@ -8,6 +8,7 @@ import java.io.File
 import java.util.concurrent.ExecutionException
 import java.util.regex.Pattern
 
+import ducttape.Graph
 import ducttape.cli.Config
 import ducttape.cli.Directives
 import ducttape.cli.ErrorUtils
@@ -223,15 +224,26 @@ object Ducttape extends Logging {
     val branchFactory = ex2err(WorkflowBuilder.findBranchPoints(wd))
     val (numBranchPoints, numBranches) = branchFactory.size
     System.err.println(s"Found ${numBranches} total branches in ${numBranchPoints} branch points")
-    val workflow: HyperWorkflow = ex2err(builder.build(branchFactory))
-    System.err.println("Hyperworkflow has been constructed")
+    /*
     
     {
       val pw = new java.io.PrintWriter(new java.io.File("workflow.dot" ))
       pw.write(workflow.toHyperGraphViz())
       pw.close
     }
+    */
+    val tasks: scala.collection.Map[String,Graph.Task] = Graph.build(wd, branchFactory)
+    
+    {
+      val pw = new java.io.PrintWriter(new java.io.File("workflow.dot" ))
+      pw.write(ducttape.Graph.toGraphviz(tasks))
+      pw.close
+    }    
     System.exit(0)
+    val workflow: HyperWorkflow = ex2err(builder.build(branchFactory))
+    System.err.println("Hyperworkflow has been constructed")
+    
+    
     
     val traversal: Traversal = opts.traversal.getOrElse("DepthFirst").toLowerCase.charAt(0) match {
       case 'a' => Arbitrary
