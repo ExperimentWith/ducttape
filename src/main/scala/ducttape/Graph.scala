@@ -5,7 +5,6 @@ import ducttape.syntax.BashCode
 import ducttape.workflow.Branch
 import ducttape.workflow.BranchFactory
 import ducttape.workflow.BranchPoint
-import ducttape.syntax.{AbstractSyntaxTree => ast}
 
 
 object Graph {
