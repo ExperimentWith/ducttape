@@ -7,7 +7,10 @@ import ducttape.workflow.BranchFactory
 import ducttape.workflow.BranchPoint
 import scala.collection.Map
 
-class PackedGraph(workflow:ast.WorkflowDefinition, branchFactory:BranchFactory) {
+class PackedGraph(val workflow:ast.WorkflowDefinition, val confSpecs: Seq[ast.ConfigAssignment]) {
+  
+  private val branchFactory = ducttape.cli.ErrorUtils.ex2err(ducttape.workflow.builder.WorkflowBuilder.findBranchPoints(confSpecs ++ Seq(workflow)))
+  
   private val taskMap:Map[String, PackedGraph.Task] = PackedGraph.build(workflow, branchFactory)
   
   override def toString(): String = PackedGraph.toGraphviz(taskMap)

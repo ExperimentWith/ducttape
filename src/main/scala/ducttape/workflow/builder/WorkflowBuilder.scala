@@ -281,11 +281,13 @@ class WorkflowBuilder(wd: WorkflowDefinition, configSpecs: Seq[ConfigAssignment]
 // can be factored out into their own files
 object WorkflowBuilder {
 
-  def findBranchPoints(element: ASTType): BranchFactory = {
+  def findBranchPoints(elements: Seq[ASTType]): BranchFactory = {
 
     val branchFactory = new BranchFactory()
     
-    branchFactory.findBranchPoints(element)
+    for (element <- elements) {
+      branchFactory.findBranchPoints(element)
+    }
     
     return branchFactory
   }

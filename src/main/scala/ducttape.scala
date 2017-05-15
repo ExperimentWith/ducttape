@@ -221,13 +221,14 @@ object Ducttape extends Logging {
     }
     
     val builder = new WorkflowBuilder(wd, confSpecs, builtins)
-    val branchFactory = ex2err(WorkflowBuilder.findBranchPoints(wd))
-    val (numBranchPoints, numBranches) = branchFactory.size
-    System.err.println(s"Found ${numBranches} total branches in ${numBranchPoints} branch points")
-
-    val packedGraph = new PackedGraph(wd, branchFactory)
+    
+    val packedGraph = new PackedGraph(wd, confSpecs)
     Files.write(packedGraph.toString, "./workflow.dot")
     System.exit(0)
+
+    val branchFactory = ex2err(WorkflowBuilder.findBranchPoints(confSpecs ++ Seq(wd)))
+    val (numBranchPoints, numBranches) = branchFactory.size
+    System.err.println(s"Found ${numBranches} total branches in ${numBranchPoints} branch points")
 
     val workflow: HyperWorkflow = ex2err(builder.build(branchFactory))
     System.err.println("Hyperworkflow has been constructed")
