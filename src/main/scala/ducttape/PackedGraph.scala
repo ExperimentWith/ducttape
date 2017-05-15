@@ -9,11 +9,12 @@ import scala.collection.Map
 
 class PackedGraph(val workflow:ast.WorkflowDefinition, val confSpecs: Seq[ast.ConfigAssignment]) {
   
-  private val branchFactory = ducttape.cli.ErrorUtils.ex2err(ducttape.workflow.builder.WorkflowBuilder.findBranchPoints(confSpecs ++ Seq(workflow)))
+  val branchFactory = ducttape.cli.ErrorUtils.ex2err(ducttape.workflow.builder.WorkflowBuilder.findBranchPoints(confSpecs ++ Seq(workflow)))
   
   private val taskMap:Map[String, PackedGraph.Task] = PackedGraph.build(workflow, branchFactory)
+  private val globalMap:Map[String, PackedGraph.Global] = PackedGraph.build(confSpecs, branchFactory) 
   
-  override def toString(): String = PackedGraph.toGraphviz(taskMap)
+  override def toString(): String = PackedGraph.toGraphviz(taskMap, globalMap)
   
 }
 
@@ -27,6 +28,7 @@ object PackedGraph {
   final case class Task(name:String, code:BashCode, inputs:Seq[Spec], params:Seq[Spec], outputs:Seq[Spec], packages:Seq[Spec]) extends Node
   final case class ShellScript(code: String, vars: Set[String]) extends Node
   final case class Packages(value:Seq[Package]) extends Node
+  final case class Global(value:Spec) extends Node
 
   sealed trait ValueBearingNode extends Node
   final case class Literal(value:String) extends ValueBearingNode
@@ -44,7 +46,7 @@ object PackedGraph {
   
   def toGraphvizID(task:Task) : String = toGraphvizID(task.name)
   
-  def toGraphviz(tasks:Map[String,Task]) : String = {
+  def toGraphviz(tasks:Map[String,Task], globals:Map[String, PackedGraph.Global]) : String = {
     val s = new StringBuilder(capacity=1000)
     s ++= "digraph G {\n\n"
     
@@ -52,7 +54,7 @@ object PackedGraph {
       rhs match {
         case Literal(value) => {
           val id = targetID + " value " + value
-          s.append("\t\t\"").append(id).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=white, fillcolor=darkgreen, color=black, shape=box, style="filled", label="""").append(value).append("\"]\n")
+          s.append("\t\t\"").append(id).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=darkseagreen2, color=black, shape=box, style="filled", label="""").append(value).append("\"]\n")
           s.append("\t\t\"").append(id).append("\" -> \"").append(targetID).append("\"\n")
         }
         
@@ -122,6 +124,22 @@ object PackedGraph {
       
       
     }      
+    
+    
+    
+    for (global <- globals.values) {
+      val spec = global.value
+      if (! spec.name.startsWith("ducttape_")) {
+        val id = "global " + spec.name
+        s.append("\tsubgraph \"cluster ").append(id).append("\" {\n")
+        s.append("\t\t\"").append(id).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=white, color=black, style=filled, shape="box", label="""").append(spec.name).append("\"]\n")
+        s.append("\t\tcolor=black\n\t\tfillcolor=beige\n\t\tstyle=filled\n")
+        recursivelyBuildTask(id, spec.value, s)
+        s.append("\t}\n")
+      }
+    }
+
+    
       
     for (task <- tasks.values) {
       val taskID = toGraphvizID(task)
@@ -149,7 +167,7 @@ object PackedGraph {
         s.append("\t\t\"").append(taskID).append("\" -> \"").append(outputID).append("\"\n")
       }
       
-      s.append("\t\tcolor=black\n\tfillcolor=white\n\tstyle=filled\n")
+      s.append("\t\tcolor=black\n\t\tfillcolor=white\n\t\tstyle=filled\n")
       s.append("\t}\n\n")
     }  
     
@@ -173,6 +191,18 @@ object PackedGraph {
     return s.result
   }
   
+  def build(confSpecs: Seq[ast.ConfigAssignment], branchFactory:BranchFactory) : Map[String,Global] = {
+    
+    val globals = confSpecs.map{ confSpec => Global(recursivelyProcessSpec(confSpec.spec, branchFactory)) }
+    
+    val tuples = globals.map{ global => 
+      global.value.name -> global
+    }
+    
+    val globalMap = tuples.toMap
+    
+    return globalMap
+  }
   
   def build(workflow:ast.WorkflowDefinition, branchFactory:BranchFactory) : Map[String,Task] = {
     
