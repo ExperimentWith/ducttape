@@ -5,11 +5,12 @@ import ducttape.syntax.BashCode
 import ducttape.workflow.Branch
 import ducttape.workflow.BranchFactory
 import ducttape.workflow.BranchPoint
-
+import scala.collection.Map
 
 object Graph {
   
   sealed trait Node
+  final case class Spec(name:String, value:ValueBearingNode)
   final case class CrossProduct(value:Set[Branch]) extends Node
   final case class Via(reach:Task, via:CrossProduct) extends Node
   final case class Plan(goals:Seq[Via]) extends Node
@@ -21,11 +22,11 @@ object Graph {
   final case class Literal(value:String) extends ValueBearingNode
   final case class BranchNode(branch:Branch, value:ValueBearingNode) extends ValueBearingNode
   final case class BranchPointNode(branchPoint:BranchPoint, branches:Seq[BranchNode]) extends ValueBearingNode
-  final case class Spec(name:String, value:ValueBearingNode) //extends ValueBearingNode
-  final case class Reference(variableName:String, taskName:Option[String], grafts:Option[Seq[Branch]]) extends ValueBearingNode
-  final case class Glob(nodes:Seq[ValueBearingNode]) extends ValueBearingNode
+  final case class Reference(variableName:String, taskName:Option[String], grafts:Seq[Grafts]) extends ValueBearingNode
 
-
+  final case class Grafts(value:Seq[Branch]) {
+    def size() = value.size
+  }
   
   def toGraphvizID(taskName:String) : String = {
     return s"""task ${taskName}"""
@@ -33,7 +34,7 @@ object Graph {
   
   def toGraphvizID(task:Task) : String = toGraphvizID(task.name)
   
-  def toGraphviz(tasks:scala.collection.Map[String,Task]) : String = {
+  def toGraphviz(tasks:Map[String,Task]) : String = {
     val s = new StringBuilder(capacity=1000)
     s ++= "digraph G {\n\n"
     
@@ -83,18 +84,28 @@ object Graph {
           }
         }
         
-        case Reference(variable, taskName, grafts) => {
+        case Reference(variable, taskName, graftsList) => {
           val id = taskName match {
             case Some(task) => variable + "@" + toGraphvizID(task)
             case None       => "global " + variable
           }
-          val label = grafts match {
-            case Some(grafts) if grafts.size > 0 => grafts.map{ graft => graft.toString}.mkString("[ label=\"", ",", "\" ]")
-            case _ => ""
+          if (graftsList.isEmpty) {
+            s.append("\t\"").append(id).append("\" -> \"").append(targetID).append("\"").append("\n")
+          } else {
+            for ((grafts,index) <- graftsList.zipWithIndex) {
+              if (grafts.value.size > 0) {
+                val label = grafts.value.map{ graft => graft.toString}.mkString(",")
+                val graftID = "from " + id + " graft " + index + " to " + targetID
+                s.append("\t\"").append(graftID).append("""" [margin="0.0,0.0", height=0.0, width=0.0, fontcolor=black, fillcolor=azure, color=black, style="filled", shape=box, label="""").append(label).append("\"]\n")
+                s.append("\t\"").append(id).append("\" -> \"").append(graftID).append("\"").append("\n")
+                s.append("\t\"").append(graftID).append("\" -> \"").append(targetID).append("\"").append("\n")
+              } else {
+                s.append("\t\"").append(id).append("\" -> \"").append(targetID).append("\"").append("\n")
+              }
+              
+            }
           }
-          s.append("\t\"").append(id).append("\" -> \"").append(targetID).append("\" ").append(label).append("\n")
         }
-        
        
         case _ => {}
       }
@@ -152,7 +163,7 @@ object Graph {
     return s.result
   }
   
-  def build(workflow:ast.WorkflowDefinition, branchFactory:BranchFactory) : scala.collection.Map[String,Task] = {
+  def build(workflow:ast.WorkflowDefinition, branchFactory:BranchFactory) : Map[String,Task] = {
     
     val taskList:Seq[ast.TaskDef] = 
       (workflow.tasks ++ workflow.functionCallTasks)                  // gather all TaskDef objects from the workflow definition
@@ -184,41 +195,75 @@ object Graph {
     return specs.map{ spec => recursivelyProcessSpec(spec, branchFactory) }
   }
   
+  def crossProduct(branchMap:Map[BranchPoint, Seq[Branch]]) : Seq[Seq[Branch]] = {
+    
+    val branchPoints = branchMap.keys.toSeq.sortBy{ branchPoint => branchPoint.toString }
+    
+    val solutions = Seq.newBuilder[Seq[Branch]]
+    
+    def recursivelyConstructSolution(bpIndex:Int, partialSolution:Seq[Branch]): Unit = {
+      if (bpIndex < branchPoints.size) {
+        val branchPoint = branchPoints(bpIndex)
+        val branches = branchMap(branchPoint)
+        for (branch <- branches) {
+          if (bpIndex == branchPoints.size - 1) {
+            solutions += (partialSolution++Seq(branch))
+          } else {
+            recursivelyConstructSolution(bpIndex+1, partialSolution++Seq(branch))
+          }
+        }
+      }
+    }
+    
+    recursivelyConstructSolution(0, Seq())
+    
+    return solutions.result
+  }
+  
+  def processGraftReference(branchGraftElements: Seq[ast.BranchGraftElement], branchFactory:BranchFactory) : Seq[Grafts] = {
 
+    import scala.collection.immutable.Map
+    
+    val branches = branchGraftElements.flatMap { graftElement => 
+      if (graftElement.branchName == "*") {
+        branchFactory.getAll(graftElement.branchPointName)
+      } else {
+        Seq(branchFactory(graftElement.branchName, graftElement.branchPointName))
+      }
+    }    
+
+    val groups:Map[BranchPoint, Seq[Branch]] = branches.groupBy{ branch => branch.branchPoint }
+    
+    return crossProduct(groups).map{ group => Grafts(group) }
+
+  }
+  
   def recursivelyProcessSpec(spec:ast.Spec, branchFactory:BranchFactory) : Spec = {
     val name = spec.name
     
     val value:ValueBearingNode = spec.rval match {
       case astNode:ast.Unbound => Literal(name)
       case astNode:ast.Literal => Literal(astNode.value)
-      case astNode:ast.ConfigVariable          => Reference(astNode.value, None,                   None)
-      case astNode:ast.ShorthandConfigVariable => Reference(name,          None,                   None)
-      case astNode:ast.TaskVariable            => Reference(astNode.value, Some(astNode.taskName), None)
-      case astNode:ast.ShorthandTaskVariable   => Reference(name,          Some(astNode.taskName), None)
+      case astNode:ast.ConfigVariable          => Reference(astNode.value, None,                   Seq())
+      case astNode:ast.ShorthandConfigVariable => Reference(name,          None,                   Seq())
+      case astNode:ast.TaskVariable            => Reference(astNode.value, Some(astNode.taskName), Seq())
+      case astNode:ast.ShorthandTaskVariable   => Reference(name,          Some(astNode.taskName), Seq())
       case astNode:ast.BranchGraft             => { 
         
-        val branches = astNode.branchGraftElements.flatMap { graftElement => 
-          if (graftElement.branchName == "*") {
-            branchFactory.getAll(graftElement.branchPointName)
-          } else {
-            Seq(branchFactory(graftElement.branchName, graftElement.branchPointName))
-          }
-        }    
+        val grafts = processGraftReference(astNode.branchGraftElements, branchFactory)
         
         val reference = astNode.taskName match {
-          case Some(taskName) => Reference(astNode.variableName, Some(taskName), Some(branches))
-          case None           => Reference(astNode.variableName, None,           Some(branches))
+          case Some(taskName) => Reference(astNode.variableName, Some(taskName), grafts)
+          case None           => Reference(astNode.variableName, None,           grafts)
         }
         
         reference
       }
       case astNode:ast.ShorthandBranchGraft             => { 
         
-        val branches = astNode.branchGraftElements.map {
-          graftElement => branchFactory(graftElement.branchName, graftElement.branchPointName)
-        }
+        val grafts = processGraftReference(astNode.branchGraftElements, branchFactory)
         
-        val reference = Reference(name, Some(astNode.taskName), Some(branches))
+        val reference = Reference(name, Some(astNode.taskName), grafts)
         
         reference
       }
