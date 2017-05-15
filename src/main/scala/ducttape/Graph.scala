@@ -7,6 +7,13 @@ import ducttape.workflow.BranchFactory
 import ducttape.workflow.BranchPoint
 import scala.collection.Map
 
+class PackedGraph(workflow:ast.WorkflowDefinition, branchFactory:BranchFactory) {
+  private val taskMap:Map[String, Graph.Task] = Graph.build(workflow, branchFactory)
+  
+  override def toString(): String = Graph.toGraphviz(taskMap)
+  
+}
+
 object Graph {
   
   sealed trait Node
@@ -162,6 +169,7 @@ object Graph {
     
     return s.result
   }
+  
   
   def build(workflow:ast.WorkflowDefinition, branchFactory:BranchFactory) : Map[String,Task] = {
     

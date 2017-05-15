@@ -27,6 +27,10 @@ object Files extends Logging {
     
     result.toString + " " + units(unitIndex)
   }
+
+  def write(str:String, file:String) {
+    write(str, new File(file))
+  }
   
   def write(str: String, file: File) {
     Files.mkdirs(file.getParentFile)
