@@ -1,0 +1,5 @@
+package ducttape
+
+class UnpackedGraph {
+
+}
