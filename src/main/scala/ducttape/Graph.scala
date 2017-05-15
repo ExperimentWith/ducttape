@@ -8,13 +8,13 @@ import ducttape.workflow.BranchPoint
 import scala.collection.Map
 
 class PackedGraph(workflow:ast.WorkflowDefinition, branchFactory:BranchFactory) {
-  private val taskMap:Map[String, Graph.Task] = Graph.build(workflow, branchFactory)
+  private val taskMap:Map[String, PackedGraph.Task] = PackedGraph.build(workflow, branchFactory)
   
-  override def toString(): String = Graph.toGraphviz(taskMap)
+  override def toString(): String = PackedGraph.toGraphviz(taskMap)
   
 }
 
-object Graph {
+object PackedGraph {
   
   sealed trait Node
   final case class Spec(name:String, value:ValueBearingNode)
@@ -128,25 +128,25 @@ object Graph {
       
       for (input <- task.inputs) {
         val inputID = input.name + "@" + taskID 
-        s.append("\t\t\"").append(inputID).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=white, color=black, label="""").append(input.name).append("\"]\n")
+        s.append("\t\t\"").append(inputID).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=white, color=black, style=filled, label="""").append(input.name).append("\"]\n")
         s.append("\t\t\"").append(inputID).append("\" -> \"").append(taskID).append("\"\n")
         recursivelyBuildTask(inputID, input.value, s)
       }
 
       for (param <- task.params) {
         val paramID = param.name + "@" + taskID
-        s.append("\t\t\"").append(paramID).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=white, color=black, shape="box", label="""").append(param.name).append("\"]\n")
+        s.append("\t\t\"").append(paramID).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=white, color=black, style=filled, shape="box", label="""").append(param.name).append("\"]\n")
         s.append("\t\t\"").append(paramID).append("\" -> \"").append(taskID).append("\"\n")
         recursivelyBuildTask(paramID, param.value, s)
       }
 
       for (output <- task.outputs) {
         val outputID = output.name + "@" + taskID
-        s.append("\t\t\"").append(outputID).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=white, color=black, label="""").append(output.name).append("\"]\n")
+        s.append("\t\t\"").append(outputID).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=white, color=black, style=filled, label="""").append(output.name).append("\"]\n")
         s.append("\t\t\"").append(taskID).append("\" -> \"").append(outputID).append("\"\n")
       }
       
-      s.append("\t\tcolor=black\n")
+      s.append("\t\tcolor=black\n\tfillcolor=white\n\tstyle=filled\n")
       s.append("\t}\n\n")
     }  
     
