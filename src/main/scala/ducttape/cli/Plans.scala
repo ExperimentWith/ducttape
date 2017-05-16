@@ -31,6 +31,31 @@ import grizzled.slf4j.Logging
 // TODO: Disconnect from CLI and move to workflow package
 object Plans extends Logging {
   
+  def selectPlans(plans: Seq[RealizationPlan], planNames:Option[Seq[String]]): Seq[RealizationPlan] = {
+    
+    val selectedPlans: Seq[RealizationPlan] = planNames match {
+      case None => plans // use union of all plans if none are specified
+      case Some(names) => {
+        val requestedNames: Set[String] = names.toSet
+        plans.filter { plan: RealizationPlan =>
+          plan.name match {
+            case None => false
+            case Some(name) => requestedNames.contains(name)
+          }
+        } match {
+          // TODO: Change to CLI exception?
+          case Seq() => {
+            val candidates = plans.map(_.name.getOrElse("*anonymous*"))
+            throw new RuntimeException(s"One of the specified plans was not found: '${planNames.mkString(" ")}'. Candidates are: ${candidates.mkString(" ")}")
+          }
+          case matches @ _ => matches
+        }
+      }
+    }
+    
+    return selectedPlans
+  }
+  
   // implemented the second forward pass through the HyperDAG
   // using a PatternFilter
   private def getCandidates(workflow: HyperWorkflow,
@@ -157,26 +182,7 @@ object Plans extends Logging {
         System.err.println("Finding hyperpaths contained in plan...")
          
         val vertexFilter = new mutable.HashSet[(Namespace,Realization)]
-        val plans: Seq[RealizationPlan] = planNames match {
-          case None => workflow.plans // use union of all plans if none are specified
-          case Some(names) => {
-            val requestedNames: Set[String] = names.toSet
-            workflow.plans.filter { plan: RealizationPlan =>
-              plan.name match {
-                case None => false
-                case Some(name) => requestedNames.contains(name)
-              }
-            } match {
-              // TODO: Change to CLI exception?
-              case Seq() => {
-                val candidates = workflow.plans.map(_.name.getOrElse("*anonymous*"))
-                throw new RuntimeException(s"One of the specified plans was not found: '${planNames.mkString(" ")}'. Candidates are: ${candidates.mkString(" ")}")
-              }
-              case matches @ _ => matches
-            }
-          }
-        }
-        for (plan: RealizationPlan <- plans) {
+        for (plan: RealizationPlan <- selectPlans(workflow.plans, planNames)) {
           // Pass 2: Forward pass through the HyperDAG using a PatternFilter
           //   so that we can discover which realizations are valid at each goal task
           // Note: This isn't as simple as taking the cross-product of branches that have been seen at all dependents

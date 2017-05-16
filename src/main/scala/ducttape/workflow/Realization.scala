@@ -13,8 +13,6 @@ import grizzled.slf4j.Logging
 class Realization(val branches: Seq[Branch]) extends Logging {
  // TODO: Keep string branch point names?
 
-  private val MaxNameLength = 255 - 5; // leave room for ".LOCK"
-
   /** sort by branch *point* names to keep ordering consistent, then join branch names using dashes
    *   and don't include our default branch "baseline"
    * by default we "shorten" realization names by removing branch points using baseline branches
@@ -38,7 +36,7 @@ class Realization(val branches: Seq[Branch]) extends Logging {
     }
     val result = names.mkString(Realization.delimiter)
     
-    if (result.length > MaxNameLength && hashLongNames) {
+    if (result.length > Realization.MaxNameLength && hashLongNames) {
       warn(s"Very long filename is being hashed: ${result}")
       HashUtils.md5(result)
     } else {
@@ -55,7 +53,7 @@ class Realization(val branches: Seq[Branch]) extends Logging {
     }
     val names = filteredBranches.map { branch => s"${branch.branchPoint.name}.${branch.name}" }
     val result = names.mkString(Realization.delimiter)
-    if (result.length > MaxNameLength && hashLongNames) {
+    if (result.length > Realization.MaxNameLength && hashLongNames) {
       warn(s"Very long filename is being hashed: ${result}")
       HashUtils.md5(result)
     } else {
@@ -88,4 +86,41 @@ class Realization(val branches: Seq[Branch]) extends Logging {
 
 object Realization {
   var delimiter: String = "+"
+  
+  val MaxNameLength = 255 - 5; // leave room for ".LOCK"
+
+    
+  def crossProduct(branchMap:Map[BranchPoint, Iterable[Branch]], withOmissions:Boolean=false) : Seq[Realization] = {
+    
+    val branchPoints = branchMap.keys.toSeq.sortBy{ branchPoint => branchPoint.toString }
+    
+    val solutions = Seq.newBuilder[Realization]
+    
+    def recursivelyConstructSolution(bpIndex:Int, partialSolution:Seq[Branch]): Unit = {
+      if (bpIndex < branchPoints.size) {
+        val branchPoint = branchPoints(bpIndex)
+        val branches = branchMap(branchPoint)
+        for (branch <- branches) {
+          if (bpIndex == branchPoints.size - 1) {
+            val realization = new Realization(partialSolution++Seq(branch))
+            solutions += realization
+          } else {
+            recursivelyConstructSolution(bpIndex+1, partialSolution++Seq(branch))
+          }
+        }
+        if (withOmissions) {
+          if (bpIndex == branchPoints.size - 1) {
+            val realization = new Realization(partialSolution)
+            solutions += realization
+          } else {
+            recursivelyConstructSolution(bpIndex+1, partialSolution)
+          }
+        }
+      }
+    }
+    
+    recursivelyConstructSolution(0, Seq())
+    
+    return solutions.result
+  }
 }

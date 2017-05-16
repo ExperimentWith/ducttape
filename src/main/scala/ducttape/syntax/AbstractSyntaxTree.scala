@@ -26,6 +26,7 @@ object AbstractSyntaxTree {
     def children: Seq[ASTType]
   }
 
+  
   case class Comments(val value: Option[String]) extends ASTType {
     override def children = Nil
     override def toString() = value match {
@@ -36,6 +37,9 @@ object AbstractSyntaxTree {
   
   /** Type of the right hand side in an assignment. */
   trait RValue extends ASTType;
+
+  /** Specific type of RValue that can represent the branch(es) values of a branch point. */
+  trait BranchRef extends RValue  
   
   /** Unbound is the right hand side type in an underspecified variable declaration.
    *  
@@ -47,7 +51,7 @@ object AbstractSyntaxTree {
   }
   
   /** Type of a literal string value, in the right-hand side context of an assignment. */
-  case class Literal(val value: String) extends RValue {
+  case class Literal(val value: String) extends BranchRef {
     override def children = Nil
     override def toString() = "'%s'".format(value)
   }  
@@ -81,7 +85,7 @@ object AbstractSyntaxTree {
   
   case class Sequence(val start: BigDecimal, 
                       val end: BigDecimal,
-                      val increment: BigDecimal) extends ASTType {
+                      val increment: BigDecimal) extends BranchRef {
     override def children = Nil
     override def toString() = "%s..%s..%s".format(start,end,increment)
   }
@@ -183,11 +187,32 @@ object AbstractSyntaxTree {
   }  
 
  /** Reference, in a plan, to a branchpoint and one or more of its branches. */
-  case class BranchPointRef(val name: String, val branchNames: Seq[ASTType]) extends ASTType {
+  case class BranchPointRef(val name: String, val branchNames: Seq[BranchRef]) extends ASTType {
     override def children = Nil
     override def toString() = {
       "(%s: %s)".format(name, branchNames.mkString(" "))
     }
+    
+    def getBranches(branchFactory:ducttape.workflow.BranchFactory): (ducttape.workflow.BranchPoint, Seq[ducttape.workflow.Branch]) = {
+        val branchPoint = branchFactory.getBranchPoint(this.name)
+        val branches = this.branchNames.flatMap{ branchName => 
+          branchName match {
+            case Literal(literal) => Seq(branchFactory(literal, branchPoint))
+            case Sequence(start, end, increment) => {
+              val builder = Seq.newBuilder[ducttape.workflow.Branch]
+              var i = start
+              while (i <= end) {
+                builder += branchFactory(i.toString, branchPoint)
+                i += increment
+              }
+              builder.result
+            }
+          }
+        }
+        
+        (branchPoint, branches) // Return a tuple of type (BranchPoint, Seq[Branch])      
+    }
+
   }    
   
   // NOTE: This has been replaced by the bash parser and BashCode

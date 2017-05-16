@@ -53,9 +53,14 @@ class BranchFactory() extends Logging {
   /**
    * Gets a map containing all branches for each branch point
    */
-  def getAll() : Map[BranchPoint,Iterable[Branch]] = { 
-    return pool.values.groupBy{ branch: Branch => branch.branchPoint }
+  def getAll(includeBaseline:Boolean=true) : Map[BranchPoint,Iterable[Branch]] = { 
+    if (includeBaseline) {
+      return pool.values.groupBy{ branch: Branch => branch.branchPoint }
+    } else {
+      return pool.values.filter{ branch => !branch.branchPoint.equals(Task.NO_BRANCH_POINT) }.groupBy{ branch: Branch => branch.branchPoint }
+    }
   }
+
   
   /**
    * Gets all branches for a particular branch point

@@ -5,6 +5,7 @@ import ducttape.syntax.BashCode
 import ducttape.workflow.Branch
 import ducttape.workflow.BranchFactory
 import ducttape.workflow.BranchPoint
+import ducttape.workflow.Realization
 import scala.collection.Map
 
 class PackedGraph(val workflow:ast.WorkflowDefinition, val confSpecs: Seq[ast.ConfigAssignment]) {
@@ -236,30 +237,6 @@ object PackedGraph {
     return specs.map{ spec => recursivelyProcessSpec(spec, branchFactory) }
   }
   
-  def crossProduct(branchMap:Map[BranchPoint, Seq[Branch]]) : Seq[Seq[Branch]] = {
-    
-    val branchPoints = branchMap.keys.toSeq.sortBy{ branchPoint => branchPoint.toString }
-    
-    val solutions = Seq.newBuilder[Seq[Branch]]
-    
-    def recursivelyConstructSolution(bpIndex:Int, partialSolution:Seq[Branch]): Unit = {
-      if (bpIndex < branchPoints.size) {
-        val branchPoint = branchPoints(bpIndex)
-        val branches = branchMap(branchPoint)
-        for (branch <- branches) {
-          if (bpIndex == branchPoints.size - 1) {
-            solutions += (partialSolution++Seq(branch))
-          } else {
-            recursivelyConstructSolution(bpIndex+1, partialSolution++Seq(branch))
-          }
-        }
-      }
-    }
-    
-    recursivelyConstructSolution(0, Seq())
-    
-    return solutions.result
-  }
   
   def processGraftReference(branchGraftElements: Seq[ast.BranchGraftElement], branchFactory:BranchFactory) : Seq[Grafts] = {
 
@@ -275,7 +252,7 @@ object PackedGraph {
 
     val groups:Map[BranchPoint, Seq[Branch]] = branches.groupBy{ branch => branch.branchPoint }
     
-    return crossProduct(groups).map{ group => Grafts(group) }
+    return Realization.crossProduct(groups).map{ realization => Grafts(realization.branches) }
 
   }
   

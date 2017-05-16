@@ -522,7 +522,7 @@ object Grammar {
     }
   )  
 
-  val branchPointRefBranchName: Parser[ASTType] = {
+  val branchPointRefBranchName: Parser[BranchRef] = {
     sequence |
     literalValue
   }
@@ -551,7 +551,7 @@ object Grammar {
     )
     } ^^ {
       case (bpName: String) ~ (branchName: String) => new BranchPointRef(bpName,List.apply(new Literal(branchName)))
-      case (bpName: String) ~ (branchNames: List[ASTType @unchecked]) => new BranchPointRef(bpName,branchNames)
+      case (bpName: String) ~ (branchNames: List[BranchRef @unchecked]) => new BranchPointRef(bpName,branchNames)
     }
   )
   
