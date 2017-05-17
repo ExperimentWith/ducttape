@@ -49,7 +49,7 @@ class PhantomMetaHyperDag[V,M,H,E](val delegate: MetaHyperDag[Option[V],M,H,E]) 
   def unpackedWalker[D,F](munger: RealizationMunger[Option[V],H,E,D,F],
                           vertexFilter: MetaVertexFilter[Option[V],H,E,D],
                           toD: H => D,
-                          traversal: Traversal = Arbitrary,
+                          traversal: Traversal,
                           observer: UnpackedVertex[Option[V], H,E,D] => Unit)
                          (implicit ordering: Ordering[D])
                          : UnpackedPhantomMetaDagWalker[V,M,H,E,D,F] = {

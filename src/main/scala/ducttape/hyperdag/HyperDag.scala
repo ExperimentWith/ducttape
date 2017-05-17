@@ -51,7 +51,7 @@ class HyperDag[V,H,E](val roots: Seq[PackedVertex[V]],
   def unpackedWalker[D,F](munger: RealizationMunger[V,H,E,D,F],
                           vertexFilter: VertexFilter[V,H,E,D],
                           toD: H => D,
-                          traversal: Traversal = Arbitrary)
+                          traversal: Traversal)
                          (implicit ordering: Ordering[D])
     = new walker.UnpackedDagWalker[V,H,E,D,F](this, munger, vertexFilter, toD, traversal)
     

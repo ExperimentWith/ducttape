@@ -3,7 +3,7 @@
 package ducttape.workflow
 
 import ducttape.workflow.Task.NO_BRANCH
-import org.scalatest.WordSpec
+import org.scalatest._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -39,11 +39,11 @@ class RealizationTest extends WordSpec {
     val crossProduct = Realization.crossProduct(branchMap, withOmissions=false)
     
     "have a cross-product consisting of expected size" in {      
-      expectResult(1)(crossProduct.size)
+      assertResult(1)(crossProduct.size)
     }
     
     "have a single realization with expected value" in {
-      expectResult("A.a1")(crossProduct.head.toFullString())
+      assertResult("A.a1")(crossProduct.head.toFullString())
     }
 
   }
@@ -56,15 +56,15 @@ class RealizationTest extends WordSpec {
     val crossProduct = Realization.crossProduct(branchMap, withOmissions=true)
 
     "have a cross-product of expected size" in {      
-      expectResult(2)(crossProduct.size)
+      assertResult(2)(crossProduct.size)
     }
 
     "have realizations with expected value" in {
       val expected = new scala.collection.mutable.ArrayBuffer[String]
       expected ++= crossProduct.map{ realization => realization.toFullString() }.sorted
       
-      expectResult("A.a1")(expected.remove(0))
-      expectResult(NO_BRANCH.toString)(expected.remove(0))
+      assertResult("A.a1")(expected.remove(0))
+      assertResult(NO_BRANCH.toString)(expected.remove(0))
     }
   }  
 
@@ -76,17 +76,17 @@ class RealizationTest extends WordSpec {
     val crossProduct = Realization.crossProduct(branchMap, withOmissions=false)
     
     "have a cross-product consisting of expected size" in {      
-      expectResult(4)(crossProduct.size)
+      assertResult(4)(crossProduct.size)
     }
     
     "have realizations with expected values" in {
       val expected = new scala.collection.mutable.ArrayBuffer[String]
       expected ++= crossProduct.map{ realization => realization.toFullString() }.sorted
       
-      expectResult("A.a1+B.b1")(expected.remove(0))
-      expectResult("A.a1+B.b2")(expected.remove(0))
-      expectResult("A.a2+B.b1")(expected.remove(0))
-      expectResult("A.a2+B.b2")(expected.remove(0))      
+      assertResult("A.a1+B.b1")(expected.remove(0))
+      assertResult("A.a1+B.b2")(expected.remove(0))
+      assertResult("A.a2+B.b1")(expected.remove(0))
+      assertResult("A.a2+B.b2")(expected.remove(0))      
     }
     
   }
@@ -100,22 +100,22 @@ class RealizationTest extends WordSpec {
     val crossProduct = Realization.crossProduct(branchMap, withOmissions=true)
     
     "have a cross-product consisting of expected size" in {      
-      expectResult(9)(crossProduct.size)
+      assertResult(9)(crossProduct.size)
     }
     
     "have realizations with expected values" in {
       val expected = new scala.collection.mutable.ArrayBuffer[String]
       expected ++= crossProduct.map{ realization => realization.toFullString() }.sorted
       
-      expectResult("A.a1")(expected.remove(0))
-      expectResult("A.a1+B.b1")(expected.remove(0))
-      expectResult("A.a1+B.b2")(expected.remove(0))
-      expectResult("A.a2")(expected.remove(0))
-      expectResult("A.a2+B.b1")(expected.remove(0))
-      expectResult("A.a2+B.b2")(expected.remove(0))
-      expectResult("B.b1")(expected.remove(0))
-      expectResult("B.b2")(expected.remove(0))
-      expectResult(NO_BRANCH.toString)(expected.remove(0))
+      assertResult("A.a1")(expected.remove(0))
+      assertResult("A.a1+B.b1")(expected.remove(0))
+      assertResult("A.a1+B.b2")(expected.remove(0))
+      assertResult("A.a2")(expected.remove(0))
+      assertResult("A.a2+B.b1")(expected.remove(0))
+      assertResult("A.a2+B.b2")(expected.remove(0))
+      assertResult("B.b1")(expected.remove(0))
+      assertResult("B.b2")(expected.remove(0))
+      assertResult(NO_BRANCH.toString)(expected.remove(0))
     }
     
   }  
@@ -128,21 +128,21 @@ class RealizationTest extends WordSpec {
     val crossProduct = Realization.crossProduct(branchMap, withOmissions=false)
     
     "have a cross-product consisting of expected size" in {      
-      expectResult(8)(crossProduct.size)
+      assertResult(8)(crossProduct.size)
     }
     
     "have realizations with expected values" in {
       val expected = new scala.collection.mutable.ArrayBuffer[String]
       expected ++= crossProduct.map{ realization => realization.toFullString() }.sorted
       
-      expectResult("A.a1+B.b1+C.c1")(expected.remove(0))
-      expectResult("A.a1+B.b1+C.c2")(expected.remove(0))
-      expectResult("A.a1+B.b2+C.c1")(expected.remove(0))
-      expectResult("A.a1+B.b2+C.c2")(expected.remove(0))
-      expectResult("A.a2+B.b1+C.c1")(expected.remove(0))
-      expectResult("A.a2+B.b1+C.c2")(expected.remove(0))
-      expectResult("A.a2+B.b2+C.c1")(expected.remove(0)) 
-      expectResult("A.a2+B.b2+C.c2")(expected.remove(0)) 
+      assertResult("A.a1+B.b1+C.c1")(expected.remove(0))
+      assertResult("A.a1+B.b1+C.c2")(expected.remove(0))
+      assertResult("A.a1+B.b2+C.c1")(expected.remove(0))
+      assertResult("A.a1+B.b2+C.c2")(expected.remove(0))
+      assertResult("A.a2+B.b1+C.c1")(expected.remove(0))
+      assertResult("A.a2+B.b1+C.c2")(expected.remove(0))
+      assertResult("A.a2+B.b2+C.c1")(expected.remove(0)) 
+      assertResult("A.a2+B.b2+C.c2")(expected.remove(0)) 
     }
     
   }
@@ -154,40 +154,40 @@ class RealizationTest extends WordSpec {
     val crossProduct = Realization.crossProduct(branchMap, withOmissions=true)
     
     "have a cross-product consisting of expected size" in {      
-      expectResult(27)(crossProduct.size)
+      assertResult(27)(crossProduct.size)
     }
     
     "have realizations with expected values" in {
       val expected = new scala.collection.mutable.ArrayBuffer[String]
       expected ++= crossProduct.map{ realization => realization.toFullString() }.sorted
       
-      expectResult("A.a1")(expected.remove(0))
-      expectResult("A.a1+B.b1")(expected.remove(0))
-      expectResult("A.a1+B.b1+C.c1")(expected.remove(0))
-      expectResult("A.a1+B.b1+C.c2")(expected.remove(0))
-      expectResult("A.a1+B.b2")(expected.remove(0))
-      expectResult("A.a1+B.b2+C.c1")(expected.remove(0))
-      expectResult("A.a1+B.b2+C.c2")(expected.remove(0))
-      expectResult("A.a1+C.c1")(expected.remove(0))
-      expectResult("A.a1+C.c2")(expected.remove(0))
-      expectResult("A.a2")(expected.remove(0))
-      expectResult("A.a2+B.b1")(expected.remove(0))
-      expectResult("A.a2+B.b1+C.c1")(expected.remove(0))
-      expectResult("A.a2+B.b1+C.c2")(expected.remove(0))
-      expectResult("A.a2+B.b2")(expected.remove(0))
-      expectResult("A.a2+B.b2+C.c1")(expected.remove(0)) 
-      expectResult("A.a2+B.b2+C.c2")(expected.remove(0))
-      expectResult("A.a2+C.c1")(expected.remove(0))
-      expectResult("A.a2+C.c2")(expected.remove(0))
-      expectResult("B.b1")(expected.remove(0))
-      expectResult("B.b1+C.c1")(expected.remove(0))
-      expectResult("B.b1+C.c2")(expected.remove(0))
-      expectResult("B.b2")(expected.remove(0))
-      expectResult("B.b2+C.c1")(expected.remove(0))
-      expectResult("B.b2+C.c2")(expected.remove(0))
-      expectResult(NO_BRANCH.toString)(expected.remove(0))
-      expectResult("C.c1")(expected.remove(0))
-      expectResult("C.c2")(expected.remove(0))
+      assertResult("A.a1")(expected.remove(0))
+      assertResult("A.a1+B.b1")(expected.remove(0))
+      assertResult("A.a1+B.b1+C.c1")(expected.remove(0))
+      assertResult("A.a1+B.b1+C.c2")(expected.remove(0))
+      assertResult("A.a1+B.b2")(expected.remove(0))
+      assertResult("A.a1+B.b2+C.c1")(expected.remove(0))
+      assertResult("A.a1+B.b2+C.c2")(expected.remove(0))
+      assertResult("A.a1+C.c1")(expected.remove(0))
+      assertResult("A.a1+C.c2")(expected.remove(0))
+      assertResult("A.a2")(expected.remove(0))
+      assertResult("A.a2+B.b1")(expected.remove(0))
+      assertResult("A.a2+B.b1+C.c1")(expected.remove(0))
+      assertResult("A.a2+B.b1+C.c2")(expected.remove(0))
+      assertResult("A.a2+B.b2")(expected.remove(0))
+      assertResult("A.a2+B.b2+C.c1")(expected.remove(0)) 
+      assertResult("A.a2+B.b2+C.c2")(expected.remove(0))
+      assertResult("A.a2+C.c1")(expected.remove(0))
+      assertResult("A.a2+C.c2")(expected.remove(0))
+      assertResult("B.b1")(expected.remove(0))
+      assertResult("B.b1+C.c1")(expected.remove(0))
+      assertResult("B.b1+C.c2")(expected.remove(0))
+      assertResult("B.b2")(expected.remove(0))
+      assertResult("B.b2+C.c1")(expected.remove(0))
+      assertResult("B.b2+C.c2")(expected.remove(0))
+      assertResult(NO_BRANCH.toString)(expected.remove(0))
+      assertResult("C.c1")(expected.remove(0))
+      assertResult("C.c2")(expected.remove(0))
     }
     
   }

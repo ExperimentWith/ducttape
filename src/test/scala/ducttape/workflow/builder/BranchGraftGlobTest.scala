@@ -45,7 +45,7 @@ class BranchGraftGlobTest extends WordSpec {
 
       val expandedBranchGraftElements = BranchGraftGlob.expand(unexpandedBranchGraftElements, branchFactory)
 
-      expectResult(1)(expandedBranchGraftElements.size)
+      assertResult(1)(expandedBranchGraftElements.size)
 
       assertEqual(unexpandedBranchGraftElements, expandedBranchGraftElements.head)
 
@@ -64,7 +64,7 @@ class BranchGraftGlobTest extends WordSpec {
 
       val expandedBranchGraftElements = BranchGraftGlob.expand(unexpandedBranchGraftElements, branchFactory)
 
-      expectResult(branchesPerBranchPoint)(expandedBranchGraftElements.size)
+      assertResult(branchesPerBranchPoint)(expandedBranchGraftElements.size)
 
     }
   }  
@@ -80,7 +80,7 @@ class BranchGraftGlobTest extends WordSpec {
 
       val expandedBranchGraftElements = BranchGraftGlob.expand(unexpandedBranchGraftElements, branchFactory)
 
-      expectResult(branchesPerBranchPoint*branchesPerBranchPoint)(expandedBranchGraftElements.size)
+      assertResult(branchesPerBranchPoint*branchesPerBranchPoint)(expandedBranchGraftElements.size)
 
     }
   }    
@@ -96,7 +96,7 @@ class BranchGraftGlobTest extends WordSpec {
 
       val expandedBranchGraftElements = BranchGraftGlob.expand(unexpandedBranchGraftElements, branchFactory)
 
-      expectResult(Math.pow(branchesPerBranchPoint, 3))(expandedBranchGraftElements.size)
+      assertResult(Math.pow(branchesPerBranchPoint, 3))(expandedBranchGraftElements.size)
 
     }
   }    

@@ -50,7 +50,7 @@ class MetaHyperDag[V,M,H,E](val delegate: HyperDag[V,H,E],
   def unpackedWalker[D,F](munger: RealizationMunger[V,H,E,D,F],
                           vertexFilter: MetaVertexFilter[V,H,E,D],
                           toD: H => D,
-                          traversal: Traversal = Arbitrary)
+                          traversal: Traversal)
                          (implicit ordering: Ordering[D])= {
     // TODO: Exclude epsilons from completed, etc.
     // TODO: Map epsilons and phantoms for the munger in this class instead of putting
