@@ -24,7 +24,7 @@ class PackedDagWalkerTest extends FlatSpec with Logging {
     val e2 = builder.addHyperEdge("HyperEdge 2", List((b,"")), c)
 
     val dag: HyperDag[String,String,String] = builder.build
-    info(dag.toGraphViz)
+    //info(dag.toGraphViz)
     val vertices = for(v <- dag.packedWalker.iterator.toList) yield v.value
     assert(vertices(0) == "Vertex A")
     assert(vertices(1) == "Vertex B")
