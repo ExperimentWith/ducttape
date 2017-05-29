@@ -14,7 +14,7 @@ object ErrorUtils extends Logging {
   
   def prettyPrintError(e: FileFormatException, prefix: String, color: String) {
     debug(e.getMessage)
-    debug(e.getStackTraceString)
+    debug(e.getStackTrace.toString())
       
     System.err.println("%s%s: %s%s".format(color, prefix, e.getMessage, Config.resetColor))
     for ( (file: File, line: Int, col: Int, untilLine: Int) <- e.refs) {
@@ -30,7 +30,7 @@ object ErrorUtils extends Logging {
     
     def exitError(e: Exception): T = {
       debug(e.getMessage)
-      debug(e.getStackTraceString)
+      debug(e.getStackTrace.toString)
       
       System.err.println("%sERROR: %s".format(Config.errorColor, e.getMessage))
       System.exit(1)
@@ -46,7 +46,7 @@ object ErrorUtils extends Logging {
       }
       
       debug(e.getMessage)
-      debug(e.getStackTraceString)
+      debug(e.getStackTrace.toString())
       
       e match {
         case e: FileFormatException => {

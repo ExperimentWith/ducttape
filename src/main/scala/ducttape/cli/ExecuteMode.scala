@@ -32,6 +32,8 @@ import ducttape.versioner.WorkflowVersionStore
 import ducttape.versioner.WorkflowVersionHistory
 import ducttape.util.Files
 
+import scala.io.StdIn
+
 object ExecuteMode {
   
   // uncommittedVersion is the version we hallucinate before the user
@@ -105,7 +107,7 @@ object ExecuteMode {
         } else {
           System.err.print("Are you sure you want to run these %d tasks? [y/n] ".format(cc.todo.size))
         }
-        Console.readBoolean
+        StdIn.readBoolean
       }
       
       answer match {

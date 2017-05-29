@@ -7,7 +7,7 @@ object Config {
   var headerColor = Console.BLUE
   var byColor = Console.BLUE
   var taskColor = Console.CYAN
-  var warnColor = Console.BOLD + "\033[1;33;40m\033[1m"
+  var warnColor = Console.BOLD + "\u001b[1;33;40m\u001b[1m"
   var errorColor = Console.RED
   var resetColor = Console.RESET
 

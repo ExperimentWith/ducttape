@@ -82,6 +82,7 @@ import ducttape.util.Globs
 import ducttape.util.Shell
 
 import grizzled.slf4j.Logging
+import scala.io.StdIn
 
 object Ducttape extends Logging {
   
@@ -530,7 +531,7 @@ object Ducttape extends Logging {
       } else {
         // note: user must still press enter
         err.print("Are you sure you want to invalidate all these? [y/n] ")
-        Console.readChar
+        StdIn.readChar
       }
       
       answer match {
@@ -571,7 +572,7 @@ object Ducttape extends Logging {
       } else {
         // note: user must still press enter
         err.print("Are you sure you want to delete all these? [y/n] ")
-        Console.readChar
+        StdIn.readChar
       }
 
       answer match {
@@ -797,7 +798,7 @@ object Ducttape extends Logging {
             // note: user must still press enter
             if (victims.size > 0) {
               System.err.print(s"Are you sure you want to FORCE UNLOCK these ${victims.size} tasks? (Only do this if you sure no other process is using them) [y/n] ")
-              Console.readBoolean
+              StdIn.readBoolean
             } else {
               false
             }
@@ -828,7 +829,7 @@ object Ducttape extends Logging {
              // note: user must still press enter
              System.err.print(s"Are you sure you want to build these ${packageVersions.packagesToBuild.size} packages? [y/n] ")
              System.err.flush()
-             Console.readBoolean
+             StdIn.readBoolean
            }
            
            if (answer) {
