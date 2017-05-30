@@ -26,8 +26,32 @@ object GrammarParser extends RegexParsers {
   }
   
   def readWorkflow(file: File, isImported: Boolean = false): WorkflowDefinition = {
+    
+    val from:Any = file    
+    
+    return readWorkflow(from, isImported)
+    
+  }
+  
+  
+  def readWorkflow(string: String): WorkflowDefinition = {
+    
+    val from:Any = string
+    
+    return readWorkflow(from, isImported=false)
+    
+  }
+
+  
+  private def readWorkflow(from: Any, isImported: Boolean): WorkflowDefinition = {
+
+    val file:File = from match {
+      case f:File => f
+      case _      => new File(System.getProperty("user.dir"))
+    }
+
     val importDir: File = file.getAbsoluteFile.getParentFile
-    val result: ParseResult[Seq[ASTType]] = parseAll(Grammar.elements(importDir), IO.read(file, "UTF-8"))
+    val result: ParseResult[Seq[ASTType]] = parseAll(Grammar.elements(importDir), IO.read(from, "UTF-8"))
     val pos = result.next.pos
     
     return result match {

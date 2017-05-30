@@ -225,6 +225,16 @@ object Ducttape extends Logging {
     
     val packedGraph = new PackedGraph(wd, confSpecs)
     Files.write(packedGraph.toString, "./workflow.dot")
+    
+    val goals = packedGraph.goals
+    
+    for (taskName <- goals.tasks) {
+      
+      for (realization <- goals(taskName)) {
+        println("%sRUN:%s %s".format(Config.greenColor, Config.resetColor, ducttape.cli.ColorUtils.colorizeDir(taskName, realization)))
+      }
+    }
+    
     System.exit(0)
 
     val branchFactory = ex2err(WorkflowBuilder.findBranchPoints(confSpecs ++ Seq(wd)))

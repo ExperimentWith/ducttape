@@ -70,46 +70,6 @@ class WorkflowBuilder(wd: WorkflowDefinition, configSpecs: Seq[ConfigAssignment]
   // correspond to workflow-specific types
   val dag = new PhantomMetaHyperDagBuilder[TaskTemplate, BranchPoint, Branch, SpecGroup]()
 
-  def catcher[U](func: => U)(implicit ref: BranchPointRef) = try { func } catch {
-    case e: NoSuchBranchPointException => {
-      throw new FileFormatException("No such branch point: %s".format(e.msg), ref)
-    }
-    case e: NoSuchBranchException => {
-      throw new FileFormatException("No such branch: %s".format(e.msg), ref)
-    }
-  }
-
-  def buildPlans(planDefs: Seq[PlanDefinition], branchFactory: BranchFactory): Seq[RealizationPlan] = {
-    planDefs.flatMap { planDef: PlanDefinition =>
-      val numReachClauses = planDef.crossProducts.size
-      var i = 0
-      planDef.crossProducts.map { cross: CrossProduct =>
-        i += 1
-        val realizations: Map[BranchPoint, Set[String]] = cross.value.map { implicit ref: BranchPointRef =>
-          catcher {
-            val branchPoint: BranchPoint = branchFactory.getBranchPoint(ref.name)
-            // TODO: Change branches back to Branch after we get the baseline/branch name duality hammered out?
-            val branches: Set[String] = ref.branchNames.flatMap { element: ASTType =>
-              element match {
-                case l: Literal => Seq(l.value.toString)
-                case s: Sequence => {
-                  for (x: BigDecimal <- s.start to s.end by s.increment) yield {
-                    x.toString
-                  }
-                }
-                case e: ASTType => throw new AbstractSyntaxTreeException(e, "Element cannot be used to refer to a branch name")
-              }
-            }.toSet
-            (branchPoint, branches) // map entry
-          }
-        }.toMap
-
-        val fullName = if (numReachClauses > 1) s"${planDef} (Clause $i of $numReachClauses)"
-                       else planDef.toString
-        new RealizationPlan(planDef, cross.goals, realizations, fullName)
-      }
-    }
-  }
   
   /** getHyperedges() is called by traverse() when traversing a nested branch point tree
    *  to add graph structure leading to a particular task's newly created sink vertex.
@@ -307,4 +267,44 @@ object WorkflowBuilder {
     return foundTasks
   }
 
+  def catcher[U](func: => U)(implicit ref: BranchPointRef) = try { func } catch {
+    case e: NoSuchBranchPointException => {
+      throw new FileFormatException("No such branch point: %s".format(e.msg), ref)
+    }
+    case e: NoSuchBranchException => {
+      throw new FileFormatException("No such branch: %s".format(e.msg), ref)
+    }
+  }
+
+  def buildPlans(planDefs: Seq[PlanDefinition], branchFactory: BranchFactory): Seq[RealizationPlan] = {
+    planDefs.flatMap { planDef: PlanDefinition =>
+      val numReachClauses = planDef.crossProducts.size
+      var i = 0
+      planDef.crossProducts.map { cross: CrossProduct =>
+        i += 1
+        val realizations: Map[BranchPoint, Set[String]] = cross.value.map { implicit ref: BranchPointRef =>
+          catcher {
+            val branchPoint: BranchPoint = branchFactory.getBranchPoint(ref.name)
+            // TODO: Change branches back to Branch after we get the baseline/branch name duality hammered out?
+            val branches: Set[String] = ref.branchNames.flatMap { element: ASTType =>
+              element match {
+                case l: Literal => Seq(l.value.toString)
+                case s: Sequence => {
+                  for (x: BigDecimal <- s.start to s.end by s.increment) yield {
+                    x.toString
+                  }
+                }
+                case e: ASTType => throw new AbstractSyntaxTreeException(e, "Element cannot be used to refer to a branch name")
+              }
+            }.toSet
+            (branchPoint, branches) // map entry
+          }
+        }.toMap
+
+        val fullName = if (numReachClauses > 1) s"${planDef} (Clause $i of $numReachClauses)"
+                       else planDef.toString
+        new RealizationPlan(planDef, cross.goals, realizations, fullName)
+      }
+    }
+  }
 }

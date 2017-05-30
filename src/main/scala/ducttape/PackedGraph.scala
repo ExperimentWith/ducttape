@@ -10,12 +10,37 @@ import scala.collection.Map
 
 class PackedGraph(val workflow:ast.WorkflowDefinition, val confSpecs: Seq[ast.ConfigAssignment]) {
   
-  val branchFactory = ducttape.cli.ErrorUtils.ex2err(ducttape.workflow.builder.WorkflowBuilder.findBranchPoints(confSpecs ++ Seq(workflow)))
+  val branchFactory:BranchFactory = ducttape.cli.ErrorUtils.ex2err(ducttape.workflow.builder.WorkflowBuilder.findBranchPoints(confSpecs ++ Seq(workflow)))
   
   private val taskMap:Map[String, PackedGraph.Task] = PackedGraph.build(workflow, branchFactory)
   private val globalMap:Map[String, PackedGraph.Global] = PackedGraph.build(confSpecs, branchFactory) 
   
+  lazy val numTasks:Int = taskMap.values.size
+  
+  /** 
+   * Gets the [[ducttape.PackedGraph.Task]] associated with the provided task name. 
+   * 
+   * @param name Name of the task
+   * @return the task 
+   */
+  def task(name:String): Option[PackedGraph.Task] = taskMap.get(name)
+
+  
+  /** 
+   * Gets the [[ducttape.PackedGraph.Global]] associated with the provided global variable name. 
+   * 
+   * @param name Name of the task
+   * @return the task 
+   */
+  def global(name:String): Option[PackedGraph.Global] = globalMap.get(name)
+  
+  
+  
   override def toString(): String = PackedGraph.toGraphviz(taskMap, globalMap)
+  
+  lazy val goals = Goals.fromPlans(this)
+  
+  def plans = workflow.plans
   
 }
 
@@ -26,10 +51,21 @@ object PackedGraph {
   final case class CrossProduct(value:Set[Branch]) extends Node
   final case class Via(reach:Task, via:CrossProduct) extends Node
   final case class Plan(goals:Seq[Via]) extends Node
-  final case class Task(name:String, code:BashCode, inputs:Seq[Spec], params:Seq[Spec], outputs:Seq[Spec], packages:Seq[Spec]) extends Node
   final case class ShellScript(code: String, vars: Set[String]) extends Node
   final case class Packages(value:Seq[Package]) extends Node
   final case class Global(value:Spec) extends Node
+  final case class Task(name:String, code:BashCode, inputs:Seq[Spec], params:Seq[Spec], outputs:Seq[Spec], packages:Seq[Spec]) extends Node {
+    
+    def containsVariable(variableName:String) : Boolean = {
+      
+      for (input  <- inputs)  { if (input.name  == variableName) { return true } }
+      for (output <- outputs) { if (output.name == variableName) { return true } }
+      for (param  <- params)  { if (param.name  == variableName) { return true } }
+      
+      return false
+    }
+    
+  }
 
   sealed trait ValueBearingNode extends Node
   final case class Literal(value:String) extends ValueBearingNode

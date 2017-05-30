@@ -13,6 +13,29 @@ import grizzled.slf4j.Logging
 class Realization(val branches: Seq[Branch]) extends Logging {
  // TODO: Keep string branch point names?
 
+  def explicitlyRefersTo(branchPoint:BranchPoint): Boolean = {
+    
+    for (branch <- branches) {
+      if (branchPoint.equals(branch.branchPoint)) {
+        return true
+      }
+    }
+    
+    return false
+  }
+
+  def explicitlyRefersTo(branch:Branch): Boolean = {
+    
+    for (branchInRealization <- branches) {
+      if (branch.equals(branchInRealization)) {
+        return true
+      }
+    }
+    
+    return false
+  }
+  
+  
   /** sort by branch *point* names to keep ordering consistent, then join branch names using dashes
    *   and don't include our default branch "baseline"
    * by default we "shorten" realization names by removing branch points using baseline branches
@@ -75,7 +98,7 @@ class Realization(val branches: Seq[Branch]) extends Logging {
   }
   override def toString() = toCanonicalString(false)
   
-  // unshortened realization name
+  /** unshortened realization name */
   def toFullString(hashLongNames: Boolean = true): String = fullRealizationName(hashLongNames)
   
   // returns true if this realization has only one branch and it is Baseline.baseline

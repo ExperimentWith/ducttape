@@ -197,7 +197,13 @@ object AbstractSyntaxTree {
         val branchPoint = branchFactory.getBranchPoint(this.name)
         val branches = this.branchNames.flatMap{ branchName => 
           branchName match {
-            case Literal(literal) => Seq(branchFactory(literal, branchPoint))
+            case Literal(literal) => {
+              if ("*".equals(literal)) {
+                branchFactory.getAll(branchPoint).toSeq
+              } else {
+                Seq(branchFactory(literal, branchPoint))
+              }
+            }
             case Sequence(start, end, increment) => {
               val builder = Seq.newBuilder[ducttape.workflow.Branch]
               var i = start
