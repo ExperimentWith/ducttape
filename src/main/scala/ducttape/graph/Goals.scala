@@ -1,6 +1,6 @@
-package ducttape
+package ducttape.graph
 
-import ducttape.{PackedGraph => packed}
+import ducttape.graph.{PackedGraph => packed}
 import ducttape.syntax.{AbstractSyntaxTree => ast}
 import ducttape.workflow.Branch
 import ducttape.workflow.BranchFactory

@@ -1,6 +1,6 @@
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package ducttape
+package ducttape.graph
 
 import org.scalatest._
 import org.junit.runner.RunWith
@@ -26,7 +26,7 @@ class GoalsTest extends WordSpec {
     val goals = packedGraph.goals
     
     "contain zero tasks" in {      
-      assertResult(0)(packedGraph.numTasks)
+      assertResult(0)(goals)
     }
     
     "contain zero goals" in {

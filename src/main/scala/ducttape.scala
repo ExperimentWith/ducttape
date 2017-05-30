@@ -8,7 +8,6 @@ import java.io.File
 import java.util.concurrent.ExecutionException
 import java.util.regex.Pattern
 
-import ducttape.PackedGraph
 import ducttape.cli.Config
 import ducttape.cli.Directives
 import ducttape.cli.ErrorUtils
@@ -42,6 +41,7 @@ import ducttape.hyperdag.walker.Traversal
 import ducttape.hyperdag.walker.Arbitrary
 import ducttape.hyperdag.walker.BreadthFirst
 import ducttape.hyperdag.walker.DepthFirst
+import ducttape.graph.PackedGraph
 import ducttape.syntax.AbstractSyntaxTree._
 import ducttape.syntax.GrammarParser
 import ducttape.syntax.StaticChecker

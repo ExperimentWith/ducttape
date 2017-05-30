@@ -1,4 +1,4 @@
-package ducttape
+package ducttape.graph
 
 import ducttape.syntax.{AbstractSyntaxTree => ast}
 import ducttape.syntax.BashCode

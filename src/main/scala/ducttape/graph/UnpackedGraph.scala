@@ -1,5 +1,5 @@
 /*
-package ducttape
+package ducttape.graph
 
 import ducttape.{PackedGraph => packed}
 import ducttape.syntax.BashCode
