@@ -16,10 +16,10 @@ import grizzled.slf4j.Logging
 class Goals private(private val packedGraph:PackedGraph) extends Logging { // private() declares the default constructor to be private
   
   /** Maps from task name to the required set of realizations for that task. */
-  private val values = new HashMap[String, HashSet[Realization]]
+  private[graph] val values = new HashMap[String, HashSet[Realization]]
   
   
-  private val comments = new HashMap[(String,Realization), String]
+  private[graph] val comments = new HashMap[(String,Realization), String]
   
   /** Adds realizations to the set required for a specified task. */
   private def add(taskName:String, realizations:Seq[Realization], comment:String): Unit = {
@@ -132,7 +132,22 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
     return true
   }
   
-  
+  def recursivelyProcessVariableReference(task:PackedGraph.Task, realization:Realization, comment:String, variableName:String): Boolean = {
+    if (task.containsVariable(variableName)) {
+      val success = recursivelyProcess(task, realization, comment)
+		  if (success) {
+		    if (! this.contains(task.name, realization)) {
+			    this.add(task.name, Seq(realization), s"${comment} $$${variableName}@${task.name}")
+			  }
+		    return true
+		  } else {
+			  return false
+		  }
+    } else {
+      warn(s"A reference to ${variableName}@${task.name} was found, but no variable with that name is defined for task ${task.name}")
+      return false      
+    }
+  }  
   
   /** Recursively processes a [[ducttape.PackedGraph.Spec]] node object.
     * 
@@ -146,12 +161,14 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
     */
   def recursivelyProcessSpec(node:packed.ValueBearingNode, realization:Realization, comment:String): Boolean = {
     
+    val defaultRealization = (realization == ducttape.workflow.Task.NO_REALIZATION)
+    
     node match {
       
       case packed.Literal(_) => return true
       
       case packed.BranchPointNode(bp, branches) => {
-        if (realization.explicitlyRefersTo(bp)) {
+        if (realization.explicitlyRefersTo(bp) || defaultRealization) {
           val successes = branches.map{ branchNode => recursivelyProcessSpec(branchNode, realization, s"${comment}[${bp.name}") }
           for (success <- successes) { if (success) return true } // If at least one branch succeeds, we're good
           return false
@@ -161,7 +178,7 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
       }
       
       case packed.BranchNode(branch, value) => {
-        if (realization.explicitlyRefersTo(branch)) {
+        if (realization.explicitlyRefersTo(branch) || (branch.baseline && defaultRealization)) {
           return recursivelyProcessSpec(value, realization, s"${comment}:${branch.name}]")
         } else {
           return false
@@ -177,17 +194,23 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
             packedGraph.task(taskName) match {
             
               case Some(task) => {
-                if (task.containsVariable(variableName)) {
-                  val success = recursivelyProcess(task, realization, comment)
-                  if (success && ! this.contains(task.name, realization)) {
-                    this.add(task.name, Seq(realization), s"${comment} $$${variableName}@${task.name}")
-                  }
+                //if (task.containsVariable(variableName)) {
                   
-                  return success
-                } else {
-                  warn(s"A reference to ${variableName}@${taskName} was found, but no variable with that name is defined for task ${taskName}")
-                  return false
-                }
+                  if (graftsList.isEmpty) {
+                		  val success = recursivelyProcessVariableReference(task, realization, comment, variableName)
+                		  return success                    
+                  } else {
+                	  for (graftRealization <- graftsList) {
+                		  val newRealization = Realization.applyGraft(graft=graftRealization, original=realization)
+                		  val success = recursivelyProcessVariableReference(task, newRealization, comment, variableName)
+                		  if (!success) return false
+                	  }
+                	  return true
+                  }
+                //} else {
+                //  warn(s"A reference to ${variableName}@${taskName} was found, but no variable with that name is defined for task ${taskName}")
+                //  return false
+                //}
               }
               
               case None       => {                
@@ -219,7 +242,7 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
           }
           
         }
-        return false
+        //return false
       }
       
     }
@@ -282,27 +305,65 @@ object Goals extends Logging {
   private def initialGoalsFromPlans(packedGraph:PackedGraph): Goals = {
     
     val goals = new Goals(packedGraph)
+
+    // A ducttape workflow may have zero or more "plan" blocks.
+    //
+    // Each "plan" block may contain zero or more "reach..via" clauses.
     
-    for (plan <- packedGraph.plans) {
-      val numReachClauses = plan.crossProducts.size
-      
-      for ((crossProduct,index) <- plan.crossProducts.zipWithIndex) {
     
-        val taskNames = crossProduct.goals
+    val totalNumReachClauses = packedGraph.plans.map{ plan => plan.crossProducts.size}.sum
+
+    // If there are zero plans, or if no plan contains any "reach..via" clauses,
+    //   we act as if the following plan were in effect:
+    //
+    // plan {
+    //   reach task_1 via (Baseline: baseline)
+    //   reach task_2 via (Baseline: baseline)
+    //   ...
+    //   reach task_n via (Baseline: baseline)
+    // }
+    //
+    if (packedGraph.plans.isEmpty || totalNumReachClauses==0) {
       
-        val branchTuples:Seq[(BranchPoint, Seq[Branch])] = crossProduct.value.map { branchPointRef => branchPointRef.getBranches(packedGraph.branchFactory) }
-        val branchMap:   Map[ BranchPoint, Seq[Branch] ] = branchTuples.toMap
+      val baselineOnly = Seq(ducttape.workflow.Task.NO_REALIZATION)
+      val baselineComment = ducttape.workflow.Task.NO_REALIZATION.toString()
+    
+      for (taskName <- packedGraph.taskNames) {
+        goals.add(taskName, baselineOnly, baselineComment)
+      }
       
-        val realizations = Realization.crossProduct(branchMap, withOmissions=true)
+    } else {
+    
+      // If there are plans with "reach..via" clauses, process each plan to identify the explicit realizations required by the plan
+      for (plan <- packedGraph.plans) {
       
-        val comment = if (numReachClauses > 1) s"${plan} (Clause $index of $numReachClauses)" else plan.toString
+        // Get the number of "reach..via" clauses explicitly mentioned in the plan
+        val numReachClauses = plan.crossProducts.size
+      
+        // Each crossProduct represents a "reach..via" clause within a "plan" block
+        // We keep track of the index so that we can report user-friendly messages that include clause numbers
+        for ((reachVia,index) <- plan.crossProducts.zipWithIndex) {
+    
+          // Get the task names explicitly requested by the "reach" component of this "reach...via" clause 
+          val reach = reachVia.goals
+        
+          // Get the branches explicitly requested by the "via" component of this "reach..via" clause
+          val branchTuples:Seq[(BranchPoint, Seq[Branch])] = reachVia.value.map { via => via.getBranches(packedGraph.branchFactory) }
+        
+          // Gather a map, where the keys are branch points, and the values are the branches (of each respective branch point) that were explicitly requested by the "via" component of this "reach..via" clause
+          val branchMap:   Map[ BranchPoint, Seq[Branch] ] = branchTuples.toMap
+      
+        
+          val realizations:Seq[Realization] = Realization.crossProduct(branchMap, withOmissions=false)
+      
+          val comment = if (numReachClauses > 1) s"${plan} (Clause $index of $numReachClauses)" else plan.toString
                        
-        for (taskName <- taskNames) {
-          goals.add(taskName, realizations, comment)
+          for (taskName <- reach) {
+            goals.add(taskName, realizations, comment)
+          }
         }
       }
     }
-    
     return goals
   }
   

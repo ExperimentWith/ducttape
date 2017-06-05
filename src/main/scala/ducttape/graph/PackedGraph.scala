@@ -35,6 +35,7 @@ class PackedGraph(val workflow:ast.WorkflowDefinition, val confSpecs: Seq[ast.Co
   def global(name:String): Option[PackedGraph.Global] = globalMap.get(name)
   
   
+  def taskNames = taskMap.keys
   
   override def toString(): String = PackedGraph.toGraphviz(taskMap, globalMap)
   
@@ -71,11 +72,11 @@ object PackedGraph {
   final case class Literal(value:String) extends ValueBearingNode
   final case class BranchNode(branch:Branch, value:ValueBearingNode) extends ValueBearingNode
   final case class BranchPointNode(branchPoint:BranchPoint, branches:Seq[BranchNode]) extends ValueBearingNode
-  final case class Reference(variableName:String, taskName:Option[String], grafts:Seq[Grafts]) extends ValueBearingNode
+  final case class Reference(variableName:String, taskName:Option[String], grafts:Seq[Realization]) extends ValueBearingNode
 
-  final case class Grafts(value:Seq[Branch]) {
-    def size() = value.size
-  }
+//  final case class Grafts(value:Seq[Branch]) {
+//    def size() = value.size
+//  }
   
   def toGraphvizID(taskName:String) : String = {
     return s"""task ${taskName}"""
@@ -142,8 +143,8 @@ object PackedGraph {
             s.append("\t\"").append(id).append("\" -> \"").append(targetID).append("\"").append("\n")
           } else {
             for ((grafts,index) <- graftsList.zipWithIndex) {
-              if (grafts.value.size > 0) {
-                val label = grafts.value.map{ graft => graft.toString}.mkString(",")
+              if (grafts.size > 0) {
+                val label = grafts.toString //grafts.map{ graft => graft.toString}.mkString(",")
                 val graftID = "from " + id + " graft " + index + " to " + targetID
                 s.append("\t\"").append(graftID).append("""" [margin="0.0,0.0", height=0.0, width=0.0, fontcolor=black, fillcolor=azure, color=black, style="filled", shape=box, label="""").append(label).append("\"]\n")
                 s.append("\t\"").append(id).append("\" -> \"").append(graftID).append("\"").append("\n")
@@ -274,7 +275,7 @@ object PackedGraph {
   }
   
   
-  def processGraftReference(branchGraftElements: Seq[ast.BranchGraftElement], branchFactory:BranchFactory) : Seq[Grafts] = {
+  def processGraftReference(branchGraftElements: Seq[ast.BranchGraftElement], branchFactory:BranchFactory) : Seq[Realization] = {
 
     import scala.collection.immutable.Map
     
@@ -288,7 +289,7 @@ object PackedGraph {
 
     val groups:Map[BranchPoint, Seq[Branch]] = branches.groupBy{ branch => branch.branchPoint }
     
-    return Realization.crossProduct(groups).map{ realization => Grafts(realization.branches) }
+    return Realization.crossProduct(groups) //.map{ realization => Grafts(realization.branches) }
 
   }
   

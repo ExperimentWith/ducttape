@@ -235,6 +235,9 @@ object Ducttape extends Logging {
       }
     }
     
+    println()
+    println(s"Total tasks:\t${goals.size}")
+    
     System.exit(0)
 
     val branchFactory = ex2err(WorkflowBuilder.findBranchPoints(confSpecs ++ Seq(wd)))

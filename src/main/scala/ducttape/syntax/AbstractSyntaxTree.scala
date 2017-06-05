@@ -195,13 +195,13 @@ object AbstractSyntaxTree {
     
     def getBranches(branchFactory:ducttape.workflow.BranchFactory): (ducttape.workflow.BranchPoint, Seq[ducttape.workflow.Branch]) = {
         val branchPoint = branchFactory.getBranchPoint(this.name)
-        val branches = this.branchNames.flatMap{ branchName => 
+        val branches = this.branchNames.flatMap{ branchName:BranchRef => 
           branchName match {
-            case Literal(literal) => {
-              if ("*".equals(literal)) {
+            case Literal(branchName:String) => {
+              if ("*".equals(branchName)) {
                 branchFactory.getAll(branchPoint).toSeq
               } else {
-                Seq(branchFactory(literal, branchPoint))
+                Seq(branchFactory(branchName, branchPoint))
               }
             }
             case Sequence(start, end, increment) => {

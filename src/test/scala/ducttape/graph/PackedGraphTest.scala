@@ -8,6 +8,7 @@ import org.scalatest.junit.JUnitRunner
 
 import ducttape.syntax.GrammarParser
 import ducttape.syntax.AbstractSyntaxTree.ConfigAssignment
+import ducttape.workflow.Task
 
 @RunWith(classOf[JUnitRunner])
 class PackedGraphTest extends WordSpec {
@@ -50,8 +51,9 @@ class PackedGraphTest extends WordSpec {
       assertResult(1)(packedGraph.numTasks)
     }
     
-    "contain zero goals" in {
-      assertResult(0)(packedGraph.goals.size)
+    s"contain a single goal of ${Task.NO_REALIZATION}" in {
+      assertResult(1)(packedGraph.goals.size)
+      assertResult(Task.NO_REALIZATION)(packedGraph.goals.values.values.flatten.head)
     }
 
   }
@@ -75,8 +77,9 @@ class PackedGraphTest extends WordSpec {
       assertResult(1)(packedGraph.numTasks)
     }
     
-    "contain zero goals" in {
-      assertResult(0)(packedGraph.goals.size)
+    s"contain a single goal of ${Task.NO_REALIZATION}" in {
+      assertResult(1)(packedGraph.goals.size)
+      assertResult(Task.NO_REALIZATION)(packedGraph.goals.values.values.flatten.head)
     }
 
   }
@@ -136,8 +139,9 @@ class PackedGraphTest extends WordSpec {
       assertResult(2)(packedGraph.numTasks)
     }
     
-    "contain zero goals" in {
-      assertResult(0)(packedGraph.goals.size)
+    s"contain a goal of ${Task.NO_REALIZATION} for each task" in {
+      assertResult(2)(packedGraph.goals.size)
+      assertResult(Task.NO_REALIZATION)(packedGraph.goals.values.values.flatten.head)
     }
 
   }

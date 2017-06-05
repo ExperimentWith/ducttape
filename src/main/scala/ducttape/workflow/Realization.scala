@@ -12,7 +12,9 @@ import grizzled.slf4j.Logging
 // see RealizationOrdering
 class Realization(val branches: Seq[Branch]) extends Logging {
  // TODO: Keep string branch point names?
-
+  
+  def size = branches.size
+  
   def explicitlyRefersTo(branchPoint:BranchPoint): Boolean = {
     
     for (branch <- branches) {
@@ -112,8 +114,46 @@ object Realization {
   
   val MaxNameLength = 255 - 5; // leave room for ".LOCK"
 
+  /**
+   * Create a new <code>Realization</code> by grafting.
+   * 
+   * The newly created <code>Realization</code> will contain all branches specified by the graft.
+   * 
+   * In addition, it will also contain any branches specified by <code>this</code> <code>Realization<code>
+   *    which do not conflict with any branches specified by the graft.
+   */
+  def applyGraft(graft:Realization, original:Realization) : Realization = {
+    
+    // Collect the (branchPoint, branch) tuples that the graft requires
+    val graftTuples = graft.branches.map{ branch => branch.branchPoint -> branch }
+    
+    // Collect the (branchPoint, branch) tuples in the original Realization
+    val originalTuples = original.branches.map{ branch => branch.branchPoint -> branch }
+    
+    
+    // Place the graft tuples into a map
+    val graftMap:Map[BranchPoint,Branch] = graftTuples.toMap
+    
+    // Place the original tuples into a map
+    val originalMap:Map[BranchPoint,Branch] = originalTuples.toMap
+    
+    
+    // Take the originalBranchMap and remove any (key, value) pairs where the key exists in the graftMap
+    val filteredOriginalMap = originalMap.filterNot{ case (branchPoint, branch) => graftMap.contains(branchPoint) }
+    
+    // Create a new map containing all of the values from the graftMap plus the filtered original map
+    val resultMap = graftMap ++ filteredOriginalMap
+    
+    // Create the final sequence of branches
+    val branches = resultMap.map{ case (branchPoint, branch) => branch }.toSeq
+    
+    return new Realization(branches)
+  }
+  
     
   def crossProduct(branchMap:Map[BranchPoint, Iterable[Branch]], withOmissions:Boolean=false) : Seq[Realization] = {
+    
+    //if (branchMap.isEmpty) return Seq(Task.NO_REALIZATION)
     
     val branchPoints = branchMap.keys.toSeq.sortBy{ branchPoint => branchPoint.toString }
     
@@ -141,6 +181,7 @@ object Realization {
         }
       }
     }
+    
     
     recursivelyConstructSolution(0, Seq())
     
