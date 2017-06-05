@@ -144,7 +144,7 @@ object PackedGraph {
           } else {
             for ((grafts,index) <- graftsList.zipWithIndex) {
               if (grafts.size > 0) {
-                val label = grafts.toString //grafts.map{ graft => graft.toString}.mkString(",")
+                val label = grafts.toFullString() //grafts.map{ graft => graft.toString}.mkString(",")
                 val graftID = "from " + id + " graft " + index + " to " + targetID
                 s.append("\t\"").append(graftID).append("""" [margin="0.0,0.0", height=0.0, width=0.0, fontcolor=black, fillcolor=azure, color=black, style="filled", shape=box, label="""").append(label).append("\"]\n")
                 s.append("\t\"").append(id).append("\" -> \"").append(graftID).append("\"").append("\n")

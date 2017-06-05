@@ -21,6 +21,23 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
   
   private[graph] val comments = new HashMap[(String,Realization), String]
   
+  override def toString() : String = {
+
+    val s = new StringBuilder()
+    
+    for (taskName <- values.keySet.toList.sorted) {
+      
+      for (realization <- values(taskName).toList.sortWith{(a,b) => a.toFullString() < b.toFullString() }) {
+        
+        s.append(s"reach ${taskName} via ${realization.toFullString()}\t${comments((taskName,realization))}\n")
+        
+      }
+      
+    }
+    
+    return s.toString()
+  }
+  
   /** Adds realizations to the set required for a specified task. */
   private def add(taskName:String, realizations:Seq[Realization], comment:String): Unit = {
     
@@ -168,17 +185,19 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
       case packed.Literal(_) => return true
       
       case packed.BranchPointNode(bp, branches) => {
-        if (realization.explicitlyRefersTo(bp) || defaultRealization) {
+        //if (realization.explicitlyRefersTo(bp) || defaultRealization) 
+        {
           val successes = branches.map{ branchNode => recursivelyProcessSpec(branchNode, realization, s"${comment}[${bp.name}") }
           for (success <- successes) { if (success) return true } // If at least one branch succeeds, we're good
           return false
-        } else {
-          return false
-        }
+        } 
+        //else {
+        //  return false
+        //}
       }
       
       case packed.BranchNode(branch, value) => {
-        if (realization.explicitlyRefersTo(branch) || (branch.baseline && defaultRealization)) {
+        if (realization.explicitlyRefersTo(branch) || branch.baseline) { //(branch.baseline && defaultRealization)) {
           return recursivelyProcessSpec(value, realization, s"${comment}:${branch.name}]")
         } else {
           return false
