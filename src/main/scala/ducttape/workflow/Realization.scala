@@ -187,4 +187,28 @@ object Realization {
     
     return solutions.result
   }
+  
+  
+  def union(realizations:Realization*): Realization = {
+    
+    val branches = new scala.collection.mutable.HashSet[Branch]()
+    
+    for (realization <- realizations) {
+      for (branch <- realization.branches) {
+        branches += branch
+      }
+    }
+    
+    //if (branches.size > 1 && branches.contains(Task.NO_BRANCH)) {
+      //branches.remove(Task.NO_BRANCH)
+    //}
+    
+    return new Realization(branches.toSeq)
+  }
+  
+  def fromUnsorted(branches:Seq[Branch]): Realization = {
+    val sorted = branches.sortWith{(a,b) => a.toString() < b.toString()}
+    return new Realization(sorted)
+  }
+  
 }

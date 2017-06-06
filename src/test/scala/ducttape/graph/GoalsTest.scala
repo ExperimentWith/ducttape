@@ -282,6 +282,125 @@ task evaluate_all
     }
   }
   
+  "The packed graph for a workflow with 2 tasks, 1 branchpoint, and a plan with 3 vias" should {
+
+    val string = """
+      task foo 
+        :: greeting=(Language: en="hello" de="Hallo" es="Hola")
+         > out
+      {
+        echo "${greeting}" > ${out}
+      }
+      
+      task bar
+        < in=$out@foo
+        > out
+      {
+        cat ${in} > ${out}
+      }
+      
+      plan {
+        reach bar via (Language: de)
+        reach foo via (Language: de)
+        reach foo via (Language: en)
+      }
+      """
+    
+    val workflow = GrammarParser.readWorkflow(string)
+    
+    val packedGraph = new PackedGraph(workflow, confSpecs)
+        
+    val goals = packedGraph.goals
+       
+    "contain 3 goals" in {   
+      assertResult(3)(goals.size)
+    }
+    
+    "contain realization foo[Language: en]" in {
+      test(goals, packedGraph, branchPointName="Language", branchName="en", taskName="foo", expectedResult=true)
+    }
+
+    "contain realization foo[Language: de]" in {
+      test(goals, packedGraph, branchPointName="Language", branchName="de", taskName="foo", expectedResult=true)
+    }
+ 
+    "not contain realization foo[Language: es]" in {
+      test(goals, packedGraph, branchPointName="Language", branchName="es", taskName="foo", expectedResult=false)
+    }
+    
+    "not contain realization bar[Language: en]" in {
+      test(goals, packedGraph, branchPointName="Language", branchName="en", taskName="bar", expectedResult=false)
+    }
+
+    "contain realization bar[Language: de]" in {
+      test(goals, packedGraph, branchPointName="Language", branchName="de", taskName="bar", expectedResult=true)
+    }
+    
+    "not contain realization bar[Language: es]" in {
+      test(goals, packedGraph, branchPointName="Language", branchName="es", taskName="bar", expectedResult=false)
+    }
+  
+  }
+  
+  "The packed graph for a workflow with 2 tasks, 1 branchpoint, and a plan with two vias" should {
+
+    val string = """
+      task foo 
+        :: greeting=(Language: en="hello" de="Hallo" es="Hola")
+         > out
+      {
+        echo "${greeting}" > ${out}
+      }
+      
+      task bar
+        < in=$out@foo
+        > out
+      {
+        cat ${in} > ${out}
+      }
+      
+      plan {
+        reach bar via (Language: de)
+        reach foo via (Language: en)
+      }
+      """
+    
+    val workflow = GrammarParser.readWorkflow(string)
+    
+    val packedGraph = new PackedGraph(workflow, confSpecs)
+        
+    val goals = packedGraph.goals
+       
+    "contain 3 goals" in {   
+      assertResult(3)(goals.size)
+    }
+    
+    "contain realization foo[Language: en]" in {
+      test(goals, packedGraph, branchPointName="Language", branchName="en", taskName="foo", expectedResult=true)
+    }
+
+    "contain realization foo[Language: de]" in {
+      test(goals, packedGraph, branchPointName="Language", branchName="de", taskName="foo", expectedResult=true)
+    }
+ 
+    "not contain realization foo[Language: es]" in {
+      test(goals, packedGraph, branchPointName="Language", branchName="es", taskName="foo", expectedResult=false)
+    }
+    
+    "not contain realization bar[Language: en]" in {
+      test(goals, packedGraph, branchPointName="Language", branchName="en", taskName="bar", expectedResult=false)
+    }
+
+    "contain realization bar[Language: de]" in {
+      test(goals, packedGraph, branchPointName="Language", branchName="de", taskName="bar", expectedResult=true)
+    }
+    
+    "not contain realization bar[Language: es]" in {
+      test(goals, packedGraph, branchPointName="Language", branchName="es", taskName="bar", expectedResult=false)
+    }
+  
+  }
+  
   "The packed graph for a workflow with 2 tasks, 1 branchpoint, and a plan with one via and one no via" should {
 
     val string = """
@@ -560,7 +679,7 @@ task evaluate_all
       test(goals, packedGraph, branchPointName="Language", branchName="de", taskName="foo", expectedResult=true)
     }
  
-    "not contain realization foo[Language: es]" in {
+    "contain realization foo[Language: es]" in {
       test(goals, packedGraph, branchPointName="Language", branchName="es", taskName="foo", expectedResult=true)
     }
     
@@ -694,14 +813,21 @@ task evaluate_all
     val packedGraph = new PackedGraph(workflow, confSpecs)
     val goals = packedGraph.goals
        
-    "not contain goals" in {   
-      assertResult(0)(goals.size)
+    "contain goals" in {   
+      assertResult(1)(goals.size)
     }
     
-    "not contain realization nothing" in {
-      test(goals, packedGraph, branchPointName="Foo", branchName="bar", taskName="nothing", expectedResult=false)
+    "contain realization nothing[Baseline.baseline]" in {
+      test(goals, packedGraph, branchPointName="Baseline", branchName="baseline", taskName="nothing", expectedResult=true)
     }
     
+    "contain realization nothing[Foo.bar]" in {
+      test(goals, packedGraph, branchPointName="Foo", branchName="bar", taskName="nothing", expectedResult=true)
+    }
+
+    "not contain realization nothing[DataSet.test]" in {
+      test(goals, packedGraph, branchPointName="DataSet", branchName="test", taskName="nothing", expectedResult=false)
+    }
   }    
 
 
@@ -868,7 +994,7 @@ task evaluate_all
     val workflow = GrammarParser.readWorkflow(acid + plan)
     val packedGraph = new PackedGraph(workflow, confSpecs)
     val goals = packedGraph.goals
-    print(goals)
+    //print(goals)
     
     "contain goals" in {   
       assertResult(5)(goals.size)
