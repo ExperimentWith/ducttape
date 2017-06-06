@@ -47,22 +47,13 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
   private def add(taskName:String, realization:Realization, comment:String): Unit = {
     
     val realizationsForTask = values.getOrElseUpdate(taskName, new HashSet[Realization])
-    
-      //values.getOrElseUpdate(taskName, new HashSet[Realization]())
-    //debug(s"Contains ${taskName}:\t${realizationsForTask.size}\t${values.contains(taskName)}")
-    
-    //for (realization <- realizations) {
-      realizationsForTask.add(realization)
-      //debug(s"Contains ${taskName}:\t${realizationsForTask.size}\t${values.contains(taskName)}")
+    realizationsForTask.add(realization)
       
-      val tuple = (taskName, realization)
-      if (! comments.contains(tuple)) {
-        comments.put(tuple, comment)
-      }
-      //debug(s"Size is now ${this.size}\t${values.get(taskName)}")
-    //}
+    val tuple = (taskName, realization)
+    if (! comments.contains(tuple)) {
+    	comments.put(tuple, comment)
+    }
     
-    //System.exit(-1)
   }
   
   private def contains(taskName:String, realization:Realization): Boolean = {
@@ -70,42 +61,6 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
     values.get(taskName) match {
       case Some(set) => return set.contains(realization)
       case None      => return false
-    }
-    
-  }
-  
-  
-  private def remove(taskName:String, realization:Realization): Unit = {
-    var shouldWarn = false
-    
-    values.get(taskName) match {
-      case Some(set) => set.remove(realization)
-      case None      => shouldWarn = true
-    }
-    
-    val tuple = (taskName, realization)
-    comments.get(tuple) match {
-      case Some(comment) => comments.remove(tuple)
-      case None      => shouldWarn = true
-    }
-    
-    if (shouldWarn) {
-      warn(s"An attempt was made to remove realization ${realization.toFullString()} as a goal for task ${taskName}, but that task currently has no associated realizations")
-    }
-    
-  }
-  
-  private def removeAll(taskName:String): Unit = {
-    values.remove(taskName)
-    
-    // The keys to the comments map are (name, realization) tuples.
-    //
-    // Gather up the (name, realization) tuples where name==taskName
-    val keys = comments.keys.collect{ case (name, realization) if name==taskName => (name, realization) }
-    
-    // Then, remove them from the comments map
-    for (key <- keys) {
-      comments.remove(key)
     }
     
   }
@@ -156,27 +111,6 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
     }
     
     return result
-    
-//    recursivelyProcess(task.inputs,  realization, s"${comment} ${task.name} input") match {
-//      case Failure               => return Failure
-//      case Success(realizationA) => {
-//        
-//        recursivelyProcess(task.params,  realization, s"${comment} ${task.name} param") match {
-//          case Failure               => return Failure
-//          case Success(realizationB) => {
-//        
-//            recursivelyProcess(task.outputs, realization, s"${comment} ${task.name} output") match {
-//              case Failure               => return Failure
-//              case Success(realizationC) => {
-//              
-//                return Success(Realization.union(realizationA, realizationB, realizationC))
-//                
-//              }
-//            }
-//          }
-//        }
-//      }
-//    }
 
   }
 
@@ -205,33 +139,7 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
       case Underspecified  => return Underspecified
       case Success(result) => return Success(result)
     }
-    
-//    for (spec <- specs) {
-//      
-//      val status = recursivelyProcessSpec(spec.value, realization, s"${comment} ${spec.name}", Seq())       
-//      status match {
-//        
-//        case Failure         => return Failure
-//        case Underspecified  => /* Do nothing */
-//        case Success(result) => {
-//          
-//          resultSoFar match {
-//            case Failure              => return Failure
-//            case Underspecified       => resultSoFar = Some(result)
-//            case Some(existingResult) => resultSoFar = Some(Realization.union(existingResult, result))
-//          }
-//        }
-//      }
-//      
-//    }
-//    
-//    resultSoFar match {
-//      case None         => return Some(ducttape.workflow.Task.NO_REALIZATION)
-//      case Some(result) => return Some(result)
-//    }
-    
-    // Only return true if every spec in the sequence succeeds
-    //return cumulativeResult
+
   }
   
   def recursivelyProcessVariableReference(task:PackedGraph.Task, realization:Realization, grafting:Boolean, comment:String, variableName:String, branchesSeen:Seq[Branch]): Status = {
@@ -263,10 +171,6 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
             } else {
               Realization.fromUnsorted(branchesSeen)
             }
-            
-//		      if (! this.contains(task.name, result)) {
-//			      this.add(task.name, result, s"${comment} $$${variableName}@${task.name}")
-//			    }
           
 		      if (result==NO_REALIZATION) {
 		        return Underspecified
@@ -311,21 +215,15 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
       }
       
       case packed.BranchPointNode(bp, branches) => {
-        //if (realization.explicitlyRefersTo(bp) || defaultRealization) 
-        {
-          val newComment = s"${comment}[${bp.name}"
-          val successes = branches.map{ branchNode => recursivelyProcessSpec(branchNode, realization, newComment, branchesSeen) }
-          for (success <- successes) {
-            success match {
-              case Underspecified | Success(_) => return success // If at least one branch succeeds, we're good
-              case Failure                     => /* Do nothing */
-            }
-          } 
-          return Failure
-        } 
-        //else {
-        //  return false
-        //}
+    	  val newComment = s"${comment}[${bp.name}"
+    	  val successes = branches.map{ branchNode => recursivelyProcessSpec(branchNode, realization, newComment, branchesSeen) }
+    	  for (success <- successes) {
+    		  success match {
+    		    case Underspecified | Success(_) => return success // If at least one branch succeeds, we're good
+    		    case Failure                     => /* Do nothing */
+    		  }
+    	  } 
+    	  return Failure        
       }
       
       case packed.BranchNode(branch, value) => {
@@ -347,32 +245,28 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
             packedGraph.task(taskName) match {
             
               case Some(task) => {
-                //if (task.containsVariable(variableName)) {
-                  
-                  if (graftsList.isEmpty) {
+            	  
+                if (graftsList.isEmpty) {
                 		
-                    val success = recursivelyProcessVariableReference(task, realization, grafting=false, comment, variableName, branchesSeen)
-                		return success
+                	val success = recursivelyProcessVariableReference(task, realization, grafting=false, comment, variableName, branchesSeen)
+                	return success
                 		
-                  } else {
+                } else {
                 	  
-                    for (graftRealization <- graftsList) {
-                		  val newRealization = Realization.applyGraft(graft=graftRealization, original=realization)
-                		  val success = recursivelyProcessVariableReference(task, newRealization, grafting=true, comment, variableName, branchesSeen)
-                		  if (success==Failure) return Failure
-                	  }
+                	for (graftRealization <- graftsList) {
+                		val newRealization = Realization.applyGraft(graft=graftRealization, original=realization)
+                		val success = recursivelyProcessVariableReference(task, newRealization, grafting=true, comment, variableName, branchesSeen)
+                		if (success==Failure) return Failure
+                	}
                 	  
-                	  if (branchesSeen.isEmpty) {
-                	    return Underspecified
-                	  } else {
-                	    return Success(Realization.fromUnsorted(branchesSeen))  
-                	  }
+                	if (branchesSeen.isEmpty) {
+                		return Underspecified
+                	} else {
+                		return Success(Realization.fromUnsorted(branchesSeen))  
+                	}
                 	  
-                  }
-                //} else {
-                //  warn(s"A reference to ${variableName}@${taskName} was found, but no variable with that name is defined for task ${taskName}")
-                //  return false
-                //}
+                }
+                
               }
               
               case None       => {                
@@ -404,7 +298,7 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
           }
           
         }
-        //return false
+        
       }
       
     }
@@ -419,47 +313,29 @@ object Goals extends Logging {
  
   def fromPlans(packedGraph:PackedGraph): Goals = {
     
-    debug("Searching for goals")
+    debug("Searching for goals")   
+    val requestedGoals:Seq[Goal] = initialGoalsFromPlans(packedGraph)
+    debug(s"Found ${requestedGoals.size} initial goals in the specified plan(s)")
+    
+    // Construct a Goals object, which will initially contain no actual goals
     val goals = new Goals(packedGraph)
     
-    val requestedGoals:Seq[Goal] = initialGoalsFromPlans(packedGraph)
-    //val goals:Goals = initialGoalsFromPlans(packedGraph.plans, packedGraph.branchFactory)
-    
-    debug(s"Found ${goals.size} goals")
-    //var counter = 0
     for (goal <- requestedGoals) {
-      //println(s"Goal ${goal.taskName}\t${goal.realization}")
-     // counter += 1
       
       packedGraph.task(goal.taskName) match {
-        case Some(packedTask) => {
-        //	var counter2 = 0
-        	//for (realization <- goals(goal.taskName)) 
-        	//{
-        	  //counter2 += 1
-        	  val key = (goal.taskName, goal.realization)
-        	  val comment = goal.comment //goals.comments(key)
-        	  val status = goals.recursivelyProcess(packedTask, goal.realization, comment)
+        case Some(task) => {
+ 
+          // Recursively process the specified task. This will cause it and its ancestors to be added to the Goals object.
+          val status = goals.recursivelyProcess(task, goal.realization, goal.comment)
 
-        		status match {
+        	status match {
         	    
-        		  case Failure    => {
-        			  goals.debug(s"Specified goals requested task ${goal.taskName} with realization ${goal.realization.toFullString()}, but that combination cannot be fulfilled")
-        			  //goals.remove(goal.taskName, goal.realization)
-        		  }
-        	    
-        		  case Underspecified => {
-        		    goals.debug(s"Specified plan(s) require task ${goal.taskName} with realization ${NO_REALIZATION.toFullString()}")
-        		    //goals.add(goal.taskName, NO_REALIZATION, goal.comment)
-        		  }
-        		  
-        		  case Success(realization) => {
-        	      goals.debug(s"Specified plan(s) require task ${goal.taskName} with realization ${realization.toFullString()}")
-        	      //goals.add(goal.taskName, realization, goal.comment)
-        	    }
+        	  case Failure              =>  goals.debug(s"Specified plan(s) require task ${goal.taskName} with realization ${goal.realization.toFullString()}, but that combination cannot be fulfilled")
+        	  case Underspecified       =>  goals.debug(s"Specified plan(s) require task ${goal.taskName} with realization ${goal.realization.toFullString()}, which will be fulfilled by ${NO_REALIZATION.toFullString()}")
+        	  case Success(realization) =>  goals.debug(s"Specified plan(s) require task ${goal.taskName} with realization ${goal.realization.toFullString()}, which will be fulfilled by ${realization.toFullString()}")
 
-        	  }
-          //}          
+          }
+
         }
         
         // This case indicates that the packed graph does not contain a task with that taskName
@@ -467,7 +343,6 @@ object Goals extends Logging {
         // This case probably should not ever happen, but in case it does, handle it gracefully
         case None             => {  
           warn(s"Plan ${goal.comment} contains a reference to task ${goal.taskName}, but no task with that name could be found.")
-          //goals.removeAll(goal.taskName)
         }
       }
             
@@ -479,7 +354,6 @@ object Goals extends Logging {
 
   private final case class Goal(taskName:String, realization:Realization, comment:String)
   
-  //private def initialGoalsFromPlans(plans:Seq[ast.PlanDefinition], branchFactory:BranchFactory): Goals = {
   private def initialGoalsFromPlans(packedGraph:PackedGraph): Seq[Goal] = {
     
     //val goals = new Goals(packedGraph)
