@@ -132,7 +132,7 @@ task evaluate_all
     """
   
   val confSpecs:Seq[ConfigAssignment] = Seq()
-  
+ 
   "The packed graph for an empty workflow" should {
 
     val string = ""
@@ -1026,33 +1026,94 @@ task evaluate_all
     
   }   
 
+
+
   
+  "The packed graph for build_model of acid.tape workflow with the complete plan" should {
   
-//  "The packed graph for acid.tape workflow with the complete plan" should {
-//  
-//    val plan = """
-//plan {
-//	reach evaluate_one,evaluate_all via (DataSet: *)     * 
-//	                                    (TrainCorpus: *) * 
-//	                                    (TestSplit: *)   * 
-//	                                    (UseDict: *)     * 
-//	                                    (OnlyOne: *)     * 
-//	                                    (Foo: *)         * 
-//	                                    (OptimizerSeed: *)
-//}
-//      """
-//    
-//    val workflow = GrammarParser.readWorkflow(acid + plan)
-//    val packedGraph = new PackedGraph(workflow, confSpecs)
-//    val goals = packedGraph.goals
-//
-//    print(goals)
-//    
-//    "contain goals" in {   
-//      assertResult(101)(goals.size)
-//    }
-//
-//  }    
+    val plan = """
+plan {
+	reach build_model via (DataSet: *)     * 
+	                                    (TrainCorpus: *) * 
+	                                    (TestSplit: *)   * 
+	                                    (UseDict: *)     * 
+	                                    (OnlyOne: *)     * 
+	                                    (Foo: *)         * 
+	                                    (OptimizerSeed: *)
+}
+      """
+    
+    val workflow = GrammarParser.readWorkflow(acid + plan)
+    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val goals = packedGraph.goals
+
+    //print(goals)
+    
+    "contain goals" in {   
+      assertResult(20)(goals.size)
+    }
+
+  }    
+
+  "The packed graph for process_dict of acid.tape workflow with the complete plan" should {
+  
+    val plan = """
+plan {
+	reach process_dict via (DataSet: *)     * 
+	                                    (TrainCorpus: *) * 
+	                                    (TestSplit: *)   * 
+	                                    (UseDict: *)     * 
+	                                    (OnlyOne: *)     * 
+	                                    (Foo: *)         * 
+	                                    (OptimizerSeed: *)
+}
+      """
+    
+    val workflow = GrammarParser.readWorkflow(acid + plan)
+    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val goals = packedGraph.goals
+
+    //print(goals)
+    
+    "contain goals" in {   
+      assertResult(8)(goals.size)
+    }
+
+  }   
+  
+  "The packed graph for acid.tape workflow with the complete plan" should {
+  
+    val plan = """
+plan {
+	reach evaluate_one,evaluate_all via (DataSet: *)     * 
+	                                    (TrainCorpus: *) * 
+	                                    (TestSplit: *)   * 
+	                                    (UseDict: *)     * 
+	                                    (OnlyOne: *)     * 
+	                                    (Foo: *)         * 
+	                                    (OptimizerSeed: *)
+}
+      """
+    
+    val workflow = GrammarParser.readWorkflow(acid + plan)
+    val packedGraph = new PackedGraph(workflow, confSpecs)
+    
+    "contain a global variable" in {
+      packedGraph.global("null") match {
+        case None => fail()
+        case Some(_) => /* succeed */ 
+      }
+    }
+    
+    val goals = packedGraph.goals
+
+    //print(goals)
+    
+    "contain goals" in {   
+      assertResult(101)(goals.size)
+    }
+
+  }    
   
   def test(goals:Goals, packedGraph:PackedGraph, tuples:Seq[(String,String)], taskName:String, expectedResult:Boolean): Unit = {
     

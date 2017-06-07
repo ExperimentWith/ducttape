@@ -24,7 +24,7 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
   private[graph] val values = new HashMap[String, HashSet[Realization]]
   
   
-  private[graph] val comments = new HashMap[(String,Realization), String]
+  private[graph] val comments = new HashMap[(String,Realization), HashSet[String]]
   
   override def toString() : String = {
 
@@ -34,7 +34,9 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
       
       for (realization <- values(taskName).toList.sortWith{(a,b) => a.toFullString() < b.toFullString() }) {
         
-        s.append(s"reach ${taskName} via ${realization.toFullString()}\t${comments((taskName,realization))}\n")
+        val tuple = (taskName,realization)
+        val requiredBy = comments.getOrElse(tuple, HashSet[String]()).toList.sorted.mkString(";\t")
+        s.append(s"reach ${taskName} via ${realization.toFullString()}\tRequired by\t${requiredBy}\n")
         
       }
       
@@ -50,9 +52,8 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
     realizationsForTask.add(realization)
       
     val tuple = (taskName, realization)
-    if (! comments.contains(tuple)) {
-    	comments.put(tuple, comment)
-    }
+    val commentsForTask = comments.getOrElseUpdate(tuple, new HashSet[String])
+    commentsForTask.add(comment)
     
   }
   
@@ -67,7 +68,15 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
   
   def tasks: Iterable[String] = values.keys
   
-  def apply(taskName:String): Iterable[Realization] = values(taskName)
+  def apply(taskName:String): Iterable[Realization] = {
+    values.get(taskName) match {
+      case Some(value) => return value
+      case None        => {
+        warn("Realizations for task ${taskName} were requested, but no such task exists")
+        return Seq()
+      }
+    }
+  }
  
   def size: Int = values.values.flatten.size
 
@@ -79,7 +88,7 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
     * 
     * Otherwise, this method will return <code>false</code>, indicating that the provided task (or a task it refers to) is incompatible in some way with the provided realization.
     */
-  def recursivelyProcess(task:packed.Task, realization:Realization, comment:String): Status = {
+  private def recursivelyProcess(task:packed.Task, realization:Realization, comment:String): Status = {
     
     var newComment = s"${comment} ${task.name} input"
     val inputsStatus = recursivelyProcess(task.inputs,  realization, newComment)
@@ -121,7 +130,7 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
     * 
     * Otherwise, this method will return <code>false</code>, indicating that the provided node (or a task it refers to) is incompatible in some way with the provided realization.
     */  
-  def recursivelyProcess(specs:Seq[packed.Spec], realization:Realization, comment:String): Status = {
+  private def recursivelyProcess(specs:Seq[packed.Spec], realization:Realization, comment:String): Status = {
     
     val results:Seq[Status] = specs.map{ spec =>
       
@@ -142,7 +151,7 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
 
   }
   
-  def recursivelyProcessVariableReference(task:PackedGraph.Task, realization:Realization, grafting:Boolean, comment:String, variableName:String, branchesSeen:Seq[Branch]): Status = {
+  private def recursivelyProcessVariableReference(task:PackedGraph.Task, realization:Realization, graft:Option[Realization], comment:String, variableName:String, branchesSeen:Seq[Branch]): Status = {
     
     if (task.containsVariable(variableName)) {
 
@@ -162,22 +171,49 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
         case Success(recursiveRealization) => {
           
           val result:Realization = 
-            if (branchesSeen.isEmpty) {
-              if (grafting) {
-                NO_REALIZATION
-              } else {
-                recursiveRealization
+        		  graft match {
+                case Some(graftRealization) => {
+                  val branchSet = new HashSet[Branch]
+                  branchesSeen.foreach{ branch => branchSet.add(branch) }
+                  recursiveRealization.branches.foreach{ branch => if (! graftRealization.explicitlyRefersTo(branch.branchPoint)) branchSet.add(branch) } // toSet -- graftRealization.branches ++ branchesSeen
+                  Realization.fromUnsorted(branchSet.toSeq)
+                }
+                case None                   => {
+                  val branches = (branchesSeen ++ recursiveRealization.branches).toSet.toSeq
+                  Realization.fromUnsorted(branches)
+                }
               }
-            } else {
-              Realization.fromUnsorted(branchesSeen)
-            }
           
-		      if (result==NO_REALIZATION) {
-		        return Underspecified
-		      } else {
-		        return Success(result)
-		      }
-		      
+//            if (branchesSeen.isEmpty) {
+//              graft match {
+//                case Some(graftRealization) => {
+//                  //NO_REALIZATION
+//                	val branchSet = recursiveRealization.branches.toSet -- graftRealization.branches ++ branchesSeen
+//                  Realization.fromUnsorted(branchSet.toSeq)
+//                }
+//                case None    => recursiveRealization
+//              }
+//            } else {
+//              graft match {
+//                case Some(graftRealization) => {
+//                  val branchSet = recursiveRealization.branches.toSet -- graftRealization.branches ++ branchesSeen
+//                  Realization.fromUnsorted(branchSet.toSeq)
+//                }
+//                case None                   => {
+//                  val branches = (branchesSeen ++ recursiveRealization.branches).toSet.toSeq
+//                  Realization.fromUnsorted(branches)
+//                }
+//              }
+//            }
+          
+//		      if (result==NO_REALIZATION) {
+//		        return Underspecified
+//		      } else {
+//		        return Success(result)
+//		      }
+
+          return Success(result)
+          
         }
         
       }
@@ -200,7 +236,7 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
     * 
     * Otherwise, this method will return <code>false</code>, indicating that the provided node (or a task it refers to) is incompatible in some way with the provided realization.
     */
-  def recursivelyProcessSpec(node:packed.ValueBearingNode, realization:Realization, comment:String, branchesSeen:Seq[Branch]): Status = {
+  private def recursivelyProcessSpec(node:packed.ValueBearingNode, realization:Realization, comment:String, branchesSeen:Seq[Branch]): Status = {
     
     val defaultRealization = (realization == ducttape.workflow.Task.NO_REALIZATION)
     
@@ -248,21 +284,33 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
             	  
                 if (graftsList.isEmpty) {
                 		
-                	val success = recursivelyProcessVariableReference(task, realization, grafting=false, comment, variableName, branchesSeen)
+                	val success = recursivelyProcessVariableReference(task, realization, graft=None, comment, variableName, branchesSeen)
                 	return success
                 		
                 } else {
-                	  
+                	
+                  val branches = new HashSet[Branch]
+                  branchesSeen.foreach{ branch => branches.add(branch) }
+                  
                 	for (graftRealization <- graftsList) {
-                		val newRealization = Realization.applyGraft(graft=graftRealization, original=realization)
-                		val success = recursivelyProcessVariableReference(task, newRealization, grafting=true, comment, variableName, branchesSeen)
-                		if (success==Failure) return Failure
+                		val newRealization = Realization.applyGraft(graft=graftRealization, original=realization) //; println(graftRealization.toFullString(false))
+                		val status = recursivelyProcessVariableReference(task, newRealization, graft=Some(graftRealization), comment, variableName, branchesSeen)
+                		status match {
+                		  case Failure         => return Failure
+                		  case Underspecified  => /* Do nothing */
+                		  case Success(result) => result.branches.foreach{ branch => branches.add(branch) } //; println(s"recursiveRealization = ${recursiveRealization.toFullString(false)}") 
+                		}
                 	}
-                	  
-                	if (branchesSeen.isEmpty) {
+                	
+                  
+                  //val branches = branches.toSeq
+                  
+                  //println(s"recursivelyProcessVariableReference result = ${branches.mkString("+")}")
+                  
+                	if (branches.isEmpty) {
                 		return Underspecified
                 	} else {
-                		return Success(Realization.fromUnsorted(branchesSeen))  
+                		return Success(Realization.fromUnsorted(branches.toSeq))  
                 	}
                 	  
                 }
@@ -313,13 +361,19 @@ object Goals extends Logging {
  
   def fromPlans(packedGraph:PackedGraph): Goals = {
     
+		// Construct a Goals object, which will initially contain no actual goals
+    val goals = new Goals(packedGraph)
+
+    
+    def debug(msg: => Any):Unit = 
+      goals.debug(msg)
+      //System.err.println(msg)
+    
     debug("Searching for goals")   
     val requestedGoals:Seq[Goal] = initialGoalsFromPlans(packedGraph)
+    val size = requestedGoals.size
     debug(s"Found ${requestedGoals.size} initial goals in the specified plan(s)")
-    
-    // Construct a Goals object, which will initially contain no actual goals
-    val goals = new Goals(packedGraph)
-    
+        
     for (goal <- requestedGoals) {
       
       packedGraph.task(goal.taskName) match {
@@ -330,9 +384,9 @@ object Goals extends Logging {
 
         	status match {
         	    
-        	  case Failure              =>  goals.debug(s"Specified plan(s) require task ${goal.taskName} with realization ${goal.realization.toFullString()}, but that combination cannot be fulfilled")
-        	  case Underspecified       =>  goals.debug(s"Specified plan(s) require task ${goal.taskName} with realization ${goal.realization.toFullString()}, which will be fulfilled by ${NO_REALIZATION.toFullString()}")
-        	  case Success(realization) =>  goals.debug(s"Specified plan(s) require task ${goal.taskName} with realization ${goal.realization.toFullString()}, which will be fulfilled by ${realization.toFullString()}")
+        	  case Failure              =>  debug(s"Specified plan(s) require task ${goal.taskName} with realization ${goal.realization.toFullString()}, but that combination cannot be fulfilled")
+        	  case Underspecified       =>  debug(s"Specified plan(s) require task ${goal.taskName} with realization ${goal.realization.toFullString()}, which will be fulfilled by underspecified realization ${NO_REALIZATION.toFullString()}")
+        	  case Success(realization) =>  debug(s"Specified plan(s) require task ${goal.taskName} with realization ${goal.realization.toFullString()}, which will be fulfilled by ${realization.toFullString()}")
 
           }
 
@@ -342,7 +396,7 @@ object Goals extends Logging {
         //
         // This case probably should not ever happen, but in case it does, handle it gracefully
         case None             => {  
-          warn(s"Plan ${goal.comment} contains a reference to task ${goal.taskName}, but no task with that name could be found.")
+          goals.warn(s"Plan ${goal.comment} contains a reference to task ${goal.taskName}, but no task with that name could be found.")
         }
       }
             

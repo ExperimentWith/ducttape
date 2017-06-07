@@ -13,7 +13,7 @@ class PackedGraph(val workflow:ast.WorkflowDefinition, val confSpecs: Seq[ast.Co
   val branchFactory:BranchFactory = ducttape.cli.ErrorUtils.ex2err(ducttape.workflow.builder.WorkflowBuilder.findBranchPoints(confSpecs ++ Seq(workflow)))
   
   private val taskMap:Map[String, PackedGraph.Task] = PackedGraph.build(workflow, branchFactory)
-  private val globalMap:Map[String, PackedGraph.Global] = PackedGraph.build(confSpecs, branchFactory) 
+  private val globalMap:Map[String, PackedGraph.Global] = PackedGraph.build(workflow.globals ++ confSpecs, branchFactory) 
   
   lazy val numTasks:Int = taskMap.values.size
   
