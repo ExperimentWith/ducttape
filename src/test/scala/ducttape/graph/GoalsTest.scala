@@ -1107,10 +1107,515 @@ plan {
     
     val goals = packedGraph.goals
 
-    //print(goals)
+    print(goals)
     
     "contain goals" in {   
       assertResult(101)(goals.size)
+    }
+
+    """contain realization build_model[Seq(("TrainCorpus","small"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("Baseline","baseline")), taskName="build_model", expectedResult=true)
+      test(goals, packedGraph, Seq(("TrainCorpus","small"),("UseDict","no")), taskName="build_model", expectedResult=true)
+    }
+
+    """contain realization build_model[Seq(("DataSet","test"),("OnlyOne","one"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes")), taskName="build_model", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes")), taskName="build_model", expectedResult=true)
+    }
+
+    """contain realization build_model[Seq(("DataSet","test"),("OnlyOne","one"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random"),("UseDict","yes")), taskName="build_model", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","yes")), taskName="build_model", expectedResult=true)
+    }
+
+    """contain realization build_model[Seq(("DataSet","test"),("OnlyOne","one"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TrainCorpus","large"),("UseDict","yes")), taskName="build_model", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","yes")), taskName="build_model", expectedResult=true)
+    }
+
+    """contain realization build_model[Seq(("DataSet","test"),("OnlyOne","one"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("UseDict","yes")), taskName="build_model", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","yes")), taskName="build_model", expectedResult=true)
+    }
+
+    """contain realization build_model[Seq(("TrainCorpus","large"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("TrainCorpus","large")), taskName="build_model", expectedResult=true)
+      test(goals, packedGraph, Seq(("TrainCorpus","large"),("UseDict","no")), taskName="build_model", expectedResult=true)
+    }
+
+    """contain realization build_model[Seq(("DataSet","train"),("OnlyOne","one"),("TrainCorpus","large"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("TrainCorpus","large"),("UseDict","yes")), taskName="build_model", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("OnlyOne","one"),("TrainCorpus","large"),("UseDict","yes")), taskName="build_model", expectedResult=true)
+    }
+
+    """contain realization build_model[Seq(("DataSet","train"),("OnlyOne","one"),("TrainCorpus","small"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("UseDict","yes")), taskName="build_model", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("OnlyOne","one"),("TrainCorpus","small"),("UseDict","yes")), taskName="build_model", expectedResult=true)
+    }
+
+    """contain realization corpus_counts[Seq(("DataSet","train"),("Foo","bar"),("TrainCorpus","small"))]""" in {
+      test(goals, packedGraph, Seq(("Baseline","baseline")), taskName="corpus_counts", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Foo","bar"),("TrainCorpus","small")), taskName="corpus_counts", expectedResult=true)
+    }
+
+    """contain realization corpus_counts[Seq(("DataSet","test"),("Foo","bar"),("TestSplit","standard"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test")), taskName="corpus_counts", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("TestSplit","standard")), taskName="corpus_counts", expectedResult=true)
+    }
+
+    """contain realization corpus_counts[Seq(("DataSet","test"),("Foo","bar"),("TestSplit","random"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random")), taskName="corpus_counts", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("TestSplit","random")), taskName="corpus_counts", expectedResult=true)
+    }
+
+    """contain realization corpus_counts[Seq(("DataSet","train"),("Foo","bar"),("TrainCorpus","large"))]""" in {
+      test(goals, packedGraph, Seq(("TrainCorpus","large")), taskName="corpus_counts", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Foo","bar"),("TrainCorpus","large")), taskName="corpus_counts", expectedResult=true)
+    }
+
+    """contain realization evaluate_all[Seq(("DataSet","train"),("Foo","bar"),("TrainCorpus","small"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("Baseline","baseline")), taskName="evaluate_all", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Foo","bar"),("TrainCorpus","small"),("UseDict","no")), taskName="evaluate_all", expectedResult=true)
+    }
+
+    """contain realization evaluate_all[Seq(("DataSet","test"),("Foo","bar"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test")), taskName="evaluate_all", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","no")), taskName="evaluate_all", expectedResult=true)
+    }
+
+    """contain realization evaluate_all[Seq(("DataSet","test"),("Foo","bar"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random")), taskName="evaluate_all", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","no")), taskName="evaluate_all", expectedResult=true)
+    }
+
+    """contain realization evaluate_all[Seq(("DataSet","test"),("Foo","bar"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random"),("TrainCorpus","large")), taskName="evaluate_all", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","no")), taskName="evaluate_all", expectedResult=true)
+    }
+
+    """contain realization evaluate_all[Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes")), taskName="evaluate_all", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes")), taskName="evaluate_all", expectedResult=true)
+    }
+
+    """contain realization evaluate_all[Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random"),("UseDict","yes")), taskName="evaluate_all", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","yes")), taskName="evaluate_all", expectedResult=true)
+    }
+
+    """contain realization evaluate_all[Seq(("DataSet","test"),("Foo","bar"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TrainCorpus","large")), taskName="evaluate_all", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","no")), taskName="evaluate_all", expectedResult=true)
+    }
+
+    """contain realization evaluate_all[Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TrainCorpus","large"),("UseDict","yes")), taskName="evaluate_all", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","yes")), taskName="evaluate_all", expectedResult=true)
+    }
+
+    """contain realization evaluate_all[Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("UseDict","yes")), taskName="evaluate_all", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","yes")), taskName="evaluate_all", expectedResult=true)
+    }
+
+    """contain realization evaluate_all[Seq(("DataSet","train"),("Foo","bar"),("TrainCorpus","large"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("TrainCorpus","large")), taskName="evaluate_all", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Foo","bar"),("TrainCorpus","large"),("UseDict","no")), taskName="evaluate_all", expectedResult=true)
+    }
+
+    """contain realization evaluate_all[Seq(("DataSet","train"),("Foo","bar"),("OnlyOne","one"),("TrainCorpus","large"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("TrainCorpus","large"),("UseDict","yes")), taskName="evaluate_all", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Foo","bar"),("OnlyOne","one"),("TrainCorpus","large"),("UseDict","yes")), taskName="evaluate_all", expectedResult=true)
+    }
+
+    """contain realization evaluate_all[Seq(("DataSet","train"),("Foo","bar"),("OnlyOne","one"),("TrainCorpus","small"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("UseDict","yes")), taskName="evaluate_all", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Foo","bar"),("OnlyOne","one"),("TrainCorpus","small"),("UseDict","yes")), taskName="evaluate_all", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","train"),("Foo","bar"),("OptimizerSeed","1"),("TrainCorpus","small"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("Baseline","baseline")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Foo","bar"),("OptimizerSeed","1"),("TrainCorpus","small"),("UseDict","no")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","test"),("Foo","bar"),("OptimizerSeed","1"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OptimizerSeed","1"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","no")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","test"),("Foo","bar"),("OptimizerSeed","2"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("OptimizerSeed","2")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OptimizerSeed","2"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","no")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","test"),("Foo","bar"),("OptimizerSeed","2"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("OptimizerSeed","2"),("TestSplit","random")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OptimizerSeed","2"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","no")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","test"),("Foo","bar"),("OptimizerSeed","2"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("OptimizerSeed","2"),("TestSplit","random"),("TrainCorpus","large")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OptimizerSeed","2"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","no")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","2"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("OptimizerSeed","2"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","2"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","2"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("OptimizerSeed","2"),("TestSplit","random"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","2"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","test"),("Foo","bar"),("OptimizerSeed","2"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("OptimizerSeed","2"),("TrainCorpus","large")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OptimizerSeed","2"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","no")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","2"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("OptimizerSeed","2"),("TrainCorpus","large"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","2"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","2"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("OptimizerSeed","2"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","2"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","test"),("Foo","bar"),("OptimizerSeed","3"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("OptimizerSeed","3")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OptimizerSeed","3"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","no")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","test"),("Foo","bar"),("OptimizerSeed","3"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("OptimizerSeed","3"),("TestSplit","random")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OptimizerSeed","3"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","no")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","test"),("Foo","bar"),("OptimizerSeed","3"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("OptimizerSeed","3"),("TestSplit","random"),("TrainCorpus","large")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OptimizerSeed","3"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","no")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","3"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("OptimizerSeed","3"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","3"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","3"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("OptimizerSeed","3"),("TestSplit","random"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","3"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","test"),("Foo","bar"),("OptimizerSeed","3"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("OptimizerSeed","3"),("TrainCorpus","large")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OptimizerSeed","3"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","no")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","3"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("OptimizerSeed","3"),("TrainCorpus","large"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","3"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","3"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("OptimizerSeed","3"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","3"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","test"),("Foo","bar"),("OptimizerSeed","1"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OptimizerSeed","1"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","no")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","test"),("Foo","bar"),("OptimizerSeed","1"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random"),("TrainCorpus","large")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OptimizerSeed","1"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","no")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","1"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","1"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","1"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","1"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","test"),("Foo","bar"),("OptimizerSeed","1"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TrainCorpus","large")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OptimizerSeed","1"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","no")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","1"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TrainCorpus","large"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","1"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","1"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","1"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","train"),("Foo","bar"),("OptimizerSeed","2"),("TrainCorpus","small"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("OptimizerSeed","2")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Foo","bar"),("OptimizerSeed","2"),("TrainCorpus","small"),("UseDict","no")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","train"),("Foo","bar"),("OptimizerSeed","2"),("TrainCorpus","large"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("OptimizerSeed","2"),("TrainCorpus","large")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Foo","bar"),("OptimizerSeed","2"),("TrainCorpus","large"),("UseDict","no")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","train"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","2"),("TrainCorpus","large"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("OptimizerSeed","2"),("TrainCorpus","large"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","2"),("TrainCorpus","large"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","train"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","2"),("TrainCorpus","small"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("OptimizerSeed","2"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","2"),("TrainCorpus","small"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","train"),("Foo","bar"),("OptimizerSeed","3"),("TrainCorpus","small"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("OptimizerSeed","3")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Foo","bar"),("OptimizerSeed","3"),("TrainCorpus","small"),("UseDict","no")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","train"),("Foo","bar"),("OptimizerSeed","3"),("TrainCorpus","large"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("OptimizerSeed","3"),("TrainCorpus","large")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Foo","bar"),("OptimizerSeed","3"),("TrainCorpus","large"),("UseDict","no")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","train"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","3"),("TrainCorpus","large"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("OptimizerSeed","3"),("TrainCorpus","large"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","3"),("TrainCorpus","large"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","train"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","3"),("TrainCorpus","small"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("OptimizerSeed","3"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","3"),("TrainCorpus","small"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","train"),("Foo","bar"),("OptimizerSeed","1"),("TrainCorpus","large"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("TrainCorpus","large")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Foo","bar"),("OptimizerSeed","1"),("TrainCorpus","large"),("UseDict","no")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","train"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","1"),("TrainCorpus","large"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("TrainCorpus","large"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","1"),("TrainCorpus","large"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization evaluate_one[Seq(("DataSet","train"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","1"),("TrainCorpus","small"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Foo","bar"),("OnlyOne","one"),("OptimizerSeed","1"),("TrainCorpus","small"),("UseDict","yes")), taskName="evaluate_one", expectedResult=true)
+    }
+
+    """contain realization extract_dictionary[Seq(("DataSet","train"),("TrainCorpus","small"))]""" in {
+      test(goals, packedGraph, Seq(("Baseline","baseline")), taskName="extract_dictionary", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("TrainCorpus","small")), taskName="extract_dictionary", expectedResult=true)
+    }
+
+    """contain realization extract_dictionary[Seq(("DataSet","test"),("TestSplit","standard"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test")), taskName="extract_dictionary", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","standard")), taskName="extract_dictionary", expectedResult=true)
+    }
+
+    """contain realization extract_dictionary[Seq(("DataSet","test"),("TestSplit","random"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random")), taskName="extract_dictionary", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random")), taskName="extract_dictionary", expectedResult=true)
+    }
+
+    """contain realization extract_dictionary[Seq(("DataSet","train"),("TrainCorpus","large"))]""" in {
+      test(goals, packedGraph, Seq(("TrainCorpus","large")), taskName="extract_dictionary", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("TrainCorpus","large")), taskName="extract_dictionary", expectedResult=true)
+    }
+
+    """contain realization nothing[Seq(("Foo","bar"))]""" in {
+      test(goals, packedGraph, Seq(("Baseline","baseline")), taskName="nothing", expectedResult=true)
+      test(goals, packedGraph, Seq(("Foo","bar")), taskName="nothing", expectedResult=true)
+    }
+
+    """contain realization optimize[Seq(("OptimizerSeed","1"),("TrainCorpus","small"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("Baseline","baseline")), taskName="optimize", expectedResult=true)
+      test(goals, packedGraph, Seq(("OptimizerSeed","1"),("TrainCorpus","small"),("UseDict","no")), taskName="optimize", expectedResult=true)
+    }
+
+    """contain realization optimize[Seq(("DataSet","test"),("OnlyOne","one"),("OptimizerSeed","2"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("OptimizerSeed","2"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("OptimizerSeed","2"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+    }
+
+    """contain realization optimize[Seq(("DataSet","test"),("OnlyOne","one"),("OptimizerSeed","2"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("OptimizerSeed","2"),("TestSplit","random"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("OptimizerSeed","2"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+    }
+
+    """contain realization optimize[Seq(("DataSet","test"),("OnlyOne","one"),("OptimizerSeed","2"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("OptimizerSeed","2"),("TrainCorpus","large"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("OptimizerSeed","2"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+    }
+
+    """contain realization optimize[Seq(("DataSet","test"),("OnlyOne","one"),("OptimizerSeed","2"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("OptimizerSeed","2"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("OptimizerSeed","2"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+    }
+
+    """contain realization optimize[Seq(("DataSet","test"),("OnlyOne","one"),("OptimizerSeed","3"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("OptimizerSeed","3"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("OptimizerSeed","3"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+    }
+
+    """contain realization optimize[Seq(("DataSet","test"),("OnlyOne","one"),("OptimizerSeed","3"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("OptimizerSeed","3"),("TestSplit","random"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("OptimizerSeed","3"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+    }
+
+    """contain realization optimize[Seq(("DataSet","test"),("OnlyOne","one"),("OptimizerSeed","3"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("OptimizerSeed","3"),("TrainCorpus","large"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("OptimizerSeed","3"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+    }
+
+    """contain realization optimize[Seq(("DataSet","test"),("OnlyOne","one"),("OptimizerSeed","3"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("OptimizerSeed","3"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("OptimizerSeed","3"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+    }
+
+    """contain realization optimize[Seq(("DataSet","test"),("OnlyOne","one"),("OptimizerSeed","1"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("OptimizerSeed","1"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+    }
+
+    """contain realization optimize[Seq(("DataSet","test"),("OnlyOne","one"),("OptimizerSeed","1"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("OptimizerSeed","1"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+    }
+
+    """contain realization optimize[Seq(("DataSet","test"),("OnlyOne","one"),("OptimizerSeed","1"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TrainCorpus","large"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("OptimizerSeed","1"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+    }
+
+    """contain realization optimize[Seq(("DataSet","test"),("OnlyOne","one"),("OptimizerSeed","1"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("OptimizerSeed","1"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+    }
+
+    """contain realization optimize[Seq(("OptimizerSeed","2"),("TrainCorpus","small"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("OptimizerSeed","2")), taskName="optimize", expectedResult=true)
+      test(goals, packedGraph, Seq(("OptimizerSeed","2"),("TrainCorpus","small"),("UseDict","no")), taskName="optimize", expectedResult=true)
+    }
+
+    """contain realization optimize[Seq(("OptimizerSeed","2"),("TrainCorpus","large"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("OptimizerSeed","2"),("TrainCorpus","large")), taskName="optimize", expectedResult=true)
+      test(goals, packedGraph, Seq(("OptimizerSeed","2"),("TrainCorpus","large"),("UseDict","no")), taskName="optimize", expectedResult=true)
+    }
+
+    """contain realization optimize[Seq(("DataSet","train"),("OnlyOne","one"),("OptimizerSeed","2"),("TrainCorpus","large"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("OptimizerSeed","2"),("TrainCorpus","large"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("OnlyOne","one"),("OptimizerSeed","2"),("TrainCorpus","large"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+    }
+
+    """contain realization optimize[Seq(("DataSet","train"),("OnlyOne","one"),("OptimizerSeed","2"),("TrainCorpus","small"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("OptimizerSeed","2"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("OnlyOne","one"),("OptimizerSeed","2"),("TrainCorpus","small"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+    }
+
+    """contain realization optimize[Seq(("OptimizerSeed","3"),("TrainCorpus","small"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("OptimizerSeed","3")), taskName="optimize", expectedResult=true)
+      test(goals, packedGraph, Seq(("OptimizerSeed","3"),("TrainCorpus","small"),("UseDict","no")), taskName="optimize", expectedResult=true)
+    }
+
+    """contain realization optimize[Seq(("OptimizerSeed","3"),("TrainCorpus","large"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("OptimizerSeed","3"),("TrainCorpus","large")), taskName="optimize", expectedResult=true)
+      test(goals, packedGraph, Seq(("OptimizerSeed","3"),("TrainCorpus","large"),("UseDict","no")), taskName="optimize", expectedResult=true)
+    }
+
+    """contain realization optimize[Seq(("DataSet","train"),("OnlyOne","one"),("OptimizerSeed","3"),("TrainCorpus","large"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("OptimizerSeed","3"),("TrainCorpus","large"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("OnlyOne","one"),("OptimizerSeed","3"),("TrainCorpus","large"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+    }
+
+    """contain realization optimize[Seq(("DataSet","train"),("OnlyOne","one"),("OptimizerSeed","3"),("TrainCorpus","small"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("OptimizerSeed","3"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("OnlyOne","one"),("OptimizerSeed","3"),("TrainCorpus","small"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+    }
+
+    """contain realization optimize[Seq(("OptimizerSeed","1"),("TrainCorpus","large"),("UseDict","no"))]""" in {
+      test(goals, packedGraph, Seq(("TrainCorpus","large")), taskName="optimize", expectedResult=true)
+      test(goals, packedGraph, Seq(("OptimizerSeed","1"),("TrainCorpus","large"),("UseDict","no")), taskName="optimize", expectedResult=true)
+    }
+
+    """contain realization optimize[Seq(("DataSet","train"),("OnlyOne","one"),("OptimizerSeed","1"),("TrainCorpus","large"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("TrainCorpus","large"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("OnlyOne","one"),("OptimizerSeed","1"),("TrainCorpus","large"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+    }
+
+    """contain realization optimize[Seq(("DataSet","train"),("OnlyOne","one"),("OptimizerSeed","1"),("TrainCorpus","small"),("UseDict","yes"))]""" in {
+      test(goals, packedGraph, Seq(("UseDict","yes")), taskName="optimize", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("OnlyOne","one"),("OptimizerSeed","1"),("TrainCorpus","small"),("UseDict","yes")), taskName="optimize", expectedResult=true)
+    }
+
+    """contain realization preproc[Seq(("DataSet","train"),("Side","src"),("TrainCorpus","small"))]""" in {
+      test(goals, packedGraph, Seq(("Baseline","baseline")), taskName="preproc", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Side","src"),("TrainCorpus","small")), taskName="preproc", expectedResult=true)
+    }
+
+    """contain realization preproc[Seq(("DataSet","test"),("Side","src"),("TestSplit","standard"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test")), taskName="preproc", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Side","src"),("TestSplit","standard")), taskName="preproc", expectedResult=true)
+    }
+
+    """contain realization preproc[Seq(("DataSet","test"),("Side","tgt"),("TestSplit","standard"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("Side","tgt")), taskName="preproc", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Side","tgt"),("TestSplit","standard")), taskName="preproc", expectedResult=true)
+    }
+
+    """contain realization preproc[Seq(("DataSet","test"),("Side","tgt"),("TestSplit","random"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("Side","tgt"),("TestSplit","random")), taskName="preproc", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Side","tgt"),("TestSplit","random")), taskName="preproc", expectedResult=true)
+    }
+
+    """contain realization preproc[Seq(("DataSet","test"),("Side","src"),("TestSplit","random"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random")), taskName="preproc", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("Side","src"),("TestSplit","random")), taskName="preproc", expectedResult=true)
+    }
+
+    """contain realization preproc[Seq(("DataSet","train"),("Side","tgt"),("TrainCorpus","small"))]""" in {
+      test(goals, packedGraph, Seq(("Side","tgt")), taskName="preproc", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Side","tgt"),("TrainCorpus","small")), taskName="preproc", expectedResult=true)
+    }
+
+    """contain realization preproc[Seq(("DataSet","train"),("Side","tgt"),("TrainCorpus","large"))]""" in {
+      test(goals, packedGraph, Seq(("Side","tgt"),("TrainCorpus","large")), taskName="preproc", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Side","tgt"),("TrainCorpus","large")), taskName="preproc", expectedResult=true)
+    }
+
+    """contain realization preproc[Seq(("DataSet","train"),("Side","src"),("TrainCorpus","large"))]""" in {
+      test(goals, packedGraph, Seq(("TrainCorpus","large")), taskName="preproc", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Side","src"),("TrainCorpus","large")), taskName="preproc", expectedResult=true)
+    }
+
+    """contain realization process_dict[Seq(("DataSet","train"),("OnlyOne","one"),("TrainCorpus","small"))]""" in {
+      test(goals, packedGraph, Seq(("Baseline","baseline")), taskName="process_dict", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("OnlyOne","one"),("TrainCorpus","small")), taskName="process_dict", expectedResult=true)
+    }
+
+    """contain realization process_dict[Seq(("DataSet","test"),("OnlyOne","one"),("TestSplit","standard"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test")), taskName="process_dict", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("TestSplit","standard")), taskName="process_dict", expectedResult=true)
+    }
+
+    """contain realization process_dict[Seq(("DataSet","test"),("OnlyOne","one"),("TestSplit","random"))]""" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random")), taskName="process_dict", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("TestSplit","random")), taskName="process_dict", expectedResult=true)
+    }
+
+    """contain realization process_dict[Seq(("DataSet","train"),("OnlyOne","one"),("TrainCorpus","large"))]""" in {
+      test(goals, packedGraph, Seq(("TrainCorpus","large")), taskName="process_dict", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("OnlyOne","one"),("TrainCorpus","large")), taskName="process_dict", expectedResult=true)
     }
 
   }    
@@ -1122,8 +1627,8 @@ plan {
       val branch = packedGraph.branchFactory(name=branchName, branchPoint=branchPointName)
       branches += branch
     }
-    val sortedBranches = branches.result().sortWith{(a,b) => a.toString() < b.toString()}
-    val realization = new Realization(sortedBranches)
+    //val sortedBranches = branches.result().sortWith{(a,b) => a.toString() < b.toString()}
+    val realization = Realization.fromUnsorted(branches.result())
       
     goals.values.get(taskName) match {
       case Some(result) => assertResult(expectedResult)(result.contains(realization))

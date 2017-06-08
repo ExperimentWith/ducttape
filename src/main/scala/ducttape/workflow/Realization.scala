@@ -147,7 +147,7 @@ object Realization {
     // Create the final sequence of branches
     val branches = resultMap.map{ case (branchPoint, branch) => branch }.toSeq
     
-    return new Realization(branches)
+    return Realization.fromUnsorted(branches)
   }
   
     
@@ -165,7 +165,7 @@ object Realization {
         val branches = branchMap(branchPoint)
         for (branch <- branches) {
           if (bpIndex == branchPoints.size - 1) {
-            val realization = new Realization(partialSolution++Seq(branch))
+            val realization = Realization.fromUnsorted(partialSolution++Seq(branch))
             solutions += realization
           } else {
             recursivelyConstructSolution(bpIndex+1, partialSolution++Seq(branch))
@@ -173,7 +173,7 @@ object Realization {
         }
         if (withOmissions) {
           if (bpIndex == branchPoints.size - 1) {
-            val realization = new Realization(partialSolution)
+            val realization = Realization.fromUnsorted(partialSolution)
             solutions += realization
           } else {
             recursivelyConstructSolution(bpIndex+1, partialSolution)
@@ -203,11 +203,28 @@ object Realization {
       //branches.remove(Task.NO_BRANCH)
     //}
     
-    return new Realization(branches.toSeq)
+    return Realization.fromUnsorted(branches.toSeq)
   }
   
   def fromUnsorted(branches:Seq[Branch]): Realization = {
-    val sorted = branches.sortWith{(a,b) => a.toString() < b.toString()}
+    val sorted = branches.sortWith{ (a,b) => 
+      val branchPointA = a.branchPoint.toString()
+      val branchPointB = b.branchPoint.toString()
+      
+      if (branchPointA < branchPointB) {
+        true
+      } else if (branchPointA > branchPointB) {
+        false
+      } else {
+        val branchA = a.name
+        val branchB = b.name
+        if (branchA < branchB) {
+          true
+        } else {
+          false
+        }
+      }
+    }
     return new Realization(sorted)
   }
   
