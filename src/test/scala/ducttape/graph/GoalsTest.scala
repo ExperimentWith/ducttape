@@ -1107,7 +1107,7 @@ plan {
     
     val goals = packedGraph.goals
 
-    print(goals)
+    //print(goals)
     
     "contain goals" in {   
       assertResult(101)(goals.size)

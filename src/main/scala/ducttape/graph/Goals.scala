@@ -23,8 +23,9 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
   /** Maps from task name to the required set of realizations for that task. */
   private[graph] val values = new HashMap[String, HashSet[Realization]]
   
-  
   private[graph] val comments = new HashMap[(String,Realization), HashSet[String]]
+  
+  private[graph] val cache = new HashMap[(String, Realization), Status]
   
   override def toString() : String = {
 
@@ -46,11 +47,16 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
   }
   
   /** Adds a realization to the set required for a specified task. */
-  private def add(taskName:String, realization:Realization, comment:String): Unit = {
+  private def add(taskName:String, realization:Realization): Unit = {
     
     val realizationsForTask = values.getOrElseUpdate(taskName, new HashSet[Realization])
-    realizationsForTask.add(realization)
-      
+    realizationsForTask.add(realization)      
+    
+  }
+  
+  /** Records a comment that a task with a particular realization was requested. */
+  private def addComment(taskName:String, realization:Realization, comment:String): Unit = {
+        
     val tuple = (taskName, realization)
     val commentsForTask = comments.getOrElseUpdate(tuple, new HashSet[String])
     commentsForTask.add(comment)
@@ -90,37 +96,66 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
     */
   private def recursivelyProcess(task:packed.Task, realization:Realization, comment:String): Status = {
     
-    var newComment = s"${comment} ${task.name} input"
-    val inputsStatus = recursivelyProcess(task.inputs,  realization, newComment)
-    if (inputsStatus == Failure) return Failure
     
-    newComment = s"${comment} ${task.name} param"
-    val paramsStatus = recursivelyProcess(task.params,  realization, newComment) 
-    if (paramsStatus == Failure) return Failure
-    
-    newComment = s"${comment} ${task.name} output"
-    val outputsStatus = recursivelyProcess(task.outputs, realization, newComment)
-    if (paramsStatus == Failure) return Failure
-    
-    val values = Seq(inputsStatus, paramsStatus, outputsStatus)
-    val result = Goals.unify(values)
-    
-    result match {
-      case Failure => /* Do nothing */
-      case Underspecified => {
-    	  if (! this.contains(task.name, NO_REALIZATION)) {
-    		  this.add(task.name, NO_REALIZATION, comment)
-    	  }        
+    // Determine whether this exact combination of task and realization has ever been previously processed
+    val key = (task.name, realization)
+    cache.get(key) match {
+      
+      
+      case Some(result) => {
+        // We have previously processed this exact combination of task and realization.
+        
+        // Record the comment associated with this current request, but do not re-process the request itself
+        addComment(task.name, realization, comment)
+        
+        // Return the previously calculated result
+        return result
       }
-      case Success(resultRealization) => {
-    	  if (! this.contains(task.name, resultRealization)) {
-    		  this.add(task.name, resultRealization, comment)
-    	  }
-      }
-    }
     
-    return result
+      
+      case None        => {
+        // This combination of task and realization has never been requested before
+    	  
+        // Process all of this task's inputs
+        var newComment = s"${comment} ${task.name} input"
+    	  val inputsStatus = recursivelyProcess(task.inputs,  realization, newComment)
+    		if (inputsStatus == Failure) return Failure
 
+    		// Process all of this task's params
+    		newComment = s"${comment} ${task.name} param"
+    		val paramsStatus = recursivelyProcess(task.params,  realization, newComment) 
+    		if (paramsStatus == Failure) return Failure
+
+    		// Process all of this task's outputs
+    		newComment = s"${comment} ${task.name} output"
+    		val outputsStatus = recursivelyProcess(task.outputs, realization, newComment)
+    		if (paramsStatus == Failure) return Failure
+
+    		val values = Seq(inputsStatus, paramsStatus, outputsStatus)
+    		val result:Status = Goals.unify(values)
+    
+    		result match {
+          case Failure => /* Do nothing */
+          case Underspecified => {
+            this.addComment(task.name, NO_REALIZATION, comment)
+    	      if (! this.contains(task.name, NO_REALIZATION)) {
+    		      this.add(task.name, NO_REALIZATION)
+    	      }        
+          }
+          case Success(resultRealization) => {
+            this.addComment(task.name, resultRealization, comment)
+    	      if (! this.contains(task.name, resultRealization)) {
+              this.add(task.name, resultRealization)
+    	      }
+          }
+        }
+    		
+    	  cache.put(key, result)
+    
+        return result
+      }
+      
+    }
   }
 
   
@@ -160,12 +195,12 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
         
         case Failure                       => return Failure
         case Underspecified                => {
-          val result:Realization = NO_REALIZATION
-
-          if (! this.contains(task.name, result)) {
-			      this.add(task.name, result, s"${comment} $$${variableName}@${task.name}")
-			    }
-          
+//          val result:Realization = NO_REALIZATION
+//
+//          if (! this.contains(task.name, result)) {
+//			      this.add(task.name, result, s"${comment} $$${variableName}@${task.name}")
+//			    }
+//          
           return Underspecified
         }
         case Success(recursiveRealization) => {
