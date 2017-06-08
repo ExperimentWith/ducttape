@@ -90,9 +90,9 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
 
   /** Recursively processes the inputs, outputs, and parameters of a [[ducttape.PackedGraph.Task]].
     * 
-    * If the recursive processing of all of these is successful, this method will return <code>true</code>.
+    * If the recursive processing of all of these is successful, this method will return <code>Underspecified</code> or <code>Success</code>.
     * 
-    * Otherwise, this method will return <code>false</code>, indicating that the provided task (or a task it refers to) is incompatible in some way with the provided realization.
+    * Otherwise, this method will return <code>Failure</code>, indicating that the provided task (or a task it refers to) is incompatible in some way with the provided realization.
     */
   private def recursivelyProcess(task:packed.Task, realization:Realization, comment:String): Status = {
     
@@ -161,9 +161,9 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
   
   /** Recursively processes a sequence of [[ducttape.PackedGraph.Spec]] node objects.
     * 
-    * If the recursive processing of all of these is successful, this method will return <code>true</code>.
+    * If the recursive processing of all of these is successful, this method will return <code>Underspecified</code> or <code>Success</code>.
     * 
-    * Otherwise, this method will return <code>false</code>, indicating that the provided node (or a task it refers to) is incompatible in some way with the provided realization.
+    * Otherwise, this method will return <code>Failure</code>, indicating that the provided task (or a task it refers to) is incompatible in some way with the provided realization.
     */  
   private def recursivelyProcess(specs:Seq[packed.Spec], realization:Realization, comment:String): Status = {
     
@@ -194,15 +194,9 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
       status match {
         
         case Failure                       => return Failure
-        case Underspecified                => {
-//          val result:Realization = NO_REALIZATION
-//
-//          if (! this.contains(task.name, result)) {
-//			      this.add(task.name, result, s"${comment} $$${variableName}@${task.name}")
-//			    }
-//          
-          return Underspecified
-        }
+
+        case Underspecified                => return Underspecified
+
         case Success(recursiveRealization) => {
           
           val result:Realization = 
@@ -219,34 +213,6 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
                 }
               }
           
-//            if (branchesSeen.isEmpty) {
-//              graft match {
-//                case Some(graftRealization) => {
-//                  //NO_REALIZATION
-//                	val branchSet = recursiveRealization.branches.toSet -- graftRealization.branches ++ branchesSeen
-//                  Realization.fromUnsorted(branchSet.toSeq)
-//                }
-//                case None    => recursiveRealization
-//              }
-//            } else {
-//              graft match {
-//                case Some(graftRealization) => {
-//                  val branchSet = recursiveRealization.branches.toSet -- graftRealization.branches ++ branchesSeen
-//                  Realization.fromUnsorted(branchSet.toSeq)
-//                }
-//                case None                   => {
-//                  val branches = (branchesSeen ++ recursiveRealization.branches).toSet.toSeq
-//                  Realization.fromUnsorted(branches)
-//                }
-//              }
-//            }
-          
-//		      if (result==NO_REALIZATION) {
-//		        return Underspecified
-//		      } else {
-//		        return Success(result)
-//		      }
-
           return Success(result)
           
         }
@@ -263,13 +229,13 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
   
   /** Recursively processes a [[ducttape.PackedGraph.Spec]] node object.
     * 
-    * If any of the following conditions are met, this method will return <code>true</code>:
+    * If any of the following conditions are met, this method will return <code>Underspecified</code> or <code>Success</code>:
     *  - the node is a [[ducttape.PackedGraph.Literal]]
     *  - the node contains a path of [[ducttape.PackedGraph.BranchPointNode]]-[[ducttape.PackedGraph.BranchNode]] pair(s) compatible with the provided [[ducttape.workflow.Realization]] that terminates in a [[ducttape.PackedGraph.Literal]]
-    *  - the node is a [[ducttape.PackedGraph.Reference]] and a recursive call of this method on the referred task returns <code>true</code>
-    *  - the node contains a path of [[ducttape.PackedGraph.BranchPointNode]]-[[ducttape.PackedGraph.BranchNode]] pair(s) compatible with the provided [[ducttape.workflow.Realization]] that terminates in a [[ducttape.PackedGraph.Reference]], and a recursive call of this method on the referred task returns <code>true</code>
+    *  - the node is a [[ducttape.PackedGraph.Reference]] and a recursive call of this method on the referred task returns <code>Underspecified</code> or <code>Success</code>
+    *  - the node contains a path of [[ducttape.PackedGraph.BranchPointNode]]-[[ducttape.PackedGraph.BranchNode]] pair(s) compatible with the provided [[ducttape.workflow.Realization]] that terminates in a [[ducttape.PackedGraph.Reference]], and a recursive call of this method on the referred task returns <code>Underspecified</code> or <code>Success</code>
     * 
-    * Otherwise, this method will return <code>false</code>, indicating that the provided node (or a task it refers to) is incompatible in some way with the provided realization.
+    * Otherwise, this method will return <code>Failure</code>, indicating that the provided task (or a task it refers to) is incompatible in some way with the provided realization.
     */
   private def recursivelyProcessSpec(node:packed.ValueBearingNode, realization:Realization, comment:String, branchesSeen:Seq[Branch]): Status = {
     

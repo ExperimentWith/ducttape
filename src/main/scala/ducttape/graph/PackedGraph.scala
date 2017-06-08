@@ -74,9 +74,6 @@ object PackedGraph {
   final case class BranchPointNode(branchPoint:BranchPoint, branches:Seq[BranchNode]) extends ValueBearingNode
   final case class Reference(variableName:String, taskName:Option[String], grafts:Seq[Realization]) extends ValueBearingNode
 
-//  final case class Grafts(value:Seq[Branch]) {
-//    def size() = value.size
-//  }
   
   def toGraphvizID(taskName:String) : String = {
     return s"""task ${taskName}"""
