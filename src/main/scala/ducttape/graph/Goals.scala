@@ -18,7 +18,7 @@ import scala.collection.mutable.HashSet
 import grizzled.slf4j.Logging
 
 /** Maps from task name to the required set of realizations for that task. */
-class Goals private(private val packedGraph:PackedGraph) extends Logging { // private() declares the default constructor to be private
+class Goals private(private[graph] val packedGraph:PackedGraph) extends Iterable[(packed.Task, Realization)] with Logging { // private() declares the default constructor to be private
   
   /** Maps from task name to the required set of realizations for that task. */
   private[graph] val values = new HashMap[String, HashSet[Realization]]
@@ -44,6 +44,63 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
     }
     
     return s.toString()
+  }
+  
+  def iterator: Iterator[(packed.Task, Realization)] = {
+    
+//    return new Iterator[(packed.Task, Realization)]() {
+//      
+//      val tupleIterator = values.iterator
+//      var realizationsIterator:Iterator[Realization] = Seq().iterator
+//      
+//      var currentTask:Option[packed.Task] = None
+//      
+//      var nextTuple:Option[(packed.Task, Realization)] = None
+//      
+//      override def hasNext: Boolean = {
+//        
+//        currentTask match {
+//          
+//          case None => {
+//              
+//          }
+//          
+//          
+//          case Some(task) => {}
+//          
+//        }
+//        
+//        if (realizationsIterator.hasNext) {
+//          
+//        } else {
+//          return false
+//        }
+//      }
+//      
+//    }
+    
+    val tuples = Seq.newBuilder[(packed.Task, Realization)]
+    
+    for ((taskName, realizationSet) <- values) {
+      
+      packedGraph.task(taskName) match {
+        case None             => warn(s"A request was made for task ${taskName}, but no task with that name was found. This may indicate a bug in ducttape.")
+        case Some(packedTask) => {
+          
+          for (realization <- realizationSet) {
+            
+            val tuple = (packedTask, realization)
+            tuples += tuple
+            
+          }
+          
+        }
+      }
+    }
+    
+    
+    return tuples.result().iterator
+    
   }
   
   /** Adds a realization to the set required for a specified task. */
@@ -84,8 +141,33 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
     }
   }
  
-  def size: Int = values.values.flatten.size
+  override def size: Int = values.values.flatten.size
 
+  
+  def getParentRealization(parentTaskName:String, childRealization:Realization): Realization = {
+        
+    // Determine whether this exact combination of task and realization has ever been previously processed
+    val key = (parentTaskName, childRealization)
+    cache.get(key) match {
+      
+      case Some(result) => {
+        // We have previously processed this exact combination of task and realization.
+        
+        result match {
+          
+          case Success(parentRealization) => return parentRealization
+          
+          case Underspecified             => return NO_REALIZATION
+          
+          case Failure                    => throw new RuntimeException(s"A request was made for a realization of a task that is incompatible with this workflow: ${parentTaskName} with realization ${childRealization}")
+          
+        }
+      }
+      
+      case None                           => throw new RuntimeException(s"A request was made for a realization of a task that is incompatible with this workflow: ${parentTaskName} with realization ${childRealization}")
+      
+    }
+  }
   
 
   /** Recursively processes the inputs, outputs, and parameters of a [[ducttape.PackedGraph.Task]].
@@ -186,6 +268,8 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
 
   }
   
+  
+  
   private def recursivelyProcessVariableReference(task:PackedGraph.Task, realization:Realization, graft:Option[Realization], comment:String, variableName:String, branchesSeen:Seq[Branch]): Status = {
     
     if (task.containsVariable(variableName)) {
@@ -213,7 +297,10 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
                 }
               }
           
-          return Success(result)
+          val status = Success(result)
+          val key = (task.name, realization)
+          //cache.put(key, status)
+          return status
           
         }
         
@@ -303,7 +390,9 @@ class Goals private(private val packedGraph:PackedGraph) extends Logging { // pr
                 		}
                 	}
                 	
-                  
+                  if (branches.size != branches.map{branch => branch.branchPoint}.toSet.size) {
+                    throw new RuntimeException(s"Multiple branches with the same branchpoint: ${branches}")
+                  }
                   //val branches = branches.toSeq
                   
                   //println(s"recursivelyProcessVariableReference result = ${branches.mkString("+")}")

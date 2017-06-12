@@ -34,6 +34,7 @@ class PackedGraph(val workflow:ast.WorkflowDefinition, val confSpecs: Seq[ast.Co
    */
   def global(name:String): Option[PackedGraph.Global] = globalMap.get(name)
   
+  def tasks = taskMap.values
   
   def taskNames = taskMap.keys
   

@@ -205,6 +205,7 @@ object Realization {
     
     return Realization.fromUnsorted(branches.toSeq)
   }
+
   
   def fromUnsorted(branches:Seq[Branch]): Realization = {
     val sorted = branches.sortWith{ (a,b) => 

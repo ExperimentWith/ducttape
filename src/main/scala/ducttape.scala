@@ -42,6 +42,7 @@ import ducttape.hyperdag.walker.Arbitrary
 import ducttape.hyperdag.walker.BreadthFirst
 import ducttape.hyperdag.walker.DepthFirst
 import ducttape.graph.PackedGraph
+import ducttape.graph.UnpackedGraph
 import ducttape.syntax.AbstractSyntaxTree._
 import ducttape.syntax.GrammarParser
 import ducttape.syntax.StaticChecker
@@ -237,6 +238,9 @@ object Ducttape extends Logging {
     
     println()
     println(s"Total tasks:\t${goals.size}")
+    
+    val unpackedGraph = UnpackedGraph.unpack(goals)
+    Files.write(unpackedGraph.toString, "./workflow.unpacked.dot")
     
     System.exit(0)
 
