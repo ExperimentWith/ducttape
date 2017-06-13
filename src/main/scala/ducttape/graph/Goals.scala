@@ -5,6 +5,7 @@ import ducttape.graph.Goals.Failure
 import ducttape.graph.Goals.Underspecified
 import ducttape.graph.Goals.Success
 import ducttape.graph.{PackedGraph => packed}
+//import ducttape.graph.{UnpackedGraph => unpacked}
 import ducttape.syntax.{AbstractSyntaxTree => ast}
 import ducttape.workflow.Branch
 import ducttape.workflow.BranchFactory

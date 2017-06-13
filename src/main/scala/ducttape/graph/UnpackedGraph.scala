@@ -17,7 +17,22 @@ class UnpackedGraph private(private val goals:Goals) extends Logging {
   private[graph] val values = new HashMap[(packed.Task,Realization), UnpackedGraph.Task]
     
   
-  override def toString(): String = UnpackedGraph.toGraphviz(values.values)
+  override def toString(): String = {
+    
+    val map = new HashMap[packed.Task, HashSet[UnpackedGraph.Task]]
+    
+    val packedTasks = values.map{ tuple => tuple._1._1 }
+    
+    values.foreach{ tuple => 
+      val packedTask = tuple._1._1
+      val unpackedTask = tuple._2
+      
+      val set = map.getOrElseUpdate(packedTask, new HashSet[UnpackedGraph.Task])
+      set.add(unpackedTask)
+    }
+
+    UnpackedGraph.toGraphviz(map)
+  }
   
   private def recursivelyProcess(task:packed.Task, realization:Realization): UnpackedGraph.Task = {
     
@@ -111,6 +126,7 @@ class UnpackedGraph private(private val goals:Goals) extends Logging {
         
         case Some(graftRealization) => {
           val branchSet = new HashSet[Branch]
+          graftRealization.branches.foreach{ branch => branchSet.add(branch) }
           realization.branches.foreach{ branch => if (! graftRealization.explicitlyRefersTo(branch.branchPoint)) branchSet.add(branch) }
           Realization.fromUnsorted(branchSet.toSeq)
         }
@@ -261,12 +277,14 @@ object UnpackedGraph extends Logging {
   final case class Reference(variableName:String, value:Task) extends ValueBearingNode
   final case class GlobReference(variableName:String, values:Seq[Task]) extends ValueBearingNode
   
-  def toGraphviz(tasks:Iterable[UnpackedGraph.Task]): String = {
+  //def toGraphviz(tasks:Iterable[UnpackedGraph.Task]): String = {
+  def toGraphviz(tasks:HashMap[packed.Task, HashSet[UnpackedGraph.Task]]): String = {
 	  val s = new StringBuilder(capacity=1000)
     s ++= "digraph G {\n\n"
+    s.append("\tnodesep=2\n\tranksep=2\n")
     
     
-    def id(task:Task):String = return s"""task ${task}"""
+    def id(task:Task):String = return s"""task ${task} realization ${task.realization}"""
     
     def processLiterals(targetID:String, rhs:ValueBearingNode, s:StringBuilder) : Unit = {
       
@@ -286,72 +304,90 @@ object UnpackedGraph extends Logging {
       rhs match {
         case Reference(variableName, task) => {
           val variableID = variableName + "@" + id(task)
-          s.append("\t\t\"").append(variableID).append("\" -> \"").append(targetID).append("\"\n")
+          val intermediateID = "from " + variableID + " to " + targetID
+          s.append("\t\"").append(intermediateID).append("""" [margin="0.0,0.0", height=0.0, width=0.0, fillcolor=black, color=black, style="filled", label=""]""").append("\n")
+          s.append("\t\t\"").append(variableID).append("\" -> \"").append(intermediateID).append("\" [arrowhead=\"none\"]\n")
+          s.append("\t\t\"").append(intermediateID).append("\" -> \"").append(targetID).append("\"\n")
         }
         
         case GlobReference(variableName, tasks) => {
         	for (task <- tasks) {
             val variableID = variableName + "@" + id(task)
-        	  s.append("\t\t\"").append(variableID).append("\" -> \"").append(targetID).append("\"\n")
-          }
+            val intermediateID = "from " + variableID + " to " + targetID
+            s.append("\t\"").append(intermediateID).append("""" [margin="0.0,0.0", height=0.0, width=0.0, fillcolor=black, color=black, style="filled", label=""]""").append("\n")
+            s.append("\t\t\"").append(variableID).append("\" -> \"").append(intermediateID).append("\" [arrowhead=\"none\"]\n")
+            s.append("\t\t\"").append(intermediateID).append("\" -> \"").append(targetID).append("\"\n")
+        	}
         }
         
         case _ => {}
       }
     } 
     
-    for (task <- tasks) {      
-      s.append("\tsubgraph \"cluster_").append(task).append("\" {\n")
-      
-      val taskID = id(task)
-      
-      s.append("\t\t\"").append(taskID).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=white, fillcolor=orange, color=orange, style="filled,rounded", label="""").append(task.name).append("\"]\n")
-      
-      for (input <- task.specs.inputs) {
-        val inputID = input.name + "@" + taskID 
-        s.append("\t\t\"").append(inputID).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=white, color=black, style=filled, label="""").append(input.name).append("\"]\n")
-        s.append("\t\t\"").append(inputID).append("\" -> \"").append(taskID).append("\"\n")
-        processLiterals(inputID, input.value, s)
-      }
+    for (packedTask <- tasks.keySet) {
+    	s.append("\tsubgraph {\n")
 
-      for (param <- task.specs.params) {
-        val paramID = param.name + "@" + taskID
-        s.append("\t\t\"").append(paramID).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=white, color=black, style=filled, shape="box", label="""").append(param.name).append("\"]\n")
-        s.append("\t\t\"").append(paramID).append("\" -> \"").append(taskID).append("\"\n")
-        processLiterals(paramID, param.value, s)
-      }
+    	for (task <- tasks(packedTask)) {      
+    		s.append("\tsubgraph \"cluster_").append(task).append("\" {\n")
+    		s.append("\tnodesep=1\n\tranksep=1\n")
+    		
+    		val taskID = id(task)
 
-      for (output <- task.specs.outputs) {
-        val outputID = output.name + "@" + taskID
-        s.append("\t\t\"").append(outputID).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=white, color=black, style=filled, label="""").append(output.name).append("\"]\n")
-        s.append("\t\t\"").append(taskID).append("\" -> \"").append(outputID).append("\"\n")
-        //recursivelyBuildTask(outputID, output.value, s)
-      }
-      
-      s.append("\t\t").append("""label=< <TABLE BORDER="0">""").append("\n")
-      for (branch <- task.realization.branches) {
-        s.append("\t\t\t<TR>\n")
-        s.append("\t\t\t\t").append("""<TD BGCOLOR="red" COLOR="red"><FONT COLOR="white">""").append(branch.branchPoint.name).append("</FONT></TD>\n")
-        s.append("\t\t\t\t").append("""<TD BGCOLOR="blue" COLOR="blue"><FONT COLOR="white">""").append(branch.name).append("</FONT></TD>\n")
-        s.append("\t\t\t</TR>\n")
-      }
-      s.append("\t\t").append("</TABLE> >\n\n")
-      
-      s.append("\t\tcolor=black\n\t\tfillcolor=white\n\t\tstyle=filled\n")
-      s.append("\t}\n\n") 
-      
-      
-       for (input <- task.specs.inputs) {
-        val inputID = input.name + "@" + taskID 
-        processReferences(inputID, input.value, s)
-      }
+    		s.append("\t\t\"").append(taskID).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=white, fillcolor=orange, color=orange, style="filled,rounded", label="""").append(task.name).append("\"]\n")
 
-      for (param <- task.specs.params) {
-        val paramID = param.name + "@" + taskID
-        processReferences(paramID, param.value, s)
-      }
-      
+    		for (input <- task.specs.inputs) {
+    			val inputID = input.name + "@" + taskID 
+    					s.append("\t\t\"").append(inputID).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=white, color=black, style=filled, label="""").append(input.name).append("\"]\n")
+    					s.append("\t\t\"").append(inputID).append("\" -> \"").append(taskID).append("\"\n")
+    					processLiterals(inputID, input.value, s)
+    		}
+
+    		for (param <- task.specs.params) {
+    			val paramID = param.name + "@" + taskID
+    					s.append("\t\t\"").append(paramID).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=white, color=black, style=filled, shape="box", label="""").append(param.name).append("\"]\n")
+    					s.append("\t\t\"").append(paramID).append("\" -> \"").append(taskID).append("\"\n")
+    					processLiterals(paramID, param.value, s)
+    		}
+
+    		for (output <- task.specs.outputs) {
+    			val outputID = output.name + "@" + taskID
+    					s.append("\t\t\"").append(outputID).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=white, color=black, style=filled, label="""").append(output.name).append("\"]\n")
+    					s.append("\t\t\"").append(taskID).append("\" -> \"").append(outputID).append("\"\n")
+    					//recursivelyBuildTask(outputID, output.value, s)
+    		}
+
+    		s.append("\t\t").append("""label=< <TABLE BORDER="0">""").append("\n")
+    		for (branch <- task.realization.branches) {
+    			s.append("\t\t\t<TR>\n")
+    			s.append("\t\t\t\t").append("""<TD BGCOLOR="red" COLOR="red"><FONT COLOR="white">""").append(branch.branchPoint.name).append("</FONT></TD>\n")
+    			s.append("\t\t\t\t").append("""<TD BGCOLOR="blue" COLOR="blue"><FONT COLOR="white">""").append(branch.name).append("</FONT></TD>\n")
+    			s.append("\t\t\t</TR>\n")
+    		}
+    		s.append("\t\t").append("</TABLE> >\n\n")
+
+    		s.append("\t\tcolor=black\n\t\tfillcolor=white\n\t\tstyle=filled\n")
+    		s.append("\t}\n\n") 
+
+    	}
+    	s.append("\t}\n")
     }
+
+    for (packedTask <- tasks.keySet) {
+    	for (task <- tasks(packedTask)) {  
+    	  val taskID = id(task)
+    	  
+    		for (input <- task.specs.inputs) {
+    			val inputID = input.name + "@" + taskID 
+    					processReferences(inputID, input.value, s)
+    		}
+
+    		for (param <- task.specs.params) {
+    			val paramID = param.name + "@" + taskID
+    					processReferences(paramID, param.value, s)
+    		}        
+      }
+    }
+
     
     s ++= "}\n"
     return s.result()
