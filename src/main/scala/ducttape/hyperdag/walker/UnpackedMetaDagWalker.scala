@@ -1,5 +1,5 @@
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+/*
 package ducttape.hyperdag.walker
 
 import collection._
@@ -9,6 +9,7 @@ import ducttape.hyperdag.meta.UnpackedMetaVertex
 import ducttape.util.MultiSet
 import grizzled.slf4j.Logging
 import annotation.tailrec
+import ducttape.graph.traversal.Walker
 
 /** our only job is to hide epsilon vertices during iteration
  *  see UnpackedDagWalker for definitions of filter and state types
@@ -16,7 +17,6 @@ import annotation.tailrec
  * see [[ducttape.hyperdag.meta.MetaHyperDag]] for definitions of generic types V,M,H,E
  * see [[ducttape.hyperdag.walker.UnpackedDagWalker]] for definitions of generic types D,F
  */
-
 class UnpackedMetaDagWalker[V,M,H,E,D,F](
     val dag: MetaHyperDag[V,M,H,E],
     munger: RealizationMunger[V,H,E,D,F],
@@ -170,3 +170,4 @@ class UnpackedMetaDagWalker[V,M,H,E,D,F](
   // the MetaVertexFilter is now evaluated by a call from our delegate to VertexFilterAdapter
   override def take(): Option[UnpackedMetaVertex[V,H,E,D]] = getNext()
 }
+*/

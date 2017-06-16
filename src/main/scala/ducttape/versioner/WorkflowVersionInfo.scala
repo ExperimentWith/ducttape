@@ -1,5 +1,5 @@
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+/*
 package ducttape.versioner
 
 import java.io.File
@@ -7,7 +7,7 @@ import java.io.File
 import ducttape.exec.DirectoryArchitect
 import ducttape.exec.PackageVersioner
 
-import ducttape.hyperdag.PackedVertex
+//import ducttape.hyperdag.PackedVertex
 import ducttape.workflow.RealTaskId
 import ducttape.workflow.VersionedTaskId
 import ducttape.workflow.TaskTemplate
@@ -124,3 +124,4 @@ object WorkflowVersionInfo {
   // hallucinate a new version without actually committing a new version to disk
   def createFake(): WorkflowVersionInfo = FakeWorkflowVersionInfo
 }
+*/

@@ -28,8 +28,8 @@ class PackageBuilder(dirs: DirectoryArchitect,
     for (myPackage: PackageDef <- packages) {
       val packageNamespace: Namespace = myPackage.name // may contain slash delimited namespace
       val packageName: String = packageNamespace.toString
-      val version: String = packageVersions(packageNamespace)
-      val buildEnv = new BuildEnvironment(dirs, version, packageNamespace)
+      val version: String = packageVersions(packageNamespace.toString())
+      val buildEnv = new BuildEnvironment(dirs, version, packageNamespace.toString())
 
       // TODO: XXX: Can build ever interfere with another running workflow?
       if (buildEnv.buildDir.exists) {

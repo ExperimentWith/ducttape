@@ -6,13 +6,15 @@ import java.io.File
 
 import collection._
 
+import ducttape.graph.UnpackedGraph.Task
+import ducttape.graph.traversal.Visitor
 import ducttape.util.Files
 import ducttape.util.OrderedSet
 import ducttape.util.MutableOrderedSet
 import ducttape.workflow.Realization
-import ducttape.workflow.VersionedTask
-import ducttape.workflow.VersionedTaskId
-import ducttape.versioner.WorkflowVersionInfo
+//import ducttape.workflow.VersionedTask
+//import ducttape.workflow.VersionedTaskId
+//import ducttape.versioner.WorkflowVersionInfo
 
 import grizzled.slf4j.Logging
 
@@ -29,9 +31,9 @@ object CompletionChecker extends Logging {
     }
   } 
   
-  def NO_CALLBACK(task: VersionedTask, msg: String) {}
+  def NO_CALLBACK(task: Task, msg: String) {}
   def isComplete(taskEnv: TaskEnvironment,
-                 incompleteCallback: (VersionedTask, String) => Unit = NO_CALLBACK): Boolean = {
+                 incompleteCallback: (Task, String) => Unit = NO_CALLBACK): Boolean = {
     
     // TODO: Grep stdout/stderr for "error"
     // TODO: Move this check and make it check file size and date with fallback to checksums? or always checksums? or checksum only if files are under a certain size?
@@ -91,41 +93,46 @@ object CompletionChecker extends Logging {
 //
 // use incompleteCallback to show info about why tasks aren't complete
 class CompletionChecker(dirs: DirectoryArchitect,
-                        unionVersion: WorkflowVersionInfo,
-                        nextWorkflowVersion: Int,
-                        incompleteCallback: (VersionedTask, String) => Unit)
-    extends UnpackedDagVisitor with Logging {
+                        //unionVersion: WorkflowVersionInfo,
+                        //nextWorkflowVersion: Int,
+                        incompleteCallback: (Task, String) => Unit)
+    extends Visitor with Logging {
 
   // we make a single pass to atomically determine what needs to be done
   // so that we can then prompt the user for confirmation
   // note: this is one of the major reasons that ducttape is a graph specification
   // language with an imperative language (bash) nested within --
   // if ducttape were turing complete, this multi-pass approach wouldn't be possible
-  private val _completedVersions = new MutableOrderedSet[VersionedTaskId]
-  private val _todoVersions = new MutableOrderedSet[VersionedTaskId]
+//  private val _completedVersions = new MutableOrderedSet[VersionedTaskId]
+//  private val _todoVersions = new MutableOrderedSet[VersionedTaskId]
+  private val _completedTasks = new MutableOrderedSet[Task]
   private val _completed = new MutableOrderedSet[(String,Realization)] // TODO: Change datatype of realization?
   private val _partial = new MutableOrderedSet[(String,Realization)] // not complete, but has partial output
+  private val _todoTasks = new MutableOrderedSet[Task]
   private val _todo = new MutableOrderedSet[(String,Realization)]
   private val _broken = new MutableOrderedSet[(String,Realization)]
   private val _locked = new MutableOrderedSet[(String,Realization)]
 
   // NOTE: completed never includes invalidated
   // TODO: Change these tuples to "RealTaskId"?
-  def completedVersions: OrderedSet[VersionedTaskId] = _completedVersions
-  def todoVersions: OrderedSet[VersionedTaskId] = _todoVersions
+//  def completedVersions: OrderedSet[VersionedTaskId] = _completedVersions
+//  def todoVersions: OrderedSet[VersionedTaskId] = _todoVersions
+  def completedTasks: OrderedSet[Task] = _completedTasks
   def completed: OrderedSet[(String,Realization)] = _completed
   def partial: OrderedSet[(String,Realization)] = _partial
+  def todoTasks: OrderedSet[Task] = _todoTasks
   def todo: OrderedSet[(String,Realization)] = _todo
   def broken: OrderedSet[(String,Realization)] = _broken
   def locked: OrderedSet[(String,Realization)] = _locked
 
   // the version of this task will be drawn from the "union" workflow version info
-  override def visit(task: VersionedTask) {
+  override def visit(task: Task) {
     debug("Checking $task")
     val taskEnv = new TaskEnvironment(dirs, task)
 
     if (CompletionChecker.isComplete(taskEnv, incompleteCallback)) {
-      _completedVersions += task.toVersionedTaskId
+//      _completedVersions += task.toVersionedTaskId
+      _completedTasks += task
       _completed += ((task.name, task.realization))
     } else {
       // do NOT reuse the existing task for its version
@@ -136,9 +143,11 @@ class CompletionChecker(dirs: DirectoryArchitect,
       // The walker is versioning with the "union" version --
       // If it has no version for this task, we'll get the "next" workflow version (which is fine)
       // But if it gave us a previous version, we want to reject that version and start a new one
-      _todoVersions += new VersionedTaskId(task.namespace, task.realization.toCanonicalString(), nextWorkflowVersion)
+//      _todoVersions += new VersionedTaskId(task.namespace, task.realization.toCanonicalString(), nextWorkflowVersion)
+      _todoTasks += task
       _todo += ((task.name, task.realization))
-      debug(s"Todo: $task (Version $nextWorkflowVersion)")
+      //debug(s"Todo: $task (Version $nextWorkflowVersion)")
+      debug(s"Todo: $task")
 
       // Important: Check for locking *before* checking if something is broken
       // since not all output files may exist while another process is working on this task

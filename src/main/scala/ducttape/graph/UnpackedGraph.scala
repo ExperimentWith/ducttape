@@ -1,3 +1,4 @@
+// This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package ducttape.graph
 
@@ -12,10 +13,15 @@ import scala.collection.mutable.HashSet
 import grizzled.slf4j.Logging
 
 
-class UnpackedGraph private(private val goals:Goals) extends Logging {
+class UnpackedGraph private(val goals:Goals) extends Logging {
 
   private[graph] val values = new HashMap[(packed.Task,Realization), UnpackedGraph.Task]
-    
+  
+  private var root:UnpackedGraph.Root = null
+  
+  def getRoot:UnpackedGraph.Root = root
+  
+  def size = values.size
   
   override def toString(): String = {
     
@@ -86,7 +92,7 @@ class UnpackedGraph private(private val goals:Goals) extends Logging {
     val results = params.map { param =>      
       val name = param.name
       val value = recursivelyProcess(param.value, realization, Some(paramDependencies))      
-      new UnpackedGraph.Param(name, value)     
+      new UnpackedGraph.Param(name, value, param.dotVariable)     
     }
     
     return results
@@ -257,16 +263,31 @@ object UnpackedGraph extends Logging {
   
   sealed trait Spec extends Node
   final case class Input(name:String, value:ValueBearingNode) extends Spec
-  final case class Param(name:String, value:ValueBearingNode) extends Spec
+  final case class Param(name:String, value:ValueBearingNode, dotVariable:Boolean) extends Spec
   final case class Output(name:String, value:Literal) extends Spec
   
   final case class Specs(inputs:Seq[Input], params:Seq[Param], outputs:Seq[Output], packages:Seq[Literal]) extends Node
   final case class Dependencies(temporal:Set[Task], nontemporal:Set[Task]) extends Node
   
-  final case class Task(name:String, code:BashCode, realization:Realization, specs:Specs, directDependencies:Dependencies) extends Node {
+  final case class Task(name:String, code:BashCode, realization:Realization, specs:Specs, directDependencies:Dependencies) extends Node with Comparable[Task] {
     override def toString(): String = {
       return s"${name}_${realization}"
     }
+    
+    override def compareTo(other:Task):Int = {
+      return this.toString().compareTo(other.toString())  
+    }
+    
+    def temporalDependencies:Iterable[Task] = directDependencies.temporal
+    
+    def get(variableName:String): ValueBearingNode = {
+      for (input  <- specs.inputs)  { if (input.name  == variableName) return input.value  }
+      for (param  <- specs.params)  { if (param.name  == variableName) return param.value  }
+      for (output <- specs.outputs) { if (output.name == variableName) return output.value }
+      throw new RuntimeException(s"A reference was made to $$${variableName}@${name} with realization ${realization}, but no such variable was found at that task.")
+    }
+    
+    def allDotParams:Seq[Param] = specs.params.filter{ param => param.dotVariable==true }
   }
   
   final case class Root(values:Seq[Task])
@@ -397,10 +418,11 @@ object UnpackedGraph extends Logging {
     
     val unpackedGraph = new UnpackedGraph(goals)
     
-    for ((packedTask, realization) <- goals) {
-      unpackedGraph.recursivelyProcess(packedTask, realization)  
-      
-    }
+    val rootTasks = goals.map{ case (packedTask, realization) =>       
+      unpackedGraph.recursivelyProcess(packedTask, realization)       
+     }
+
+    unpackedGraph.root = Root(rootTasks.toSeq)
     
     return unpackedGraph
     

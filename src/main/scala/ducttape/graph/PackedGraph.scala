@@ -1,3 +1,5 @@
+// This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 package ducttape.graph
 
 import ducttape.syntax.{AbstractSyntaxTree => ast}
@@ -8,12 +10,13 @@ import ducttape.workflow.BranchPoint
 import ducttape.workflow.Realization
 import scala.collection.Map
 
-class PackedGraph(val workflow:ast.WorkflowDefinition, val confSpecs: Seq[ast.ConfigAssignment]) {
+class PackedGraph(val workflow:ast.WorkflowDefinition) {
   
-  val branchFactory:BranchFactory = ducttape.cli.ErrorUtils.ex2err(ducttape.workflow.builder.WorkflowBuilder.findBranchPoints(confSpecs ++ Seq(workflow)))
+//  val branchFactory:BranchFactory = ducttape.cli.ErrorUtils.ex2err(PackedGraph.findBranchPoints(confSpecs ++ Seq(workflow)))
+  val branchFactory:BranchFactory = ducttape.cli.ErrorUtils.ex2err(PackedGraph.findBranchPoints(Seq(workflow)))
   
   private val taskMap:Map[String, PackedGraph.Task] = PackedGraph.build(workflow, branchFactory)
-  private val globalMap:Map[String, PackedGraph.Global] = PackedGraph.build(workflow.globals ++ confSpecs, branchFactory) 
+  private val globalMap:Map[String, PackedGraph.Global] = PackedGraph.build(workflow.confSpecs, branchFactory) 
   
   lazy val numTasks:Int = taskMap.values.size
   
@@ -49,7 +52,7 @@ class PackedGraph(val workflow:ast.WorkflowDefinition, val confSpecs: Seq[ast.Co
 object PackedGraph {
   
   sealed trait Node
-  final case class Spec(name:String, value:ValueBearingNode)
+  final case class Spec(name:String, value:ValueBearingNode, dotVariable:Boolean)
   final case class CrossProduct(value:Set[Branch]) extends Node
   final case class Via(reach:Task, via:CrossProduct) extends Node
   final case class Plan(goals:Seq[Via]) extends Node
@@ -75,6 +78,16 @@ object PackedGraph {
   final case class BranchPointNode(branchPoint:BranchPoint, branches:Seq[BranchNode]) extends ValueBearingNode
   final case class Reference(variableName:String, taskName:Option[String], grafts:Seq[Realization]) extends ValueBearingNode
 
+  def findBranchPoints(elements: Seq[ast.ASTType]): BranchFactory = {
+
+    val branchFactory = new BranchFactory()
+    
+    for (element <- elements) {
+      branchFactory.findBranchPoints(element)
+    }
+    
+    return branchFactory
+  }
   
   def toGraphvizID(taskName:String) : String = {
     return s"""task ${taskName}"""
@@ -364,7 +377,7 @@ object PackedGraph {
 
     }
     
-    return Spec(name, value)
+    return Spec(name, value, spec.dotVariable)
   }
  
   

@@ -8,7 +8,8 @@ import ducttape.syntax.FileFormatException
 import ducttape.util.Booleans
 
 // may throw a FileFormatException
-class Directives(confSpecs: Seq[ConfigAssignment]) {
+class Directives(wd:WorkflowDefinition) {
+  val confSpecs: Seq[ConfigAssignment] = wd.confSpecs
   // TODO: Move conf specs method into WorkflowDefinition?
   def getLiteralSpec(name: String): Option[LiteralSpec] = {
     confSpecs.map(_.spec).find { spec => spec.name == name } match {

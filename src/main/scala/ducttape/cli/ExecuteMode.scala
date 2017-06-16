@@ -14,22 +14,26 @@ import ducttape.exec.InputChecker
 import ducttape.exec.FullTaskEnvironment
 import ducttape.exec.DirectoryArchitect
 import ducttape.exec.CompletionChecker
-import ducttape.exec.PartialOutputMover
+import ducttape.exec.PartialOutputRemover
 import ducttape.exec.Executor
 import ducttape.exec.ExecutionObserver
 import ducttape.exec.PidWriter
 import ducttape.exec.LockManager
-import ducttape.workflow.Visitors
-import ducttape.workflow.HyperWorkflow
+import ducttape.exec.Submitter
+//import ducttape.workflow.Visitors
+//import ducttape.workflow.HyperWorkflow
 import ducttape.workflow.Realization
-import ducttape.workflow.PlanPolicy
-import ducttape.workflow.VersionedTask
-import ducttape.workflow.VersionedTaskId
-import ducttape.hyperdag.walker.Traversal
-import ducttape.hyperdag.walker.Arbitrary
-import ducttape.versioner.TentativeWorkflowVersionInfo
-import ducttape.versioner.WorkflowVersionStore
-import ducttape.versioner.WorkflowVersionHistory
+//import ducttape.workflow.PlanPolicy
+//import ducttape.workflow.VersionedTask
+//import ducttape.workflow.VersionedTaskId
+import ducttape.graph.UnpackedGraph
+import ducttape.graph.UnpackedGraph.Task
+import ducttape.graph.traversal.Traversal
+import ducttape.graph.traversal.Arbitrary
+import ducttape.graph.traversal.Visitor
+//import ducttape.versioner.TentativeWorkflowVersionInfo
+//import ducttape.versioner.WorkflowVersionStore
+//import ducttape.versioner.WorkflowVersionHistory
 import ducttape.util.Files
 
 import scala.io.StdIn
@@ -39,13 +43,15 @@ object ExecuteMode {
   // uncommittedVersion is the version we hallucinate before the user
   // has officially given us the greenlight to proceed with execution
   // (and therefore the greenlight to commit this version of the workflow to disk)
-  def run(workflow: HyperWorkflow,
+  def run(//workflow: HyperWorkflow,
+          graph:UnpackedGraph,
           cc: CompletionChecker,
-          history: WorkflowVersionHistory,
-          planPolicy: PlanPolicy,
+//          history: WorkflowVersionHistory,
+//          planPolicy: PlanPolicy,
+          submitter:Submitter,
           getPackageVersions: () => PackageVersioner,
-          traversal: Traversal = Arbitrary)
-         (implicit opts: Opts, dirs: DirectoryArchitect, directives: Directives) {
+          traversal: Traversal = Arbitrary,
+         opts: Opts, dirs: DirectoryArchitect, directives: Directives) {
     
     if (cc.todo.isEmpty) {
       // TODO: Might need to re-run if any package versions have changed
@@ -55,15 +61,16 @@ object ExecuteMode {
 
       // gather the information needed to record all of the packages and tasks that might get executed if the user confirms
       val packageVersions = getPackageVersions()
-      val existingTasks: Seq[VersionedTaskId] = cc.completedVersions.toSeq
-      val todoTasks: Seq[VersionedTaskId] = cc.todoVersions.toSeq
-      val uncommittedVersion = new TentativeWorkflowVersionInfo(dirs, workflow, history, packageVersions, existingTasks, todoTasks)
+      val existingTasks: Seq[Task] = cc.completedTasks.toSeq
+      val todoTasks: Seq[Task] = cc.todoTasks.toSeq
+//      val uncommittedVersion = new TentativeWorkflowVersionInfo(dirs, workflow, history, packageVersions, existingTasks, todoTasks)
       
       System.err.println("Checking inputs...")
-      val inputChecker = new InputChecker(dirs)
-      Visitors.visitAll(workflow, inputChecker, planPolicy, uncommittedVersion)
+      val inputChecker = new InputChecker(dirs, graph)
+//      Visitors.visitAll(workflow, inputChecker, planPolicy, uncommittedVersion)
+      Visitor.visitAll(graph, inputChecker, traversal=traversal)
       if (inputChecker.errors.size > 0) {
-        for (e: FileFormatException <- inputChecker.errors) {
+        for (e: Exception <- inputChecker.errors) {
           ErrorUtils.prettyPrintError(e, prefix="ERROR", color=Config.errorColor)
         }
         System.err.println("%d errors".format(inputChecker.errors.size))
@@ -83,19 +90,19 @@ object ExecuteMode {
       
       System.err.println("Work plan ("+traversal+" traversal):")
       for ( (task, real) <- cc.broken) {
-        System.err.println("%sDELETE:%s %s".format(Config.redColor, Config.resetColor, colorizeDir(task, real)))
+        System.err.println("%sDELETE:%s %s".format(Config.redColor, Config.resetColor, colorizeDir(task, real, dirs)))
       }
       for ( (task, real) <- cc.partial) {
-        System.err.println("%sMOVE TO ATTIC:%s %s".format(Config.redColor, Config.resetColor, colorizeDir(task, real)))
+        System.err.println("%sMOVE TO ATTIC:%s %s".format(Config.redColor, Config.resetColor, colorizeDir(task, real, dirs)))
       }
       for (packageName <- packageVersions.packagesToBuild) {
         System.err.println("%sBUILD:%s %s".format(Config.greenColor, Config.resetColor, packageName))
       }
       for ( (task, real) <- cc.locked) {
-        System.err.println("%sWAIT FOR LOCK:%s %s".format(Config.greenColor, Config.resetColor, colorizeDir(task, real)))
+        System.err.println("%sWAIT FOR LOCK:%s %s".format(Config.greenColor, Config.resetColor, colorizeDir(task, real, dirs)))
       }
       for ( (task, real) <- cc.todo) {
-        System.err.println("%sRUN:%s %s".format(Config.greenColor, Config.resetColor, colorizeDir(task, real)))
+        System.err.println("%sRUN:%s %s".format(Config.greenColor, Config.resetColor, colorizeDir(task, real, dirs)))
       }
   
       val answer = if (opts.yes) {
@@ -114,14 +121,14 @@ object ExecuteMode {
         case true => {
           // create a new workflow version
           val configFile: Option[File] = opts.config_file.value.map(new File(_))
-          val existingTasks: Seq[VersionedTaskId] = cc.completedVersions.toSeq
-          val todoTasks: Seq[VersionedTaskId] = cc.todoVersions.toSeq
+          val existingTasks: Seq[Task] = cc.completedTasks.toSeq
+          val todoTasks: Seq[Task] = cc.todoTasks.toSeq
 
           // user has given us the green light, so now switch over from using
           // fake/hallucinated version that wasn't actually written to disk
           // to using version info that's written in stone (i.e. on disk)
           // TODO: We should just add a "commit" method to the version
-          val committedVersion: WorkflowVersionStore = uncommittedVersion.commit()
+//          val committedVersion: WorkflowVersionStore = uncommittedVersion.commit()
           
           // before doing *anything* else, make sure our output directory exists, so that we can lock things
           Files.mkdirs(dirs.confBaseDir)
@@ -132,15 +139,17 @@ object ExecuteMode {
 
           // Locker takes a thunk to create a scoping effect
           // note: LockManager internally starts a JVM shutdown hook to release locks on JVM shutdown
-          LockManager(committedVersion) { locker: LockManager =>
+          LockManager() { locker: LockManager =>
 
             System.err.println("Moving previous partial output to the attic...")
             // NOTE: We get the version of each failed attempt from its version file (partial). Lacking that, we kill it (broken).
-            Visitors.visitAll(workflow, new PartialOutputMover(dirs, cc.partial, cc.broken, locker), planPolicy, committedVersion)
+//            Visitors.visitAll(workflow, new PartialOutputMover(dirs, cc.partial, cc.broken, locker), planPolicy, committedVersion)
+            Visitor.visitAll(graph, new PartialOutputRemover(dirs, cc.partial.toSet, cc.broken.toSet, locker), traversal=traversal)
           
             // Make a pass after moving partial output to write output files
             // claiming those directories as ours so that we can later start another ducttape process
-            Visitors.visitAll(workflow, new PidWriter(dirs, cc.todo, locker), planPolicy, committedVersion)
+//            Visitors.visitAll(workflow, new PidWriter(dirs, cc.todo, locker), planPolicy, committedVersion)
+            Visitor.visitAll(graph, new PidWriter(dirs, cc.todo, locker))
             
             System.err.println("Executing tasks...")
             val failObserver = new ExecutionObserver {
@@ -150,9 +159,12 @@ object ExecuteMode {
               }
             }
             try {
-              Visitors.visitAll(workflow,
-                                new Executor(dirs, packageVersions, planPolicy, locker, workflow, cc.completed, cc.todo, observers=Seq(failObserver)),
-                                planPolicy, committedVersion, opts.jobs(), traversal)
+//              Visitors.visitAll(workflow,
+//                                new Executor(dirs, packageVersions, planPolicy, locker, workflow, cc.completed, cc.todo, observers=Seq(failObserver)),
+//                                planPolicy, committedVersion, opts.jobs(), traversal)
+              Visitor.visitAll(graph,
+                               new Executor(dirs, packageVersions, locker, cc.completed, cc.todo, submitter, observers=Seq(failObserver)),
+                               traversal=traversal)
             } catch {
               case t: Throwable => {
                 System.err.println(s"${Config.errorColor}The following tasks failed:${Config.resetColor}")

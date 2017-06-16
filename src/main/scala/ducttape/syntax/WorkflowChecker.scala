@@ -6,16 +6,21 @@ import ducttape.cli.Directives
 import ducttape.exec.Submitter
 import ducttape.exec.Versioners
 import ducttape.exec.PackageVersionerInfo
-import ducttape.exec.UnpackedRealDagVisitor
-import ducttape.workflow.HyperWorkflow
-import ducttape.workflow.RealTask
-import ducttape.workflow.Visitors
+//import ducttape.exec.UnpackedRealDagVisitor
+import ducttape.graph.UnpackedGraph
+import ducttape.graph.{UnpackedGraph => unpacked}
+import ducttape.graph.traversal.Traversal
+import ducttape.graph.traversal.Visitor
+//import ducttape.workflow.HyperWorkflow
+//import ducttape.workflow.RealTask
+//import ducttape.workflow.Visitors
 import ducttape.workflow.Realization
-import ducttape.workflow.PlanPolicy
-import ducttape.versioner.WorkflowVersionInfo
+//import ducttape.workflow.PlanPolicy
+//import ducttape.versioner.WorkflowVersionInfo
 import ducttape.syntax.AbstractSyntaxTree.BranchPointDef
 import ducttape.syntax.AbstractSyntaxTree.ConfigAssignment
 import ducttape.syntax.AbstractSyntaxTree.Spec
+import ducttape.syntax.AbstractSyntaxTree.SubmitterDef
 import ducttape.syntax.AbstractSyntaxTree.WorkflowDefinition
 import ducttape.syntax.AbstractSyntaxTree.TaskDef
 import ducttape.syntax.AbstractSyntaxTree.ConfigDefinition
@@ -32,11 +37,9 @@ import collection._
  * Checks that require access to resolved parameters could be implemented
  * in an unpacked workflow visitor.
  */
-class WorkflowChecker(workflow: WorkflowDefinition,
-                      confSpecs: Seq[ConfigAssignment],
-                      builtins: Seq[WorkflowDefinition],
-                      directives: Directives)
+class WorkflowChecker(workflow: WorkflowDefinition)
     extends Logging {
+  
   
   // TODO: Break up into several methods
   def check(): (Seq[FileFormatException],Seq[FileFormatException]) = {
@@ -45,19 +48,19 @@ class WorkflowChecker(workflow: WorkflowDefinition,
     val errors = new mutable.ArrayBuffer[FileFormatException]
 
     // check for using imports without explicitly enabling them
-    if (!directives.enableImports && workflow.usesImports) {
+    if (!workflow.directives.enableImports && workflow.usesImports) {
       errors += new FileFormatException("Workflow uses the experimental 'import' feature, but does not explicitly enable them using 'ducttape_experimental_imports=true'", workflow)
     }
 
     // check for using experimental package syntax
-    if (!directives.enablePackages) {
+    if (!workflow.directives.enablePackages) {
       for (task: TaskDef <- workflow.tasks; if (task.packages.size > 0) ) {
         errors += new FileFormatException("Workflow uses the experimental 'package' syntax, but does not explicitly enable it using 'ducttape_experimental_packages=true'. Minor changes to this syntax are planned for a future release.", task)
       }
     }
 
     // check for using experimental submitter syntax
-    if (!directives.enableSubmitters) {
+    if (!workflow.directives.enableSubmitters) {
       for (task: TaskDef <- workflow.tasks) {
         val hasSubmitter = task.params.exists { spec => spec.dotVariable && spec.name == "submitter" }
         if (hasSubmitter) {
@@ -96,7 +99,7 @@ class WorkflowChecker(workflow: WorkflowDefinition,
     }
     
     val globals = new mutable.HashMap[String, Spec]
-    for (a: ConfigAssignment <- confSpecs) {
+    for (a: ConfigAssignment <- workflow.confSpecs) {
       globals.get(a.spec.name) match {
         case Some(prev) => {
           errors += new FileFormatException("Global variable %s originally defined at %s:%d redefined at %s:%d".
@@ -173,7 +176,8 @@ class WorkflowChecker(workflow: WorkflowDefinition,
     }
     
     // make sure that each package has defined all of the dot variables required by its versioner
-    val versionerDefs = (workflow.versioners ++ builtins.flatMap(_.versioners)).map { v => (v.name, v) }.toMap
+//    val versionerDefs = (workflow.versioners ++ builtins.flatMap(_.versioners)).map { v => (v.name, v) }.toMap
+    val versionerDefs = workflow.versioners.map { v => (v.name, v) }.toMap
     debug("Versioners are: " + versionerDefs)
     for (packageDef: PackageDef <- workflow.packages) {
       
@@ -215,34 +219,37 @@ class WorkflowChecker(workflow: WorkflowDefinition,
   
   // Grumble: It's only tractable to do this for the selection?
   // Is there any way we can do this for tasks that use only literal submitters?
-  def checkUnpacked(hyperworkflow: HyperWorkflow,
-                    planPolicy: PlanPolicy): (Seq[FileFormatException],Seq[FileFormatException]) = {
+  def checkUnpacked(graph: UnpackedGraph,
+                    traversal: Traversal, submitters:Seq[SubmitterDef]): (Seq[FileFormatException],Seq[FileFormatException]) = {
     
     val warnings = new mutable.ArrayBuffer[FileFormatException]
     val errors = new mutable.ArrayBuffer[FileFormatException]
     
-    val submitter = new Submitter(hyperworkflow.submitters)
-    val visitor = new UnpackedRealDagVisitor {
-      override def visit(task: RealTask) {
-        for (packageSpec: Spec <- task.packages) {
-          // TODO: Check for each task having the params defined for each of its versioners
-          packageSpec
-        }
+    val submitter = new Submitter(submitters)
+    val visitor = new Visitor {
+      override def visit(task: unpacked.Task) {
+//        for (packageSpec: Spec <- task.packages) {
+//          // TODO: Check for each task having the params defined for each of its versioners
+//          packageSpec
+//        }
         
         // make sure each submitter is defined
         try {
           // notice that the submitter may be defined inside a branch point
           // such that it can't be resolved before unpacking
           val taskSubmitter = submitter.getSubmitter(task)
-          val dotParams: Set[String] = task.params.filter(_.dotVariable).map(_.name).toSet
+          val dotParams: Set[String] = task.specs.params.filter(_.dotVariable).map(_.name).toSet
           val requiredParams = taskSubmitter.params.filterNot(_.dotVariable).filterNot { spec =>
             Submitter.SPECIAL_VARIABLES(spec.name)
           }
           for (requiredParam <- requiredParams) {
             if (!dotParams(requiredParam.name)) {
+              val workflow = graph.goals.packedGraph.workflow
+              val tasks = workflow.tasks ++ workflow.functionCallTasks
+              val taskList = tasks.filter{ t => t.name == task.name }.toList
               errors += new FileFormatException(
-                s"Dot parameter '${requiredParam.name}' required by submitter '${taskSubmitter.name}' not defined by task '${task.name}'",
-                List(task.taskDef, requiredParam))
+                s"Dot parameter '${requiredParam.name}' required by submitter '${taskSubmitter.name}' not defined by task '${task.name}'", taskList) //,
+//                List(task.taskDef, requiredParam))
             }
           }
         } catch {
@@ -254,7 +261,7 @@ class WorkflowChecker(workflow: WorkflowDefinition,
     
     // TODO: We could really get away without versions here if we
     // wanted to maintain another code path
-    Visitors.visitAllRealTasks(hyperworkflow, visitor, planPolicy)
+    Visitor.visitAll(graph, visitor, 1, traversal)
     
     (warnings, errors)
   }

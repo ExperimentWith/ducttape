@@ -1,5 +1,5 @@
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+/*
 package ducttape.hyperdag.walker
 
 import collection._
@@ -11,6 +11,7 @@ import ducttape.util._
 import annotation.tailrec
 
 import grizzled.slf4j.Logging
+import ducttape.graph.traversal.Walker
 
 
 /** Actually, this is an UnpackedHyperDagWalker... 
@@ -389,3 +390,4 @@ class UnpackedDagWalker[V,H,E,D,F](
     }
   }
 }
+*/

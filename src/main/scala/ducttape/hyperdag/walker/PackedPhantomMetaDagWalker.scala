@@ -1,9 +1,10 @@
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+/*
 package ducttape.hyperdag.walker
 
 import ducttape.hyperdag.PackedVertex
 import ducttape.hyperdag.meta.PhantomMetaHyperDag
+import ducttape.graph.traversal.Walker
 
 // iterates over non-None packed vertices
 class PackedPhantomMetaDagWalker[V](dag: PhantomMetaHyperDag[V,_,_,_])
@@ -30,3 +31,4 @@ class PackedPhantomMetaDagWalker[V](dag: PhantomMetaHyperDag[V,_,_,_])
   def getRunning(): Traversable[PackedVertex[Option[V]]] = dag.removePhantoms(delegate.getRunning)
   def getReady(): Traversable[PackedVertex[Option[V]]] = dag.removePhantoms(delegate.getReady)
 }
+*/

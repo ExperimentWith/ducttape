@@ -2,11 +2,12 @@
 
 package ducttape.exec
 
-import ducttape.syntax.Namespace
-import ducttape.workflow.RealTask
-import ducttape.workflow.VersionedTask
+//import ducttape.syntax.Namespace
+import ducttape.graph.UnpackedGraph.Task
+//import ducttape.workflow.RealTask
+//import ducttape.workflow.VersionedTask
 import ducttape.workflow.Realization
-import ducttape.workflow.SpecTypes._
+//import ducttape.workflow.SpecTypes._
 import ducttape.util.GlobValuesMap
 
 import java.io.File
@@ -23,18 +24,22 @@ import grizzled.slf4j.Logging
  * via DirectoryArchitect (e.g. tildes become the user's home directory)
  */
 class TaskEnvironment(val dirs: DirectoryArchitect,
-                      val task: VersionedTask) extends Logging {
+                      val task: Task) extends Logging {
+  
+  val parentDir = dirs.assignDir(task)
   
   val inputs: Seq[(String,String)] = {
 
     val map = new GlobValuesMap
 
-    for (inputVal: VersionedSpec <- task.inputValVersions) { //yield {
-      val inFile = dirs.getInFile(inputVal.origSpec, task.realization,
-                                  inputVal.srcSpec, inputVal.srcTask, inputVal.srcReal, inputVal.srcVersion)
-      debug(s"For inSpec ${inputVal.origSpec} with srcSpec ${inputVal.srcSpec} @ " +
-            s"${inputVal.srcTask}/${inputVal.srcReal}/${inputVal.srcVersion}: ${inFile.getAbsolutePath}")      
-      map.addValue(inputVal.origSpec.name, inFile.getAbsolutePath)
+    for (input <- task.specs.inputs) {      
+
+      val files = dirs.getFile(input, task.realization, parentDir)
+      
+      for (file <- files) {
+        map.addValue(input.name, file.getAbsolutePath)
+      }
+      
     }   
     
     map.toStringTupleSeq    
@@ -44,22 +49,38 @@ class TaskEnvironment(val dirs: DirectoryArchitect,
   val params: Seq[(String,String)] = {
     
     val map = new GlobValuesMap
-    
-    for (paramVal <- task.paramVals) {
-      debug(s"For paramSpec ${paramVal.origSpec} with srcSpec ${paramVal.srcSpec}, got value: " +
-            s"${paramVal.srcSpec.rval.value}")            
-      map.addValue(paramVal.origSpec.name, paramVal.srcSpec.rval.value)
-    }
+
+    for (param <- task.specs.params) {      
+
+      val files = dirs.getFile(param, task.realization, parentDir)
+      
+      for (file <- files) {
+        map.addValue(param.name, file.getAbsolutePath)
+      }
+      
+    }   
     
     map.toStringTupleSeq
 
   }
   
   // assign output paths
-  val outputs: Seq[(String, String)] = for (outSpec <- task.outputs) yield {
-    val outFile = dirs.assignOutFile(outSpec, task.taskDef, task.realization, task.version)
-    debug(s"For outSpec ${outSpec} got path: ${outFile}")
-    (outSpec.name, outFile.getAbsolutePath)
+  val outputs: Seq[(String, String)] = {
+    
+    val map = new GlobValuesMap
+
+    for (output <- task.specs.outputs) {      
+
+      val files = dirs.getFile(output, task.realization, parentDir)
+      
+      for (file <- files) {
+        map.addValue(output.name, file.getAbsolutePath)
+      }
+      
+    }   
+    
+    map.toStringTupleSeq
+
   }
   
   val where = dirs.assignDir(task)
@@ -90,8 +111,8 @@ class TaskEnvironment(val dirs: DirectoryArchitect,
  */
 class FullTaskEnvironment(dirs: DirectoryArchitect,
                           val packageVersions: PackageVersioner,
-                          task: VersionedTask) extends TaskEnvironment(dirs, task) {
-  val packageNames: Seq[Namespace] = task.packages.map { spec => Namespace.fromString(spec.name) }
+                          task: Task) extends TaskEnvironment(dirs, task) {
+  val packageNames: Seq[String] = task.specs.packages.map{ literal => literal.value } //{ spec => Namespace.fromString(spec.name) }
   val packageBuilds: Seq[BuildEnvironment] = {
     packageNames.map { name =>
       val packageVersion = packageVersions(name)
@@ -102,7 +123,7 @@ class FullTaskEnvironment(dirs: DirectoryArchitect,
     // TODO: XXX: HACK: Lane: We need a syntax for accessing fully qualified package names
     // For now, we're just arbitrarily picking the package name to represent the whole shebang, which is silly
     packageBuilds.map { build =>
-      val packageVariableName: String = build.packageName.name
+      val packageVariableName: String = build.packageName
       (packageVariableName, build.buildDir.getAbsolutePath)
     }
   }

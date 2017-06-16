@@ -1,9 +1,11 @@
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+/*
 package ducttape.hyperdag.walker
 
 import ducttape.hyperdag._
 import ducttape.hyperdag.meta.MetaHyperDag
+import ducttape.graph.traversal.Walker
+
 
 // our only job is to hide epsilon vertices during iteration
 // TODO: Create trait for getCompleted etc
@@ -30,3 +32,4 @@ class PackedMetaDagWalker[V](val dag: MetaHyperDag[V,_,_,_])
     case opt => opt
   }
 }
+*/

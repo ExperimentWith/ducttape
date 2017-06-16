@@ -1,5 +1,5 @@
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+/*
 package ducttape.hyperdag.meta
 
 import collection._
@@ -60,3 +60,4 @@ class MetaHyperDagBuilder[V,M,H,E](epsilonV: V = null, epsilonH: H = null, epsil
     new MetaHyperDag[V,M,H,E](delegate.build(), metaEdgesByEpsilon, epsilonEdges)
   }
 }
+*/

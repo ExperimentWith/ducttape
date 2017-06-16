@@ -4,17 +4,19 @@ package ducttape.exec
 
 import java.io.File
 import collection._
+import ducttape.graph.UnpackedGraph.Task
+import ducttape.graph.traversal.Visitor
 import ducttape.syntax.AbstractSyntaxTree._
 import ducttape.workflow.Branch
 import ducttape.workflow.Realization
-import ducttape.workflow.VersionedTask
+//import ducttape.workflow.VersionedTask
 import ducttape.util.Environment
-import ducttape.versioner.WorkflowVersionInfo
+//import ducttape.versioner.WorkflowVersionInfo
 
 // see also LockManager
-class ForceUnlocker(dirs: DirectoryArchitect, todo: Set[(String,Realization)]) extends UnpackedDagVisitor {
+class ForceUnlocker(dirs: DirectoryArchitect, todo: Set[(String,Realization)]) extends Visitor {
 
-  override def visit(task: VersionedTask) {
+  override def visit(task: Task) {
     if (todo( (task.name, task.realization) )) {
       val taskEnv = new TaskEnvironment(dirs, task)
       LockManager.forceReleaseLock(taskEnv)

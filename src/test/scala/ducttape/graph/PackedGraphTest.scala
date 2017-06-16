@@ -13,16 +13,14 @@ import ducttape.workflow.Task
 @RunWith(classOf[JUnitRunner])
 class PackedGraphTest extends WordSpec {
 
-  val confSpecs:Seq[ConfigAssignment] = Seq()
-
-  
+    
   "The packed graph for an empty workflow" should {
 
     val string = ""
     
     val workflow = GrammarParser.readWorkflow(string)
     
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
         
     "contain zero tasks" in {      
       assertResult(0)(packedGraph.numTasks)
@@ -45,7 +43,7 @@ class PackedGraphTest extends WordSpec {
     
     val workflow = GrammarParser.readWorkflow(string)
     
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
         
     "contain 1 task" in {      
       assertResult(1)(packedGraph.numTasks)
@@ -71,7 +69,7 @@ class PackedGraphTest extends WordSpec {
     
     val workflow = GrammarParser.readWorkflow(string)
     
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
         
     "contain 1 task" in {      
       assertResult(1)(packedGraph.numTasks)
@@ -102,7 +100,7 @@ class PackedGraphTest extends WordSpec {
     
     val workflow = GrammarParser.readWorkflow(string)
     
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
         
     val goals = packedGraph.goals
     
@@ -133,7 +131,7 @@ class PackedGraphTest extends WordSpec {
     
     val workflow = GrammarParser.readWorkflow(string)
     
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
         
     "contain 2 tasks" in {      
       assertResult(2)(packedGraph.numTasks)

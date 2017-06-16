@@ -1,5 +1,5 @@
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+/*
 package ducttape.hyperdag.meta
 import ducttape.hyperdag.PackedVertex
 import ducttape.hyperdag.HyperEdge
@@ -54,3 +54,4 @@ class UnpackedMetaVertex[V,H,E,D](val packed: PackedVertex[V],
   }
   override def toString() = s"${packed}/${realization.mkString("+")}"
 }
+*/

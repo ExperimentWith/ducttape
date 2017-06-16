@@ -7,6 +7,11 @@ import java.io.File
 import scala.util.parsing.input.Position
 import scala.collection.immutable.NumericRange.Inclusive
 
+import ducttape.cli.Directives
+
+import ducttape.util.DucttapeException
+
+
 object AbstractSyntaxTree {
 
   object ASTType {
@@ -429,6 +434,17 @@ object AbstractSyntaxTree {
     
     def anonymousConfig: Option[ConfigDefinition] = configs.find(_.name == None)
 
+    def confSpecs(): Seq[ConfigAssignment] = {
+
+      val result = 
+            this.anonymousConfig match {
+              case Some(c) => c.lines
+              case None => Nil
+            }
+          
+      return result ++ globals
+    }
+    
     // imports will always be collapsed for the outside world
     private lazy val imported: Seq[WorkflowDefinition] = elements.collect { case x: WorkflowDefinition => x }
     private lazy val hasImports: Boolean = imported.size > 0
@@ -442,6 +458,15 @@ object AbstractSyntaxTree {
 
     override def toString() = blocks.mkString("\n\n")
     
+    lazy val directives: Directives = ducttape.cli.ErrorUtils.ex2err {
+      new Directives(this)
+    }
+    
     def ++(other: WorkflowDefinition) = new WorkflowDefinition(blocks ++ other.blocks, files ++ other.files, hadImports, isImported)
+    
+    
+    
+    
   }
 }
+

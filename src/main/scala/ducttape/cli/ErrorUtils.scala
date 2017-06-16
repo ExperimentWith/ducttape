@@ -11,6 +11,13 @@ import java.util.concurrent.ExecutionException
 import grizzled.slf4j.Logging
 
 object ErrorUtils extends Logging {
+
+  def prettyPrintError(e: Exception, prefix: String, color: String) {
+    debug(e.getMessage)
+    debug(e.getStackTrace.toString())
+      
+    System.err.println("%s%s: %s%s".format(color, prefix, e.getMessage, Config.resetColor))
+  }
   
   def prettyPrintError(e: FileFormatException, prefix: String, color: String) {
     debug(e.getMessage)

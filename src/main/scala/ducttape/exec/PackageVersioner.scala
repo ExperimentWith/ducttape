@@ -99,8 +99,8 @@ object PackageVersioner {
 class PackageVersioner(val dirs: DirectoryArchitect,
                        val versioners: Seq[VersionerDef],
                        val forceUpdate: Boolean = false,
-                       verbose: Boolean = false)
-                      (implicit val directives: Directives) extends Logging {
+                       verbose: Boolean = false,
+                      val directives: Directives) extends Logging {
 
   // we need a package version comparator if we might need to detect the current version
   // todo: create the Info classes to determine if we have comparators
@@ -110,11 +110,11 @@ class PackageVersioner(val dirs: DirectoryArchitect,
   
   // the following 3 fields get populated by findAlreadyBuilt() and isAlreadyBuild()
   // TODO: Change these to immutable and initialize them on object creation?
-  val packageVersions = new mutable.HashMap[Namespace,String] // packageName -> repoVersion
+  val packageVersions = new mutable.HashMap[String,String] // packageName -> repoVersion
   var packagesToBuild: Seq[PackageDef] = Nil
   var packagesExisting: Seq[PackageDef] = Nil // both existing *and* up-to-date
   
-  def apply(packageName: Namespace) = packageVersions(packageName)
+  def apply(packageName: String) = packageVersions(packageName)
   
   /**
    * Returns a tuple of (alreadyBuilt, needsBuilding)
@@ -127,13 +127,13 @@ class PackageVersioner(val dirs: DirectoryArchitect,
 
   def writeHeadVersion(packageDef: PackageDef, version: String) {
     // TODO: Some locking at a much higher context (e.g. the whole build process)
-    val headVersionFile: File = dirs.assignBuildHeadFile(packageDef.name)
+    val headVersionFile: File = dirs.assignBuildHeadFile(packageDef.name.toString())
     Files.write(version, headVersionFile)
   }
   // we only get previous version (which requires a comparator) if we
   // aren't forced to rebuild
   def getPreviousVersion(packageDef: PackageDef): Option[String] = {
-    val headVersionFile: File = dirs.assignBuildHeadFile(packageDef.name)
+    val headVersionFile: File = dirs.assignBuildHeadFile(packageDef.name.toString())
     if (headVersionFile.exists) {
       Files.read(headVersionFile) match {
         case Seq(version) => Some(version) // only line in the file
@@ -190,10 +190,10 @@ class PackageVersioner(val dirs: DirectoryArchitect,
         repoVersion
       }
       
-      packageVersions += packageDef.name -> repoVersion
+      packageVersions += packageDef.name.toString() -> repoVersion
     
       // TODO: Different messages depending on build failed, etc.
-      val buildEnv = new BuildEnvironment(dirs, repoVersion, packageDef.name)
+      val buildEnv = new BuildEnvironment(dirs, repoVersion, packageDef.name.toString())
       val exists = PackageBuilder.isBuildSuccessful(buildEnv)
 
       if (verbose) {
@@ -208,7 +208,7 @@ class PackageVersioner(val dirs: DirectoryArchitect,
       getPreviousVersion(packageDef) match {
         case Some(previouslyBuiltRepoVersion: String) => {
           System.err.println(s"Found existing version of package ${packageDef.name}: ${previouslyBuiltRepoVersion}")
-          packageVersions += packageDef.name -> previouslyBuiltRepoVersion
+          packageVersions += packageDef.name.toString() -> previouslyBuiltRepoVersion
           true
         }
         case None => false
@@ -219,7 +219,7 @@ class PackageVersioner(val dirs: DirectoryArchitect,
   def checkout(packageDef: PackageDef, buildDir: File) {
     val versionerDef = Versioners.getVersioner(packageDef, versionerDefs)
     val info = new PackageVersionerInfo(versionerDef)
-    val repoVersion = packageVersions(packageDef.name)
+    val repoVersion = packageVersions(packageDef.name.toString())
     
     // partial builds should already have been removed by PackageBuilder
     

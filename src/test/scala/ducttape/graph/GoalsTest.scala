@@ -130,16 +130,14 @@ task evaluate_all
 }
 
     """
-  
-  val confSpecs:Seq[ConfigAssignment] = Seq()
- 
+   
   "The packed graph for an empty workflow" should {
 
     val string = ""
     
     val workflow = GrammarParser.readWorkflow(string)
     
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
     
     val goals = packedGraph.goals
     
@@ -160,7 +158,7 @@ task evaluate_all
     
     val workflow = GrammarParser.readWorkflow(string)
     
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
     
     val goals = packedGraph.goals
     
@@ -183,7 +181,7 @@ task evaluate_all
     
     val workflow = GrammarParser.readWorkflow(string)
     
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
 
     val goals = packedGraph.goals
     
@@ -212,7 +210,7 @@ task evaluate_all
     
     val workflow = GrammarParser.readWorkflow(string)
     
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
         
     val goals = packedGraph.goals
        
@@ -255,7 +253,7 @@ task evaluate_all
     
     val workflow = GrammarParser.readWorkflow(string)
     
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
         
     val goals = packedGraph.goals
        
@@ -308,7 +306,7 @@ task evaluate_all
     
     val workflow = GrammarParser.readWorkflow(string)
     
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
         
     val goals = packedGraph.goals
        
@@ -367,7 +365,7 @@ task evaluate_all
     
     val workflow = GrammarParser.readWorkflow(string)
     
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
         
     val goals = packedGraph.goals
        
@@ -426,7 +424,7 @@ task evaluate_all
     
     val workflow = GrammarParser.readWorkflow(string)
     
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
         
     val goals = packedGraph.goals
        
@@ -485,7 +483,7 @@ task evaluate_all
     
     val workflow = GrammarParser.readWorkflow(string)
     
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
         
     val goals = packedGraph.goals
        
@@ -544,7 +542,7 @@ task evaluate_all
     
     val workflow = GrammarParser.readWorkflow(string)
     
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
         
     val goals = packedGraph.goals
        
@@ -603,7 +601,7 @@ task evaluate_all
     
     val workflow = GrammarParser.readWorkflow(string)
     
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
         
     val goals = packedGraph.goals
        
@@ -663,7 +661,7 @@ task evaluate_all
     
     val workflow = GrammarParser.readWorkflow(string)
     
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
         
     val goals = packedGraph.goals
        
@@ -723,7 +721,7 @@ task evaluate_all
     
     val workflow = GrammarParser.readWorkflow(string)
     
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
         
     val goals = packedGraph.goals
        
@@ -766,7 +764,7 @@ task evaluate_all
       """
     
     val workflow = GrammarParser.readWorkflow(acid + plan)
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
     val goals = packedGraph.goals
        
     "contain goals" in {   
@@ -788,7 +786,7 @@ task evaluate_all
       """
     
     val workflow = GrammarParser.readWorkflow(acid + plan)
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
     val goals = packedGraph.goals
        
     "contain goals" in {   
@@ -810,7 +808,7 @@ task evaluate_all
       """
     
     val workflow = GrammarParser.readWorkflow(acid + plan)
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
     val goals = packedGraph.goals
        
     "contain goals" in {   
@@ -840,7 +838,7 @@ task evaluate_all
       """
     
     val workflow = GrammarParser.readWorkflow(acid + plan)
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
     val goals = packedGraph.goals
     
     "contain goals" in {   
@@ -862,7 +860,7 @@ task evaluate_all
       """
     
     val workflow = GrammarParser.readWorkflow(acid + plan)
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
     val goals = packedGraph.goals
     
     "contain goals" in {   
@@ -884,7 +882,7 @@ task evaluate_all
       """
     
     val workflow = GrammarParser.readWorkflow(acid + plan)
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
     val goals = packedGraph.goals
     
     "contain goals" in {   
@@ -909,7 +907,7 @@ task evaluate_all
       """
     
     val workflow = GrammarParser.readWorkflow(acid + plan)
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
     val goals = packedGraph.goals
     
     "contain goals" in {   
@@ -934,7 +932,7 @@ task evaluate_all
       """
     
     val workflow = GrammarParser.readWorkflow(acid + plan)
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
     val goals = packedGraph.goals
     
     "contain goals" in {   
@@ -963,7 +961,7 @@ task evaluate_all
       """
     
     val workflow = GrammarParser.readWorkflow(acid + plan)
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
     val goals = packedGraph.goals
     
     "contain goals" in {   
@@ -992,7 +990,7 @@ task evaluate_all
       """
     
     val workflow = GrammarParser.readWorkflow(acid + plan)
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
     val goals = packedGraph.goals
     //print(goals)
     
@@ -1044,7 +1042,7 @@ plan {
       """
     
     val workflow = GrammarParser.readWorkflow(acid + plan)
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
     val goals = packedGraph.goals
 
     //print(goals)
@@ -1070,7 +1068,7 @@ plan {
       """
     
     val workflow = GrammarParser.readWorkflow(acid + plan)
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
     val goals = packedGraph.goals
 
     //print(goals)
@@ -1096,7 +1094,7 @@ plan {
       """
     
     val workflow = GrammarParser.readWorkflow(acid + plan)
-    val packedGraph = new PackedGraph(workflow, confSpecs)
+    val packedGraph = new PackedGraph(workflow)
     
     "contain a global variable" in {
       packedGraph.global("null") match {

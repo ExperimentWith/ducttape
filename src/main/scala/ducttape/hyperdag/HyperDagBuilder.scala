@@ -1,5 +1,5 @@
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+/*
 package ducttape.hyperdag
 
 import collection._
@@ -8,6 +8,7 @@ import grizzled.slf4j.Logging
 /**
  * see [[ducttape.hyperdag.HyperDag]] for the definition of a HyperDag.
  */
+
 class HyperDagBuilder[V,H,E] extends Logging {
 
   private[hyperdag] val vertices = new mutable.HashSet[PackedVertex[V]]
@@ -64,3 +65,4 @@ class HyperDagBuilder[V,H,E] extends Logging {
     new HyperDag[V,H,E](roots.toSeq, vertices.toSeq, inEdges.toMap, outEdges.toMap, edges.toMap)
   }
 }
+*/

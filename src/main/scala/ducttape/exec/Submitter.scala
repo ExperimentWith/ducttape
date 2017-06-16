@@ -3,6 +3,12 @@
 package ducttape.exec
 
 import java.io.File
+import ducttape.graph.UnpackedGraph.Literal
+import ducttape.graph.UnpackedGraph.Param
+import ducttape.graph.UnpackedGraph.Task
+import ducttape.graph.UnpackedGraph.Reference
+import ducttape.graph.UnpackedGraph.GlobReference
+import ducttape.graph.UnpackedGraph.ValueBearingNode
 import ducttape.util.Environment
 import ducttape.workflow.Realization
 import ducttape.util.Shell
@@ -19,9 +25,9 @@ import ducttape.workflow.Branch
 import ducttape.util.BashException
 import ducttape.util.Files
 import scala.collection.LinearSeq
-import ducttape.workflow.SpecTypes._
+//import ducttape.workflow.SpecTypes._
 import grizzled.slf4j.Logging
-import ducttape.workflow.RealTask
+//import ducttape.workflow.RealTask
 
 object Submitter {
   // some special variables are passed without user intervention
@@ -32,23 +38,22 @@ class Submitter(submitters: Seq[SubmitterDef]) extends Logging {
   
   // TODO: Really, this should be resolved during workflow building and
   // we should never pass the workflow definition anywhere else...
-  private def getSubmitter(submitterSpec: ResolvedLiteralSpec): SubmitterDef = {
+  private def getSubmitter(submitterName:String): SubmitterDef = {
     
-    val submitterName = submitterSpec.srcSpec.rval.value
+//    val submitterName = submitterSpec.srcSpec.rval.value
     submitters.find { s => s.name.toString == submitterName } match {
       case Some(s) => s
-      case None => throw new FileFormatException(s"Submitter ${submitterName} not defined",
-                     List(submitterSpec.origSpec, submitterSpec.srcSpec))
+      case None    => throw new RuntimeException(s"Submitter ${submitterName} not defined")
+//      case None => throw new FileFormatException(s"Submitter ${submitterName} not defined", List(submitterSpec.origSpec, submitterSpec.srcSpec))
     }
   }
   
-  private def getDefaultSubmitter(submitterName: String, requiredBy: TaskDef): SubmitterDef = {
+  private def getDefaultSubmitter(submitterName: String, requiredBy: Task): SubmitterDef = {
     submitters.find { s: SubmitterDef => s.name.toString == submitterName } match {
       case Some(s) => s
-      case None => throw new FileFormatException(
+      case None => throw new RuntimeException(
         s"Default submitter '${submitterName}' not defined (required by task ${requiredBy.name})." +
-          s"We have these submitters: ${submitters.map(_.name).mkString(" ")}",
-        requiredBy)
+          s"We have these submitters: ${submitters.map(_.name).mkString(" ")}")
     }
   }
   
@@ -60,11 +65,11 @@ class Submitter(submitters: Seq[SubmitterDef]) extends Logging {
     }
   }
   
-  def getSubmitter(task: RealTask): SubmitterDef = {
-      val allDotParams: Seq[ResolvedLiteralSpec] = task.paramVals.filter(_.origSpec.dotVariable)
-      allDotParams.find { p: ResolvedLiteralSpec => p.origSpec.name == "submitter" } match {
-        case Some(p) => getSubmitter(p)
-        case None => getDefaultSubmitter("shell", task.taskDef)
+  def getSubmitter(task: Task): SubmitterDef = {
+      val allDotParams: Seq[Param] = task.allDotParams
+      allDotParams.find { p: Param => p.name == "submitter" } match {
+        case Some(p) => getSubmitter(p.name)
+        case None => getDefaultSubmitter("shell", task)
       }
     }
 
@@ -72,11 +77,23 @@ class Submitter(submitters: Seq[SubmitterDef]) extends Logging {
     val submitterDef: SubmitterDef = getSubmitter(taskEnv.task)
     val requiredParams: Set[String] = submitterDef.params.map(_.name).toSet
     // only include the dot params from the task that are explicitly requested by the submitter
-    val allDotParams: Seq[ResolvedLiteralSpec] = taskEnv.task.paramVals.filter(_.origSpec.dotVariable)
-    val dotParamsForSubmitter: Seq[ResolvedLiteralSpec] = allDotParams.filter { litSpec: ResolvedLiteralSpec =>
-      requiredParams.contains(litSpec.origSpec.name)
+    val allDotParams: Seq[Param] = taskEnv.task.allDotParams
+    val dotParamsForSubmitter: Seq[Param] = allDotParams.filter { param: Param =>
+      requiredParams.contains(param.name)
     }
-    val dotParamsEnv: Seq[(String,String)] = dotParamsForSubmitter.map { p => (p.origSpec.name, p.srcSpec.rval.value) }
+    val dotParamsEnv: Seq[(String,String)] = dotParamsForSubmitter.map { param:Param => 
+      
+      def resolve(node:ValueBearingNode): String = {
+        node match {
+          case Literal(value) => return value
+          case Reference(variableName, task) => return resolve(task.get(variableName))
+          case GlobReference(variableName, tasks) => return tasks.map{ task => resolve(task.get(variableName)) }.mkString(" ")
+        }
+      }
+      
+      val value = resolve(param.value)
+      (param.name, value)
+    }
     debug(s"Dot parameters going into environment for run action are: ${dotParamsEnv}")
     val runAction = getRunAction(submitterDef)
 
@@ -87,7 +104,7 @@ class Submitter(submitters: Seq[SubmitterDef]) extends Logging {
           ("TASK", taskEnv.task.name),
           ("REALIZATION", taskEnv.task.realization.toString),
           ("TASK_VARIABLES", taskEnv.taskVariables),
-          ("COMMANDS", taskEnv.task.commands.toString)) ++
+          ("COMMANDS", taskEnv.task.code.toString)) ++
         dotParamsEnv ++ taskEnv.env
         
     // To prevent some strange quoting bugs, treat COMMANDS specially and directly substitute it
@@ -98,7 +115,7 @@ class Submitter(submitters: Seq[SubmitterDef]) extends Logging {
     val taskScript = Seq("# This script will try to run a task *outside* any specified submitter") ++
                      Seq("# Note: This script is for archival; it is not actually run by ducttape") ++
                      taskEnv.env.map { case (key,value) => s"export ${key}=${QUOT}${value}${QUOT}" } ++
-                     Seq(taskEnv.task.commands.toString)
+                     Seq(taskEnv.task.code.toString)
     Files.write(taskScript, taskEnv.taskScriptFile)
 
     debug(s"Execution environment is: ${env}")

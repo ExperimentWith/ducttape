@@ -1,3 +1,5 @@
+// This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 package ducttape.graph
 
 import ducttape.graph.Goals.Status
@@ -19,7 +21,7 @@ import scala.collection.mutable.HashSet
 import grizzled.slf4j.Logging
 
 /** Maps from task name to the required set of realizations for that task. */
-class Goals private(private[graph] val packedGraph:PackedGraph) extends Iterable[(packed.Task, Realization)] with Logging { // private() declares the default constructor to be private
+class Goals private(val packedGraph:PackedGraph) extends Iterable[(packed.Task, Realization)] with Logging { // private() declares the default constructor to be private
   
   /** Maps from task name to the required set of realizations for that task. */
   private[graph] val values = new HashMap[String, HashSet[Realization]]

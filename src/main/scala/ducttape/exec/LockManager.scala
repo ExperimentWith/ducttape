@@ -6,7 +6,7 @@ import sys.ShutdownHookThread
 
 import ducttape.util.Files
 import ducttape.util.Optional
-import ducttape.versioner.WorkflowVersionStore
+//import ducttape.versioner.WorkflowVersionStore
 
 import java.io.File
 import java.nio.channels.FileLock
@@ -18,9 +18,11 @@ import collection._
 
 object LockManager extends Logging {
   // take a thunk so that we can create a scoping effect
-  def apply[U](workflowVersion: WorkflowVersionStore)(func: LockManager => U) {
+  def apply[U]()(func: LockManager => U) {
+  //def apply[U](workflowVersion: WorkflowVersionStore)(func: LockManager => U) {
     // note: LockManager internally starts a JVM shutdown hook to release locks on JVM shutdown
-    val locker = new LockManager(workflowVersion)
+//    val locker = new LockManager(workflowVersion)
+    val locker = new LockManager()
     func(locker)
     locker.shutdown()
   }
@@ -48,7 +50,8 @@ object LockManager extends Logging {
 
 // see also PidWriter
 // note: this class is also responsible for writing workflow version information
-class LockManager(version: WorkflowVersionStore) extends ExecutionObserver with Logging {
+//class LockManager(version: WorkflowVersionStore) extends ExecutionObserver with Logging {
+class LockManager() extends ExecutionObserver with Logging {
   
   // key is absolute path to file
   val locks = new mutable.HashMap[String, FileLock] with mutable.SynchronizedMap[String, FileLock]
@@ -131,32 +134,34 @@ class LockManager(version: WorkflowVersionStore) extends ExecutionObserver with 
         // can we use some callback function here to make this a bit cleaner?
         
         debug("Writing lock: " + taskEnv.lockFile)
-        Files.write("%s:%d".format(version.hostname, version.pid), taskEnv.lockFile)
+        //Files.write("%s:%d".format(version.hostname, version.pid), taskEnv.lockFile)
+        Files.write("lock", taskEnv.lockFile)
         debug("Sucessfully acquired lock: " + taskEnv.lockFile)
     
         // did this task already get completed while we were waiting?
         if (!CompletionChecker.isComplete(taskEnv)) {
-          // We need to cleanup if someone else previously held this lock
-          // (specifically, we need the workflow version to match our version)
-          if (taskEnv.versionFile.exists) {
-            val versionMatches: Boolean = {
-              try {
-                val oldVersion = Files.read(taskEnv.versionFile).head.toInt
-                oldVersion == version.version
-              } catch {
-                case _: Throwable => false
-              }
-            }
-    
-            // move old output to attic (if any)
-            if (!versionMatches) {
-              PartialOutputMover.moveToAttic(taskEnv)
-            }
-          }
+//          // We need to cleanup if someone else previously held this lock
+//          // (specifically, we need the workflow version to match our version)
+//          if (taskEnv.versionFile.exists) {
+//            val versionMatches: Boolean = {
+//              try {
+//                val oldVersion = Files.read(taskEnv.versionFile).head.toInt
+//                oldVersion == version.version
+//              } catch {
+//                case _: Throwable => false
+//              }
+//            }
+//    
+//            // move old output to attic (if any)
+//            if (!versionMatches) {
+//              PartialOutputMover.moveToAttic(taskEnv)
+//            }
+//          }
+          Files.deleteDir(taskEnv.parentDir)
         }
     
-        // write the version file *after* removing any previous partial output
-        Files.write(version.version.toString, taskEnv.versionFile) 
+//        // write the version file *after* removing any previous partial output
+//        Files.write(version.version.toString, taskEnv.versionFile) 
       }
     }
   }
@@ -173,7 +178,7 @@ class LockManager(version: WorkflowVersionStore) extends ExecutionObserver with 
   }
 
   // acquire the lock iff nobody else holds it
-  def maybeAcquireLock(taskEnv: TaskEnvironment, writeVersion: Boolean): Boolean = {
+  def maybeAcquireLock(taskEnv: TaskEnvironment): Boolean = {
 
     if (isShutdown) {
       false
@@ -191,10 +196,10 @@ class LockManager(version: WorkflowVersionStore) extends ExecutionObserver with 
             // note: we already have "locks" synchronized
             locks += taskEnv.lockFile.getAbsolutePath -> lock
             debug("Locks are now: " + locks)
-            if (writeVersion) {
-              debug("Writing version to " + taskEnv.versionFile)
-              Files.write(version.version.toString, taskEnv.versionFile)
-            }
+//            if (writeVersion) {
+//              debug("Writing version to " + taskEnv.versionFile)
+//              Files.write(version.version.toString, taskEnv.versionFile)
+//            }
             true
           }
           case None => {

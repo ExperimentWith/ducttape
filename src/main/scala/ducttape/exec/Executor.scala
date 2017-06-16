@@ -3,30 +3,33 @@
 package ducttape.exec
 
 import collection._
+import ducttape.graph.UnpackedGraph.Task
+import ducttape.graph.traversal.Visitor
 import ducttape.util.Shell
 import ducttape.util.Files
 import ducttape.workflow.Realization
-import ducttape.workflow.VersionedTask
-import ducttape.workflow.HyperWorkflow
-import ducttape.workflow.PlanPolicy
+//import ducttape.workflow.VersionedTask
+//import ducttape.workflow.HyperWorkflow
+//import ducttape.workflow.PlanPolicy
 import ducttape.util.BashException
 import grizzled.slf4j.Logging
 
 // workflow used for viz
 class Executor(val dirs: DirectoryArchitect,
                val packageVersioner: PackageVersioner,
-               val planPolicy: PlanPolicy,
+//               val planPolicy: PlanPolicy,
                val locker: LockManager,
-               val workflow: HyperWorkflow,
+//               val workflow: HyperWorkflow,
                val alreadyDone: Set[(String,Realization)],
                val todo: Set[(String,Realization)],
-               observers: Seq[ExecutionObserver] = Nil) extends UnpackedDagVisitor with Logging {
+               val submitter:Submitter,
+               observers: Seq[ExecutionObserver] = Nil) extends Visitor with Logging {
   
-  val submitter = new Submitter(workflow.submitters)
+//  val submitter = new Submitter(workflow.submitters)
 
   observers.foreach(_.init(this))
 
-  override def visit(task: VersionedTask) {
+  override def visit(task: Task) {
     if (todo( (task.name, task.realization) )) {
       
       val taskEnv = new FullTaskEnvironment(dirs, packageVersioner, task)
@@ -59,7 +62,7 @@ class Executor(val dirs: DirectoryArchitect,
           // the "run" action of the submitter will throw if the exit code is non-zero
           submitter.run(taskEnv)
           
-          def incompleteCallback(task: VersionedTask, msg: String) {
+          def incompleteCallback(task: Task, msg: String) {
             System.err.println(s"${task}: ${msg}")
           }
           if (!CompletionChecker.isComplete(taskEnv, incompleteCallback)) {

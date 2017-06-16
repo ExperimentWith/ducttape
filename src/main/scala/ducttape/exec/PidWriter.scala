@@ -4,20 +4,22 @@ package ducttape.exec
 
 import java.io.File
 import collection._
+import ducttape.graph.UnpackedGraph.Task
+import ducttape.graph.traversal.Visitor
 import ducttape.syntax.AbstractSyntaxTree._
 import ducttape.workflow.Branch
 import ducttape.workflow.Realization
-import ducttape.workflow.VersionedTask
+//import ducttape.workflow.VersionedTask
 import ducttape.util.Environment
-import ducttape.versioner.WorkflowVersionInfo
+//import ducttape.versioner.WorkflowVersionInfo
 
 // see also LockManager
 class PidWriter(dirs: DirectoryArchitect,
                 todo: Set[(String,Realization)],
                 locker: LockManager,
-                remove: Boolean = false) extends UnpackedDagVisitor {
+                remove: Boolean = false) extends Visitor {
 
-  override def visit(task: VersionedTask) {
+  override def visit(task: Task) {
     if (todo( (task.name, task.realization) )) {
       val taskEnv = new TaskEnvironment(dirs, task)
       if (!remove) {
@@ -32,7 +34,7 @@ class PidWriter(dirs: DirectoryArchitect,
         //    will run it (WARNING: it's the user's responsibility to
         //    make sure all currently running versions will provide
         //    *consistent* output)
-        locker.maybeAcquireLock(taskEnv, writeVersion=true)
+        locker.maybeAcquireLock(taskEnv)
       } else {
         locker.maybeReleaseLock(taskEnv)
       }

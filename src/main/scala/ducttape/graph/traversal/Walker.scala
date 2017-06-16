@@ -1,6 +1,6 @@
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package ducttape.hyperdag.walker
+package ducttape.graph.traversal
 
 import grizzled.slf4j.Logging
 
@@ -13,12 +13,12 @@ trait Walker[A] extends Iterable[A] with Logging { // TODO: Should this be a Tra
   private val self = this
 
   /** Get the next traversable item. Returns None when there are no more elements */
-  private[hyperdag] def take(): Option[A]
+  protected def take(): Option[A]
 
   /** Callers must use this method to notify walker that caller is done with each
    *  item so that walker can traverse its dependends
    *  continue: False indicates that no dependents of the specified item should be traversed */
-  private[hyperdag] def complete(item: A, continue: Boolean = true)
+  protected def complete(item: A, continue: Boolean = true)
 
   /** Get a synchronous iterator (not appropriate for multi-threaded consumers) */
   def iterator() = new Iterator[A] {

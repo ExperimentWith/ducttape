@@ -1,5 +1,5 @@
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+/*
 package ducttape.hyperdag.walker
 
 import collection._
@@ -12,6 +12,7 @@ import ducttape.hyperdag.meta.UnpackedChainedMetaVertex
 import ducttape.hyperdag.meta.UnpackedMetaVertex
 import ducttape.hyperdag.HyperEdge
 import scala.annotation.tailrec
+import ducttape.graph.traversal.Walker
 
 /**
  * The main job of this walker is to skip phantom vertices while remembering which phantom
@@ -160,3 +161,4 @@ class UnpackedPhantomMetaDagWalker[V,M,H,E,D,F](
     delegate.complete(item.dual, continue)
   }
 }
+*/

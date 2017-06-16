@@ -1,5 +1,5 @@
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+/*
 package ducttape.hyperdag.walker
 
 import collection._
@@ -8,6 +8,7 @@ import java.util.concurrent._
 
 import ducttape.workflow.Types._
 import ducttape.hyperdag._
+import ducttape.graph.traversal.Walker
 
 // agenda-based DAG iterator that allows for parallelization
 class PackedDagWalker[V](dag: HyperDag[V,_,_]) extends Walker[PackedVertex[V]] {
@@ -85,3 +86,4 @@ class PackedDagWalker[V](dag: HyperDag[V,_,_]) extends Walker[PackedVertex[V]] {
     }
   }
 }
+*/
