@@ -179,7 +179,7 @@ class DirectoryArchitect(val flat: Boolean,
   
   def getFile(node:ValueBearingNode, realization:Realization, parentDir:File): Seq[File] = {
    val result:Seq[File] = node match {
-      case Literal(filename) => { // the user told us what name to use for the file
+      case Literal(filename, astNode) => { // the user told us what name to use for the file
         if (Files.isAbsolute(filename)) {
           // TODO: Warn user about this unusual pattern...
           Seq(new File(Files.normalize(filename)))
@@ -187,8 +187,8 @@ class DirectoryArchitect(val flat: Boolean,
           Seq(new File(parentDir, filename))
         }
       }
-      case Reference(variableName, task) => getFile(variableName, task)
-      case GlobReference(variableName, tasks) => tasks.flatMap{ task => getFile(variableName, task) }
+      case Reference(variableName, task, astNode) => getFile(variableName, task)
+      case GlobReference(variableName, tasks, astNode) => tasks.flatMap{ task => getFile(variableName, task) }
     }
     
     return result

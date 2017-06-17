@@ -99,6 +99,34 @@ object Files extends Logging {
   def moveFileToDir(src: File, dest: File, createDestDir: Boolean = true)
     = org.apache.commons.io.FileUtils.moveFileToDirectory(src, dest, createDestDir)
   
+    
+  /**
+   * Potentially convert a filename into an absolute path.
+   * 
+   * If the possibleOtherFile is None, return filename
+   * 
+   * Otherwise, if the filename already represents an absolute path, return the filename.
+   * 
+   * Otherwise, identify the parent directory of the other file, and return an absolute path placing filename within that directory
+   * 
+   */
+  def possibleAbsolutePath(possibleOtherFile:Option[File], filename:String, message:String=""): String = {
+    possibleOtherFile match {
+      case None => return filename
+      case Some(otherFile) => {
+        if (isAbsolute(filename)) {
+          return filename
+        } else {
+          val parentDir = otherFile.getAbsoluteFile.getParentFile
+          val file = new File(parentDir, filename)
+          val absolutePath = file.getAbsolutePath
+          System.err.println(s"""WARNING: Reference to relative path - this can lead to unexpected behavior. The reference to "${filename}" is being interpreted as a path relative to "${parentDir}", resulting in ${absolutePath}. ${message}""")          
+          return absolutePath
+        }
+      }
+    }
+  }
+    
   // returns path, relative to the relativeToDir
   def relativize(path: File, baseDir: File): String = {
     val absPath = path.getAbsoluteFile

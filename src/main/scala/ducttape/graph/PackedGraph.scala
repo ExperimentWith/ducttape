@@ -4,10 +4,12 @@ package ducttape.graph
 
 import ducttape.syntax.{AbstractSyntaxTree => ast}
 import ducttape.syntax.BashCode
+import ducttape.util.Files
 import ducttape.workflow.Branch
 import ducttape.workflow.BranchFactory
 import ducttape.workflow.BranchPoint
 import ducttape.workflow.Realization
+import java.io.File
 import scala.collection.Map
 
 class PackedGraph(val workflow:ast.WorkflowDefinition) {
@@ -51,15 +53,15 @@ class PackedGraph(val workflow:ast.WorkflowDefinition) {
 
 object PackedGraph {
   
-  sealed trait Node
-  final case class Spec(name:String, value:ValueBearingNode, dotVariable:Boolean)
-  final case class CrossProduct(value:Set[Branch]) extends Node
-  final case class Via(reach:Task, via:CrossProduct) extends Node
-  final case class Plan(goals:Seq[Via]) extends Node
-  final case class ShellScript(code: String, vars: Set[String]) extends Node
-  final case class Packages(value:Seq[Package]) extends Node
-  final case class Global(value:Spec) extends Node
-  final case class Task(name:String, code:BashCode, inputs:Seq[Spec], params:Seq[Spec], outputs:Seq[Spec], packages:Seq[Spec]) extends Node {
+  sealed trait Node { val astNode:ast.ASTType }
+  final case class Spec(name:String, value:ValueBearingNode, dotVariable:Boolean, astNode:ast.ASTType)
+  final case class CrossProduct(value:Set[Branch], astNode:ast.ASTType) extends Node
+  final case class Via(reach:Task, via:CrossProduct, astNode:ast.ASTType) extends Node
+  final case class Plan(goals:Seq[Via], astNode:ast.ASTType) extends Node
+  final case class ShellScript(code: String, vars: Set[String], astNode:ast.ASTType) extends Node
+  final case class Packages(value:Seq[Package], astNode:ast.ASTType) extends Node
+  final case class Global(value:Spec, astNode:ast.ASTType) extends Node
+  final case class Task(name:String, code:BashCode, inputs:Seq[Spec], params:Seq[Spec], outputs:Seq[Spec], packages:Seq[Spec], astNode:ast.ASTType) extends Node {
     
     def containsVariable(variableName:String) : Boolean = {
       
@@ -73,10 +75,10 @@ object PackedGraph {
   }
 
   sealed trait ValueBearingNode extends Node
-  final case class Literal(value:String) extends ValueBearingNode
-  final case class BranchNode(branch:Branch, value:ValueBearingNode) extends ValueBearingNode
-  final case class BranchPointNode(branchPoint:BranchPoint, branches:Seq[BranchNode]) extends ValueBearingNode
-  final case class Reference(variableName:String, taskName:Option[String], grafts:Seq[Realization]) extends ValueBearingNode
+  final case class Literal(value:String, astNode:ast.ASTType) extends ValueBearingNode
+  final case class BranchNode(branch:Branch, value:ValueBearingNode, astNode:ast.ASTType) extends ValueBearingNode
+  final case class BranchPointNode(branchPoint:BranchPoint, branches:Seq[BranchNode], astNode:ast.ASTType) extends ValueBearingNode
+  final case class Reference(variableName:String, taskName:Option[String], grafts:Seq[Realization], astNode:ast.ASTType) extends ValueBearingNode
 
   def findBranchPoints(elements: Seq[ast.ASTType]): BranchFactory = {
 
@@ -88,7 +90,7 @@ object PackedGraph {
     
     return branchFactory
   }
-  
+
   def toGraphvizID(taskName:String) : String = {
     return s"""task ${taskName}"""
   }
@@ -101,22 +103,25 @@ object PackedGraph {
     
     def recursivelyBuildTask(targetID:String, rhs:ValueBearingNode, s:StringBuilder) : Unit = {
       rhs match {
-        case Literal(value) => {
+        case Literal(value, astNode) => {
           val id = targetID + " value " + value
-          s.append("\t\t\"").append(id).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=darkseagreen2, color=black, shape=box, style="filled", label="""").append(value).append("\"]\n")
+          s.append("\t\t\"").append(id).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=darkseagreen2, color=black, shape=box, style="filled", label="""").append(value).append("\"]")
+          astNode.positionString(s, prefix=" // Declared in ", suffix="\n")
           s.append("\t\t\"").append(id).append("\" -> \"").append(targetID).append("\"\n")
         }
         
-        case BranchNode(branch, value) => {
+        case BranchNode(branch, value, astNode) => {
           val id = targetID + " branch " + branch.name
-          s.append("\t\t\"").append(id).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=white, fillcolor=blue, color=blue, style="filled", label="""").append(branch.name).append("\"]\n")
+          s.append("\t\t\"").append(id).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=white, fillcolor=blue, color=blue, style="filled", label="""").append(branch.name).append("\"]")
+          astNode.positionString(s, prefix=" // Declared in ", suffix="\n")
           recursivelyBuildTask(id, value, s)
           s.append("\t\t\"").append(id).append("\" -> \"").append(targetID).append("\"\n")
         }
         
-        case BranchPointNode(branchPoint, branches) => {
+        case BranchPointNode(branchPoint, branches, astNode) => {
           val id = targetID + " branchPoint " + branchPoint.name
-          s.append("\t\t\"").append(id).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=white, fillcolor=red, color=red, shape=box, style="filled", label="""").append(branchPoint.name).append("\"]\n")
+          s.append("\t\t\"").append(id).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=white, fillcolor=red, color=red, shape=box, style="filled", label="""").append(branchPoint.name).append("\"]")
+          astNode.positionString(s, prefix=" // Declared in ", suffix="\n")
           for (branch <- branches) {
             recursivelyBuildTask(id, branch, s)
           }
@@ -133,19 +138,19 @@ object PackedGraph {
     def recursivelyConnect(targetID:String, rhs:ValueBearingNode, s:StringBuilder) : Unit = {
       rhs match {
         
-        case BranchNode(branch, value) => {
+        case BranchNode(branch, value, _) => {
           val id = targetID + " branch " + branch.name
           recursivelyConnect(id, value, s)
         }
         
-        case BranchPointNode(branchPoint, branches) => {
+        case BranchPointNode(branchPoint, branches, _) => {
           val id = targetID + " branchPoint " + branchPoint.name
           for (branch <- branches) {
             recursivelyConnect(id, branch, s)
           }
         }
         
-        case Reference(variable, taskName, graftsList) => {
+        case Reference(variable, taskName, graftsList, _) => {
           val id = taskName match {
             case Some(task) => variable + "@" + toGraphvizID(task)
             case None       => "global " + variable
@@ -181,7 +186,8 @@ object PackedGraph {
       if (! spec.name.startsWith("ducttape_")) {
         val id = "global " + spec.name
         s.append("\tsubgraph \"cluster ").append(id).append("\" {\n")
-        s.append("\t\t\"").append(id).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=white, color=black, style=filled, shape="box", label="""").append(spec.name).append("\"]\n")
+        s.append("\t\t\"").append(id).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=white, color=black, style=filled, shape="box", label="""").append(spec.name).append("\"]")
+        global.astNode.positionString(s, prefix=" // Declared in ", suffix="\n")
         s.append("\t\tcolor=black\n\t\tfillcolor=beige\n\t\tstyle=filled\n")
         recursivelyBuildTask(id, spec.value, s)
         s.append("\t}\n")
@@ -194,25 +200,29 @@ object PackedGraph {
       val taskID = toGraphvizID(task)
       
       s.append("\tsubgraph cluster_").append(task.name).append(" {\n")
-      s.append("\t\t\"").append(taskID).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=white, fillcolor=orange, color=orange, style="filled,rounded", label="""").append(task.name).append("\"]\n")
+      s.append("\t\t\"").append(taskID).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=white, fillcolor=orange, color=orange, style="filled,rounded", label="""").append(task.name).append("\"]")
+      task.astNode.positionString(s, prefix=" // Declared in ", suffix="\n")
       
       for (input <- task.inputs) {
         val inputID = input.name + "@" + taskID 
-        s.append("\t\t\"").append(inputID).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=white, color=black, style=filled, label="""").append(input.name).append("\"]\n")
+        s.append("\t\t\"").append(inputID).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=white, color=black, style=filled, label="""").append(input.name).append("\"]")
+        input.astNode.positionString(s, prefix=" // Declared in ", suffix="\n")
         s.append("\t\t\"").append(inputID).append("\" -> \"").append(taskID).append("\"\n")
         recursivelyBuildTask(inputID, input.value, s)
       }
 
       for (param <- task.params) {
         val paramID = param.name + "@" + taskID
-        s.append("\t\t\"").append(paramID).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=white, color=black, style=filled, shape="box", label="""").append(param.name).append("\"]\n")
+        s.append("\t\t\"").append(paramID).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=white, color=black, style=filled, shape="box", label="""").append(param.name).append("\"]")
+        param.astNode.positionString(s, prefix=" // Declared in ", suffix="\n")
         s.append("\t\t\"").append(paramID).append("\" -> \"").append(taskID).append("\"\n")
         recursivelyBuildTask(paramID, param.value, s)
       }
 
       for (output <- task.outputs) {
         val outputID = output.name + "@" + taskID
-        s.append("\t\t\"").append(outputID).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=white, color=black, style=filled, label="""").append(output.name).append("\"]\n")
+        s.append("\t\t\"").append(outputID).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=white, color=black, style=filled, label="""").append(output.name).append("\"]")
+        output.astNode.positionString(s, prefix=" // Declared in ", suffix="\n")
         s.append("\t\t\"").append(taskID).append("\" -> \"").append(outputID).append("\"\n")
       }
       
@@ -242,7 +252,7 @@ object PackedGraph {
   
   def build(confSpecs: Seq[ast.ConfigAssignment], branchFactory:BranchFactory) : Map[String,Global] = {
     
-    val globals = confSpecs.map{ confSpec => Global(recursivelyProcessSpec(confSpec.spec, branchFactory)) }
+    val globals = confSpecs.map{ confSpec => Global(recursivelyProcessSpec(confSpec.spec, branchFactory, Some(confSpec.declaringFile)), confSpec) }
     
     val tuples = globals.map{ global => 
       global.value.name -> global
@@ -271,19 +281,19 @@ object PackedGraph {
   
   def build(taskDef:ast.TaskDef, branchFactory:BranchFactory) : Task = {
     
-    val inputs   = taskDef.inputs.map  { spec => recursivelyProcessSpec(spec, branchFactory) }
-    val params   = taskDef.params.map  { spec => recursivelyProcessSpec(spec, branchFactory) }
-    val outputs  = taskDef.outputs.map { spec => recursivelyProcessSpec(spec, branchFactory) }
-    val packages = taskDef.packages.map{ spec => recursivelyProcessSpec(spec, branchFactory) }
+    val inputs   = taskDef.inputs.map  { spec => recursivelyProcessSpec(spec, branchFactory, Some(spec.declaringFile)) }
+    val params   = taskDef.params.map  { spec => recursivelyProcessSpec(spec, branchFactory, None) }
+    val outputs  = taskDef.outputs.map { spec => recursivelyProcessSpec(spec, branchFactory, None) }
+    val packages = taskDef.packages.map{ spec => recursivelyProcessSpec(spec, branchFactory, None) }
     val code     = taskDef.commands
     val name     = taskDef.name.name                                  //   get the name of the TaskDef; for the moment we ignore namespaces (XXX: ideally fix this) 
     
-    return new Task(name, code, inputs, params, outputs, packages)
+    return new Task(name, code, inputs, params, outputs, packages, taskDef)
   }
   
-  def build(specs:Seq[ast.Spec], branchFactory:BranchFactory) : Seq[Spec] = {
-    return specs.map{ spec => recursivelyProcessSpec(spec, branchFactory) }
-  }
+//  def build(specs:Seq[ast.Spec], branchFactory:BranchFactory) : Seq[Spec] = {
+//    return specs.map{ spec => recursivelyProcessSpec(spec, branchFactory) }
+//  }
   
   
   def processGraftReference(branchGraftElements: Seq[ast.BranchGraftElement], branchFactory:BranchFactory) : Seq[Realization] = {
@@ -304,23 +314,29 @@ object PackedGraph {
 
   }
   
-  def recursivelyProcessSpec(spec:ast.Spec, branchFactory:BranchFactory) : Spec = {
+  def recursivelyProcessSpec(spec:ast.Spec, branchFactory:BranchFactory, somePath:Option[File]) : Spec = {
     val name = spec.name
     
     val value:ValueBearingNode = spec.rval match {
-      case astNode:ast.Unbound => Literal(name)
-      case astNode:ast.Literal => Literal(astNode.value)
-      case astNode:ast.ConfigVariable          => Reference(astNode.value, None,                   Seq())
-      case astNode:ast.ShorthandConfigVariable => Reference(name,          None,                   Seq())
-      case astNode:ast.TaskVariable            => Reference(astNode.value, Some(astNode.taskName), Seq())
-      case astNode:ast.ShorthandTaskVariable   => Reference(name,          Some(astNode.taskName), Seq())
+      case astNode:ast.Unbound => {
+        val literalValue = Files.possibleAbsolutePath(somePath, name, astNode.positionString)
+        Literal(name, astNode)
+      }
+      case astNode:ast.Literal => {
+        val literalValue = Files.possibleAbsolutePath(somePath, astNode.value, astNode.positionString)
+        Literal(literalValue, astNode)
+      }
+      case astNode:ast.ConfigVariable          => Reference(astNode.value, None,                   Seq(), astNode)
+      case astNode:ast.ShorthandConfigVariable => Reference(name,          None,                   Seq(), astNode)
+      case astNode:ast.TaskVariable            => Reference(astNode.value, Some(astNode.taskName), Seq(), astNode)
+      case astNode:ast.ShorthandTaskVariable   => Reference(name,          Some(astNode.taskName), Seq(), astNode)
       case astNode:ast.BranchGraft             => { 
         
         val grafts = processGraftReference(astNode.branchGraftElements, branchFactory)
         
         val reference = astNode.taskName match {
-          case Some(taskName) => Reference(astNode.variableName, Some(taskName), grafts)
-          case None           => Reference(astNode.variableName, None,           grafts)
+          case Some(taskName) => Reference(astNode.variableName, Some(taskName), grafts, astNode)
+          case None           => Reference(astNode.variableName, None,           grafts, astNode)
         }
         
         reference
@@ -329,7 +345,7 @@ object PackedGraph {
         
         val grafts = processGraftReference(astNode.branchGraftElements, branchFactory)
         
-        val reference = Reference(name, Some(astNode.taskName), grafts)
+        val reference = Reference(name, Some(astNode.taskName), grafts, astNode)
         
         reference
       }
@@ -343,15 +359,15 @@ object PackedGraph {
         val branches = Seq.newBuilder[BranchNode]
         val sequence = astNode.sequence
         for ( number <- sequence.start to sequence.end by sequence.increment) {
-          val value = number.toString
-          val literal = Literal(value)
+          val value = Files.possibleAbsolutePath(somePath, number.toString(), astNode.positionString)
+          val literal = Literal(value, spec)
           val branch = branchFactory(value, branchPoint)
-          val branchNode = BranchNode(branch, literal)
+          val branchNode = BranchNode(branch, literal, astNode)
           
           branches += branchNode
         }
         
-       BranchPointNode(branchPoint, branches.result)
+       BranchPointNode(branchPoint, branches.result, spec)
         
       }
       case astNode:ast.BranchPointDef          => {
@@ -363,21 +379,21 @@ object PackedGraph {
         
         val branches = astNode.specs.map{ spec => 
           
-          val specNode = recursivelyProcessSpec(spec, branchFactory)
+          val specNode = recursivelyProcessSpec(spec, branchFactory, somePath)
           
           val branchName = spec.name
           val branch = branchFactory(branchName, branchPoint)
           
-          BranchNode(branch, specNode.value)
+          BranchNode(branch, specNode.value, astNode)
           
         }
         
-        BranchPointNode(branchPoint, branches)
+        BranchPointNode(branchPoint, branches, astNode)
       }
 
     }
     
-    return Spec(name, value, spec.dotVariable)
+    return Spec(name, value, spec.dotVariable, spec)
   }
  
   

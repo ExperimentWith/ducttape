@@ -123,7 +123,7 @@ class Goals private(val packedGraph:PackedGraph) extends Iterable[(packed.Task, 
     
   }
   
-  private def contains(taskName:String, realization:Realization): Boolean = {
+  def contains(taskName:String, realization:Realization): Boolean = {
     
     values.get(taskName) match {
       case Some(set) => return set.contains(realization)
@@ -167,7 +167,14 @@ class Goals private(val packedGraph:PackedGraph) extends Iterable[(packed.Task, 
         }
       }
       
-      case None                           => throw new RuntimeException(s"A request was made for a realization of a task that is incompatible with this workflow: ${parentTaskName} with realization ${childRealization}")
+      case None                           => {
+        println("cache:")
+        cache.foreach{ case (key, value) => 
+          println(s"\t${key._1}\t${key._2}\t${value}")
+        }
+        
+        throw new RuntimeException(s"A request was made for a realization of a task that is incompatible with this workflow: ${parentTaskName} with realization ${childRealization}")
+      }
       
     }
   }
@@ -179,7 +186,7 @@ class Goals private(val packedGraph:PackedGraph) extends Iterable[(packed.Task, 
     * 
     * Otherwise, this method will return <code>Failure</code>, indicating that the provided task (or a task it refers to) is incompatible in some way with the provided realization.
     */
-  private def recursivelyProcess(task:packed.Task, realization:Realization, comment:String): Status = {
+  private def recursivelyProcess(task:packed.Task, realization:Realization, someComment:Option[String]): Status = {
     
     
     // Determine whether this exact combination of task and realization has ever been previously processed
@@ -191,7 +198,11 @@ class Goals private(val packedGraph:PackedGraph) extends Iterable[(packed.Task, 
         // We have previously processed this exact combination of task and realization.
         
         // Record the comment associated with this current request, but do not re-process the request itself
-        addComment(task.name, realization, comment)
+        someComment match {
+          case Some(comment) => addComment(task.name, realization, comment)
+          case None          => /* Do nothing */
+        }
+        
         
         // Return the previously calculated result
         return result
@@ -201,34 +212,58 @@ class Goals private(val packedGraph:PackedGraph) extends Iterable[(packed.Task, 
       case None        => {
         // This combination of task and realization has never been requested before
     	  
+        def getNewComment(newComment:String): Option[String] = {
+          someComment match {
+            case None => return None
+            case Some(comment) => return Some(s"${comment} ${newComment}")
+          }
+        }
+        
+        var failed = false
+        val values = Seq.newBuilder[Goals.Status]
+        
         // Process all of this task's inputs
-        var newComment = s"${comment} ${task.name} input"
-    	  val inputsStatus = recursivelyProcess(task.inputs,  realization, newComment)
-    		if (inputsStatus == Failure) return Failure
-
+        if (! failed) {
+          val newComment = getNewComment(s"${task.name} input")
+    	    val inputsStatus = recursivelyProcess(task.inputs,  realization, newComment)
+    		  values += inputsStatus
+    	    if (inputsStatus == Failure) failed = true
+        }
     		// Process all of this task's params
-    		newComment = s"${comment} ${task.name} param"
-    		val paramsStatus = recursivelyProcess(task.params,  realization, newComment) 
-    		if (paramsStatus == Failure) return Failure
-
+    		if (! failed) {
+    		  val newComment = getNewComment(s"${task.name} param")
+    		  val paramsStatus = recursivelyProcess(task.params,  realization, newComment)
+    		  values += paramsStatus
+    		  if (paramsStatus == Failure) failed = true
+    		}
+    	  
     		// Process all of this task's outputs
-    		newComment = s"${comment} ${task.name} output"
-    		val outputsStatus = recursivelyProcess(task.outputs, realization, newComment)
-    		if (paramsStatus == Failure) return Failure
-
-    		val values = Seq(inputsStatus, paramsStatus, outputsStatus)
-    		val result:Status = Goals.unify(values)
+    	  if (! failed) {
+    		  val newComment = getNewComment(s"${task.name} output")
+    		  val outputsStatus = recursivelyProcess(task.outputs, realization, newComment)
+    		  values += outputsStatus
+    		  if (outputsStatus == Failure) failed = true
+    	  }
+    	  
+    		//val values = Seq(inputsStatus, paramsStatus, outputsStatus)
+    		val result:Status = if (failed) Failure else Goals.unify(values.result())
     
     		result match {
           case Failure => /* Do nothing */
           case Underspecified => {
-            this.addComment(task.name, NO_REALIZATION, comment)
+            someComment match {
+              case Some(comment) => this.addComment(task.name, NO_REALIZATION, comment)
+              case None          => /* Do nothing */
+            }
     	      if (! this.contains(task.name, NO_REALIZATION)) {
     		      this.add(task.name, NO_REALIZATION)
     	      }        
           }
           case Success(resultRealization) => {
-            this.addComment(task.name, resultRealization, comment)
+            someComment match {
+              case Some(comment) => this.addComment(task.name, resultRealization, comment)
+              case None          => /* Do nothing */
+            }
     	      if (! this.contains(task.name, resultRealization)) {
               this.add(task.name, resultRealization)
     	      }
@@ -250,11 +285,14 @@ class Goals private(val packedGraph:PackedGraph) extends Iterable[(packed.Task, 
     * 
     * Otherwise, this method will return <code>Failure</code>, indicating that the provided task (or a task it refers to) is incompatible in some way with the provided realization.
     */  
-  private def recursivelyProcess(specs:Seq[packed.Spec], realization:Realization, comment:String): Status = {
+  private def recursivelyProcess(specs:Seq[packed.Spec], realization:Realization, someComment:Option[String]): Status = {
     
     val results:Seq[Status] = specs.map{ spec =>
       
-      val newComment = s"${comment} ${spec.name}"
+      val newComment = someComment match {
+        case Some(comment) => Some(s"${comment} ${spec.name}")
+        case None          => None
+      }
       val result = recursivelyProcessSpec(spec.value, realization, newComment, Seq()) 
       if (result == Failure) return Failure
       
@@ -273,11 +311,11 @@ class Goals private(val packedGraph:PackedGraph) extends Iterable[(packed.Task, 
   
   
   
-  private def recursivelyProcessVariableReference(task:PackedGraph.Task, realization:Realization, graft:Option[Realization], comment:String, variableName:String, branchesSeen:Seq[Branch]): Status = {
+  private def recursivelyProcessVariableReference(task:PackedGraph.Task, realization:Realization, graft:Option[Realization], someComment:Option[String], variableName:String, branchesSeen:Seq[Branch]): Status = {
     
     if (task.containsVariable(variableName)) {
 
-      val status = recursivelyProcess(task, realization, comment)
+      val status = recursivelyProcess(task, realization, someComment)
       status match {
         
         case Failure                       => return Failure
@@ -317,6 +355,18 @@ class Goals private(val packedGraph:PackedGraph) extends Iterable[(packed.Task, 
     }
   }  
   
+  def getRealization(spec:packed.Spec, realization:Realization): Realization = {
+    val status = recursivelyProcessSpec(spec.value, realization, None, Seq())
+    
+    status match {
+      case Failure => throw new RuntimeException("")
+      case Underspecified => return NO_REALIZATION
+      case Success(result) => return result
+    }
+    
+  }
+  
+  
   /** Recursively processes a [[ducttape.PackedGraph.Spec]] node object.
     * 
     * If any of the following conditions are met, this method will return <code>Underspecified</code> or <code>Success</code>:
@@ -327,13 +377,13 @@ class Goals private(val packedGraph:PackedGraph) extends Iterable[(packed.Task, 
     * 
     * Otherwise, this method will return <code>Failure</code>, indicating that the provided task (or a task it refers to) is incompatible in some way with the provided realization.
     */
-  private def recursivelyProcessSpec(node:packed.ValueBearingNode, realization:Realization, comment:String, branchesSeen:Seq[Branch]): Status = {
+  private def recursivelyProcessSpec(node:packed.ValueBearingNode, realization:Realization, someComment:Option[String], branchesSeen:Seq[Branch]): Status = {
     
     val defaultRealization = (realization == ducttape.workflow.Task.NO_REALIZATION)
     
     node match {
       
-      case packed.Literal(_) => {
+      case packed.Literal(_, _) => {
         if (branchesSeen.isEmpty) {
           return Underspecified
         } else {
@@ -341,8 +391,11 @@ class Goals private(val packedGraph:PackedGraph) extends Iterable[(packed.Task, 
         }
       }
       
-      case packed.BranchPointNode(bp, branches) => {
-    	  val newComment = s"${comment}[${bp.name}"
+      case packed.BranchPointNode(bp, branches, _) => {
+    	  val newComment = someComment match {
+    	    case Some(comment) => Some(s"${comment}[${bp.name}")
+    	    case None          => None
+    	  }
     	  val successes = branches.map{ branchNode => recursivelyProcessSpec(branchNode, realization, newComment, branchesSeen) }
     	  for (success <- successes) {
     		  success match {
@@ -353,9 +406,12 @@ class Goals private(val packedGraph:PackedGraph) extends Iterable[(packed.Task, 
     	  return Failure        
       }
       
-      case packed.BranchNode(branch, value) => {
+      case packed.BranchNode(branch, value, _) => {
         if (realization.explicitlyRefersTo(branch) || (branch.baseline && !realization.explicitlyRefersTo(branch.branchPoint))) { //(branch.baseline && defaultRealization)) {
-          val newComment = s"${comment}:${branch.name}]"
+          val newComment = someComment match {
+    	      case Some(comment) => Some(s"${comment}:${branch.name}]")
+    	      case None          => None
+    	    }
           val newBranches = branchesSeen ++ Seq(branch)
           return recursivelyProcessSpec(value, realization, newComment, newBranches)
         } else {
@@ -363,7 +419,7 @@ class Goals private(val packedGraph:PackedGraph) extends Iterable[(packed.Task, 
         }
       }
       
-      case packed.Reference(variableName, possibleTaskName, graftsList) => {
+      case packed.Reference(variableName, possibleTaskName, graftsList, _) => {
         possibleTaskName match {
           
           // Look up a task
@@ -375,7 +431,7 @@ class Goals private(val packedGraph:PackedGraph) extends Iterable[(packed.Task, 
             	  
                 if (graftsList.isEmpty) {
                 		
-                	val success = recursivelyProcessVariableReference(task, realization, graft=None, comment, variableName, branchesSeen)
+                	val success = recursivelyProcessVariableReference(task, realization, graft=None, someComment, variableName, branchesSeen)
                 	return success
                 		
                 } else {
@@ -385,7 +441,7 @@ class Goals private(val packedGraph:PackedGraph) extends Iterable[(packed.Task, 
                   
                 	for (graftRealization <- graftsList) {
                 		val newRealization = Realization.applyGraft(graft=graftRealization, original=realization) //; println(graftRealization.toFullString(false))
-                		val status = recursivelyProcessVariableReference(task, newRealization, graft=Some(graftRealization), comment, variableName, branchesSeen)
+                		val status = recursivelyProcessVariableReference(task, newRealization, graft=Some(graftRealization), someComment, variableName, branchesSeen)
                 		status match {
                 		  case Failure         => return Failure
                 		  case Underspecified  => /* Do nothing */
@@ -426,7 +482,7 @@ class Goals private(val packedGraph:PackedGraph) extends Iterable[(packed.Task, 
               
               case Some(globalVariable) => {
                 val spec = globalVariable.value
-                return recursivelyProcessSpec(spec.value, realization, comment, branchesSeen)
+                return recursivelyProcessSpec(spec.value, realization, someComment, branchesSeen)
               }
               
               case None                 => {
@@ -473,7 +529,7 @@ object Goals extends Logging {
         case Some(task) => {
  
           // Recursively process the specified task. This will cause it and its ancestors to be added to the Goals object.
-          val status = goals.recursivelyProcess(task, goal.realization, goal.comment)
+          val status = goals.recursivelyProcess(task, goal.realization, Some(goal.comment))
 
         	status match {
         	    

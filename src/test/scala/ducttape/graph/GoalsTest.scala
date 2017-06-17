@@ -1045,12 +1045,113 @@ plan {
     val packedGraph = new PackedGraph(workflow)
     val goals = packedGraph.goals
 
-    //print(goals)
+    print(goals)
     
     "contain goals" in {   
       assertResult(20)(goals.size)
     }
 
+
+
+    "contain task build_model with realization Baseline.baseline" in {
+      test(goals, packedGraph, Seq(("Baseline","baseline")), taskName="build_model", expectedResult=true)
+      test(goals, packedGraph, Seq(("TrainCorpus","small"),("UseDict","no")), taskName="build_model", expectedResult=true)
+    }
+
+    "contain task build_model with realization DataSet.test+TestSplit.random+TrainCorpus.large+UseDict.yes" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes")), taskName="build_model", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("TestSplit","random"),("TrainCorpus","large"),("UseDict","yes")), taskName="build_model", expectedResult=true)
+    }
+
+    "contain task build_model with realization DataSet.test+TestSplit.random+UseDict.yes" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random"),("UseDict","yes")), taskName="build_model", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("TestSplit","random"),("TrainCorpus","small"),("UseDict","yes")), taskName="build_model", expectedResult=true)
+    }
+
+    "contain task build_model with realization DataSet.test+TrainCorpus.large+UseDict.yes" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TrainCorpus","large"),("UseDict","yes")), taskName="build_model", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("TestSplit","standard"),("TrainCorpus","large"),("UseDict","yes")), taskName="build_model", expectedResult=true)
+    }
+
+    "contain task build_model with realization DataSet.test+UseDict.yes" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("UseDict","yes")), taskName="build_model", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("TestSplit","standard"),("TrainCorpus","small"),("UseDict","yes")), taskName="build_model", expectedResult=true)
+    }
+
+    "contain task build_model with realization TrainCorpus.large" in {
+      test(goals, packedGraph, Seq(("TrainCorpus","large")), taskName="build_model", expectedResult=true)
+      test(goals, packedGraph, Seq(("TrainCorpus","large"),("UseDict","no")), taskName="build_model", expectedResult=true)
+    }
+
+    "contain task build_model with realization TrainCorpus.large+UseDict.yes" in {
+      test(goals, packedGraph, Seq(("TrainCorpus","large"),("UseDict","yes")), taskName="build_model", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("OnlyOne","one"),("TrainCorpus","large"),("UseDict","yes")), taskName="build_model", expectedResult=true)
+    }
+
+    "contain task build_model with realization UseDict.yes" in {
+      test(goals, packedGraph, Seq(("UseDict","yes")), taskName="build_model", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("OnlyOne","one"),("TrainCorpus","small"),("UseDict","yes")), taskName="build_model", expectedResult=true)
+    }
+
+    "contain task extract_dictionary with realization Baseline.baseline" in {
+      test(goals, packedGraph, Seq(("Baseline","baseline")), taskName="extract_dictionary", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("TrainCorpus","small")), taskName="extract_dictionary", expectedResult=true)
+    }
+
+    "contain task extract_dictionary with realization DataSet.test" in {
+      test(goals, packedGraph, Seq(("DataSet","test")), taskName="extract_dictionary", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","standard")), taskName="extract_dictionary", expectedResult=true)
+    }
+
+    "contain task extract_dictionary with realization DataSet.test+TestSplit.random" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random")), taskName="extract_dictionary", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random")), taskName="extract_dictionary", expectedResult=true)
+    }
+
+    "contain task extract_dictionary with realization TrainCorpus.large" in {
+      test(goals, packedGraph, Seq(("TrainCorpus","large")), taskName="extract_dictionary", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("TrainCorpus","large")), taskName="extract_dictionary", expectedResult=true)
+    }
+
+    "contain task preproc with realization Baseline.baseline" in {
+      test(goals, packedGraph, Seq(("Baseline","baseline")), taskName="preproc", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Side","src"),("TrainCorpus","small")), taskName="preproc", expectedResult=true)
+    }
+
+    "contain task preproc with realization Side.tgt" in {
+      test(goals, packedGraph, Seq(("Side","tgt")), taskName="preproc", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Side","tgt"),("TrainCorpus","small")), taskName="preproc", expectedResult=true)
+    }
+
+    "contain task preproc with realization Side.tgt+TrainCorpus.large" in {
+      test(goals, packedGraph, Seq(("Side","tgt"),("TrainCorpus","large")), taskName="preproc", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Side","tgt"),("TrainCorpus","large")), taskName="preproc", expectedResult=true)
+    }
+
+    "contain task preproc with realization TrainCorpus.large" in {
+      test(goals, packedGraph, Seq(("TrainCorpus","large")), taskName="preproc", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("Side","src"),("TrainCorpus","large")), taskName="preproc", expectedResult=true)
+    }
+
+    "contain task process_dict with realization Baseline.baseline" in {
+      test(goals, packedGraph, Seq(("Baseline","baseline")), taskName="process_dict", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("OnlyOne","one"),("TrainCorpus","small")), taskName="process_dict", expectedResult=true)
+    }
+
+    "contain task process_dict with realization DataSet.test" in {
+      test(goals, packedGraph, Seq(("DataSet","test")), taskName="process_dict", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("TestSplit","standard")), taskName="process_dict", expectedResult=true)
+    }
+
+    "contain task process_dict with realization DataSet.test+TestSplit.random" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random")), taskName="process_dict", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("TestSplit","random")), taskName="process_dict", expectedResult=true)
+    }
+
+    "contain task process_dict with realization TrainCorpus.large" in {
+      test(goals, packedGraph, Seq(("TrainCorpus","large")), taskName="process_dict", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("OnlyOne","one"),("TrainCorpus","large")), taskName="process_dict", expectedResult=true)
+    }
   }    
 
   "The packed graph for process_dict of acid.tape workflow with the complete plan" should {
@@ -1077,6 +1178,45 @@ plan {
       assertResult(8)(goals.size)
     }
 
+     "contain task extract_dictionary with realization Baseline.baseline" in {
+      test(goals, packedGraph, Seq(("Baseline","baseline")), taskName="extract_dictionary", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("TrainCorpus","small")), taskName="extract_dictionary", expectedResult=true)
+    }
+
+    "contain task extract_dictionary with realization DataSet.test" in {
+      test(goals, packedGraph, Seq(("DataSet","test")), taskName="extract_dictionary", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","standard")), taskName="extract_dictionary", expectedResult=true)
+    }
+
+    "contain task extract_dictionary with realization DataSet.test+TestSplit.random" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random")), taskName="extract_dictionary", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random")), taskName="extract_dictionary", expectedResult=true)
+    }
+
+    "contain task extract_dictionary with realization TrainCorpus.large" in {
+      test(goals, packedGraph, Seq(("TrainCorpus","large")), taskName="extract_dictionary", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("TrainCorpus","large")), taskName="extract_dictionary", expectedResult=true)
+    }
+
+    "contain task process_dict with realization Baseline.baseline" in {
+      test(goals, packedGraph, Seq(("Baseline","baseline")), taskName="process_dict", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("OnlyOne","one"),("TrainCorpus","small")), taskName="process_dict", expectedResult=true)
+    }
+
+    "contain task process_dict with realization DataSet.test" in {
+      test(goals, packedGraph, Seq(("DataSet","test")), taskName="process_dict", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("TestSplit","standard")), taskName="process_dict", expectedResult=true)
+    }
+
+    "contain task process_dict with realization DataSet.test+TestSplit.random" in {
+      test(goals, packedGraph, Seq(("DataSet","test"),("TestSplit","random")), taskName="process_dict", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","test"),("OnlyOne","one"),("TestSplit","random")), taskName="process_dict", expectedResult=true)
+    }
+
+    "contain task process_dict with realization TrainCorpus.large" in {
+      test(goals, packedGraph, Seq(("TrainCorpus","large")), taskName="process_dict", expectedResult=true)
+      test(goals, packedGraph, Seq(("DataSet","train"),("OnlyOne","one"),("TrainCorpus","large")), taskName="process_dict", expectedResult=true)
+    }
   }   
   
   "The packed graph for acid.tape workflow with the complete plan" should {

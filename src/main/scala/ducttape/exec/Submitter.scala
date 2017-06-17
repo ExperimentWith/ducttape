@@ -85,9 +85,9 @@ class Submitter(submitters: Seq[SubmitterDef]) extends Logging {
       
       def resolve(node:ValueBearingNode): String = {
         node match {
-          case Literal(value) => return value
-          case Reference(variableName, task) => return resolve(task.get(variableName))
-          case GlobReference(variableName, tasks) => return tasks.map{ task => resolve(task.get(variableName)) }.mkString(" ")
+          case Literal(value, astNode) => return value
+          case Reference(variableName, task, astNode) => return resolve(task.get(variableName))
+          case GlobReference(variableName, tasks, astNode) => return tasks.map{ task => resolve(task.get(variableName)) }.mkString(" ")
         }
       }
       

@@ -3,6 +3,7 @@
 package ducttape.graph
 
 import ducttape.graph.{PackedGraph => packed}
+import ducttape.syntax.{AbstractSyntaxTree => ast}
 import ducttape.syntax.BashCode
 import ducttape.workflow.Branch
 import ducttape.workflow.Realization
@@ -22,6 +23,24 @@ class UnpackedGraph private(val goals:Goals) extends Logging {
   def getRoot:UnpackedGraph.Root = root
   
   def size = values.size
+  
+  def tasks = values.values
+  
+  def getTask(taskName:String, realization:Realization): Option[UnpackedGraph.Task] = {
+  
+    val packedTask = goals.packedGraph.task(taskName)
+    
+    packedTask match {
+      case None => return None
+      case Some(task) => {
+        val tuple = (task, realization)
+        return this.values.get(tuple)
+      }
+    }
+    
+  }
+  
+  def branchFactory = this.goals.packedGraph.branchFactory
   
   override def toString(): String = {
     
@@ -60,7 +79,7 @@ class UnpackedGraph private(val goals:Goals) extends Logging {
         val specs = UnpackedGraph.Specs(inputs, params, outputs, packages)
         val dependencies = UnpackedGraph.Dependencies(temporal=inputDependencies.toSet, nontemporal=paramDependencies.toSet)
         
-        val unpackedTask = UnpackedGraph.Task(task.name, task.code, realization, specs, dependencies)
+        val unpackedTask = UnpackedGraph.Task(task.name, task.code, realization, specs, dependencies, task.astNode)
         
         values.put(key, unpackedTask)
         
@@ -75,11 +94,11 @@ class UnpackedGraph private(val goals:Goals) extends Logging {
     val results = Seq.newBuilder[UnpackedGraph.Input]
     
     for (input <- inputs) {
-      
+            
       val name = input.name
-      val value = recursivelyProcess(input.value, realization, Some(inputDependencies))
+      val value = recursivelyProcess(input.value, goals.getRealization(input, realization), Some(inputDependencies))
       
-      results += new UnpackedGraph.Input(name, value)
+      results += new UnpackedGraph.Input(name, value, input.astNode)
       
     }
     
@@ -91,8 +110,8 @@ class UnpackedGraph private(val goals:Goals) extends Logging {
     
     val results = params.map { param =>      
       val name = param.name
-      val value = recursivelyProcess(param.value, realization, Some(paramDependencies))      
-      new UnpackedGraph.Param(name, value, param.dotVariable)     
+      val value = recursivelyProcess(param.value, goals.getRealization(param, realization), Some(paramDependencies))      
+      new UnpackedGraph.Param(name, value, param.dotVariable, param.astNode)     
     }
     
     return results
@@ -102,11 +121,11 @@ class UnpackedGraph private(val goals:Goals) extends Logging {
     
     val results = outputs.map { output =>      
       val name = output.name
-      val value = recursivelyProcess(output.value, realization)  
+      val value = recursivelyProcess(output.value, goals.getRealization(output, realization))  
       value match {
-        case literal:UnpackedGraph.Literal => new UnpackedGraph.Output(name, literal)
-        case UnpackedGraph.Reference(variableName, task) => throw new RuntimeException(s"A reference was made in output variable $$${name}@${taskName} to $$${variableName}@${task.name}, but output variables aren't allowed to reference other variables")
-        case UnpackedGraph.GlobReference(variableName, _) => throw new RuntimeException(s"A reference was made in output variable $$${name}@${taskName} to $$${variableName}, but output variables aren't allowed to reference other variables")
+        case literal:UnpackedGraph.Literal => new UnpackedGraph.Output(name, literal, output.astNode)
+        case UnpackedGraph.Reference(variableName, task, astNode) => throw new ducttape.syntax.FileFormatException(s"A reference was made in output variable $$${name}@${taskName} to $$${variableName}@${task.name}, but output variables aren't allowed to reference other variables", astNode)
+        case UnpackedGraph.GlobReference(variableName, _, astNode) => throw new ducttape.syntax.FileFormatException(s"A reference was made in output variable $$${name}@${taskName} to $$${variableName}, but output variables aren't allowed to reference other variables", astNode)
       }
          
     }
@@ -116,7 +135,7 @@ class UnpackedGraph private(val goals:Goals) extends Logging {
   
     private def recursivelyProcessPackages(packages:Seq[packed.Spec], realization:Realization): Seq[UnpackedGraph.Literal] = {
     
-    val results = packages.map { spec => new UnpackedGraph.Literal(spec.name) }   
+    val results = packages.map { spec => new UnpackedGraph.Literal(spec.name, spec.astNode) }   
     
     return results
   }
@@ -154,9 +173,9 @@ class UnpackedGraph private(val goals:Goals) extends Logging {
     
     node match {
       
-      case packed.Literal(value) => return UnpackedGraph.Literal(value)
+      case packed.Literal(value, astNode) => return UnpackedGraph.Literal(value, astNode)
       
-      case packed.BranchPointNode(branchPoint, branchNodes) => {
+      case packed.BranchPointNode(branchPoint, branchNodes, astNode) => {
         
         for (branchNode <- branchNodes) {          
           if (realization.explicitlyRefersTo(branchNode.branch)) {
@@ -167,9 +186,9 @@ class UnpackedGraph private(val goals:Goals) extends Logging {
         throw new RuntimeException(s"While unpacking the workflow graph, a branchpoint (${branchPoint.name}) was encountered that is incompatible with the realization ${realization.toFullString(false)}")
       }
       
-      case packed.BranchNode(branch, value) => return recursivelyProcess(value, realization)
+      case packed.BranchNode(branch, value, astNode) => return recursivelyProcess(value, realization)
       
-      case packed.Reference(variableName, possibleTaskName, graftsList) => {
+      case packed.Reference(variableName, possibleTaskName, graftsList, astNode) => {
         possibleTaskName match {
           
           // Look up a task
@@ -188,7 +207,7 @@ class UnpackedGraph private(val goals:Goals) extends Logging {
                 	  case Some(set) => set.add(unpackedTask)
                 	}
                 	
-                	return UnpackedGraph.Reference(variableName, unpackedTask)
+                	return UnpackedGraph.Reference(variableName, unpackedTask, astNode)
                 		
                 } else {
                   
@@ -205,9 +224,9 @@ class UnpackedGraph private(val goals:Goals) extends Logging {
                 	}
                 	
                   if (unpackedTasks.size == 1) {
-                    return UnpackedGraph.Reference(variableName, unpackedTasks.head)
+                    return UnpackedGraph.Reference(variableName, unpackedTasks.head, astNode)
                   } else {
-                    return UnpackedGraph.GlobReference(variableName, unpackedTasks)
+                    return UnpackedGraph.GlobReference(variableName, unpackedTasks, astNode)
                   }
                 	  
                 }
@@ -262,14 +281,14 @@ object UnpackedGraph extends Logging {
   sealed trait Node
   
   sealed trait Spec extends Node
-  final case class Input(name:String, value:ValueBearingNode) extends Spec
-  final case class Param(name:String, value:ValueBearingNode, dotVariable:Boolean) extends Spec
-  final case class Output(name:String, value:Literal) extends Spec
+  final case class Input(name:String, value:ValueBearingNode, astNode:ast.ASTType) extends Spec
+  final case class Param(name:String, value:ValueBearingNode, dotVariable:Boolean, astNode:ast.ASTType) extends Spec
+  final case class Output(name:String, value:Literal, astNode:ast.ASTType) extends Spec
   
   final case class Specs(inputs:Seq[Input], params:Seq[Param], outputs:Seq[Output], packages:Seq[Literal]) extends Node
   final case class Dependencies(temporal:Set[Task], nontemporal:Set[Task]) extends Node
   
-  final case class Task(name:String, code:BashCode, realization:Realization, specs:Specs, directDependencies:Dependencies) extends Node with Comparable[Task] {
+  final case class Task(name:String, code:BashCode, realization:Realization, specs:Specs, directDependencies:Dependencies, astNode:ast.ASTType) extends Node with Comparable[Task] {
     override def toString(): String = {
       return s"${name}_${realization}"
     }
@@ -294,9 +313,9 @@ object UnpackedGraph extends Logging {
   
   
   sealed trait ValueBearingNode extends Node
-  final case class Literal(value:String) extends ValueBearingNode
-  final case class Reference(variableName:String, value:Task) extends ValueBearingNode
-  final case class GlobReference(variableName:String, values:Seq[Task]) extends ValueBearingNode
+  final case class Literal(value:String, astNode:ast.ASTType) extends ValueBearingNode
+  final case class Reference(variableName:String, value:Task, astNode:ast.ASTType) extends ValueBearingNode
+  final case class GlobReference(variableName:String, values:Seq[Task], astNode:ast.ASTType) extends ValueBearingNode
   
   //def toGraphviz(tasks:Iterable[UnpackedGraph.Task]): String = {
   def toGraphviz(tasks:HashMap[packed.Task, HashSet[UnpackedGraph.Task]]): String = {
@@ -310,9 +329,10 @@ object UnpackedGraph extends Logging {
     def processLiterals(targetID:String, rhs:ValueBearingNode, s:StringBuilder) : Unit = {
       
       rhs match {
-        case Literal(value) => {
+        case Literal(value, astNode) => {
           val id = targetID + " value " + value
-          s.append("\t\t\"").append(id).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=darkseagreen2, color=black, shape=box, style="filled", label="""").append(value).append("\"]\n")
+          s.append("\t\t\"").append(id).append("""" [margin="0.01,0.01", height=0.0, width=0.0, fontcolor=black, fillcolor=darkseagreen2, color=black, shape=box, style="filled", label="""").append(value).append("\"]")
+          astNode.positionString(s, prefix=" // Declared in ", suffix="\n")
           s.append("\t\t\"").append(id).append("\" -> \"").append(targetID).append("\"\n")
         }
         
@@ -323,19 +343,21 @@ object UnpackedGraph extends Logging {
     
     def processReferences(targetID:String, rhs:ValueBearingNode, s:StringBuilder) : Unit = {
       rhs match {
-        case Reference(variableName, task) => {
+        case Reference(variableName, task, astNode) => {
           val variableID = variableName + "@" + id(task)
           val intermediateID = "from " + variableID + " to " + targetID
-          s.append("\t\"").append(intermediateID).append("""" [margin="0.0,0.0", height=0.0, width=0.0, fillcolor=black, color=black, style="filled", label=""]""").append("\n")
+          s.append("\t\"").append(intermediateID).append("""" [margin="0.0,0.0", height=0.0, width=0.0, fillcolor=black, color=black, style="filled", label=""]""")
+          astNode.positionString(s, prefix=" // Declared in ", suffix="\n")
           s.append("\t\t\"").append(variableID).append("\" -> \"").append(intermediateID).append("\" [arrowhead=\"none\"]\n")
           s.append("\t\t\"").append(intermediateID).append("\" -> \"").append(targetID).append("\"\n")
         }
         
-        case GlobReference(variableName, tasks) => {
+        case GlobReference(variableName, tasks, astNode) => {
         	for (task <- tasks) {
             val variableID = variableName + "@" + id(task)
             val intermediateID = "from " + variableID + " to " + targetID
-            s.append("\t\"").append(intermediateID).append("""" [margin="0.0,0.0", height=0.0, width=0.0, fillcolor=black, color=black, style="filled", label=""]""").append("\n")
+            s.append("\t\"").append(intermediateID).append("""" [margin="0.0,0.0", height=0.0, width=0.0, fillcolor=black, color=black, style="filled", label=""]""")
+            astNode.positionString(s, prefix=" // Declared in ", suffix="\n")
             s.append("\t\t\"").append(variableID).append("\" -> \"").append(intermediateID).append("\" [arrowhead=\"none\"]\n")
             s.append("\t\t\"").append(intermediateID).append("\" -> \"").append(targetID).append("\"\n")
         	}

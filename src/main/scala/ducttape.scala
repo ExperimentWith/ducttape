@@ -194,7 +194,7 @@ class Ducttape(val opts:Opts) extends Logging {
 
 		val cc = new CompletionChecker(directoryArchitect, incompleteCallback)
 			
-		// use the user's traversaal type here so that the confirmation prompt has tasks in the right order
+		// use the user's traversal type here so that the confirmation prompt has tasks in the right order
 		Visitor.visitAll(unpackedGraph, cc, traversal=traversal)
 		return cc
   }

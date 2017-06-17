@@ -29,6 +29,33 @@ object AbstractSyntaxTree {
     
     // used for traversing AST... abstractly
     def children: Seq[ASTType]
+    
+    lazy val positionString:String = positionString()
+    
+    
+    def positionString(s:StringBuilder=new StringBuilder, prefix:String="", suffix:String=""): String = {    
+      val startPosition = pos
+      val endPosition   = endPos
+    
+      s.append(prefix)
+      if (startPosition.line == endPosition.line) {
+        s.append("line ").append(startPosition.line).append(" ")
+        if (startPosition.column == endPosition.column) {
+          s.append("(column ").append(startPosition.column).append(")")
+        } else {
+          s.append("(columns ").append(startPosition.column).append("-").append(endPosition.column).append(")")
+        }
+      } else {
+        s.append("line ").append(startPosition.line).append(" ")
+        s.append("(column ").append(startPosition.column).append(")")
+        s.append(" - line ").append(endPosition.line).append(" ")
+        s.append("(column ").append(endPosition.column).append(")")
+      }
+      s.append(" of file ").append(declaringFile.getAbsoluteFile)
+      s.append(suffix)
+      
+      return s.result()
+    }
   }
 
   
