@@ -22,6 +22,8 @@ results.txt
 log
 tmp/
 /*.tape
+project/
+!project/plugins.sbt
 
 !./lib/**/*.jar
 !./lib/**
