@@ -2,12 +2,12 @@
 DUCTTAPE:=$(shell dirname $(realpath $(lastword ${MAKEFILE_LIST})))
 SBT:=sbt
 
-package:
+dist: target
 	${SBT} assembly
 	bash ${DUCTTAPE}/build-support/dist.sh
 
 doc:
-	sbt doc
+	${SBT} doc
 	${DUCTTAPE}/build-support/doc.sh ${DUCTTAPE}/dist/ducttape-current
 
 test-unit:
@@ -21,5 +21,5 @@ test-regression:
 # SBT likes to keep lots of garbage around
 clean:
 	rm -rf ~/.ivy2 ~/.m2 ~/.sbt
-	sbt clean clean-files
+	sbt clean cleanFiles
 
